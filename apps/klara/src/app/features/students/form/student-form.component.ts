@@ -226,7 +226,12 @@ export class StudentFormComponent implements OnInit {
       firstName: value.firstName!,
       lastName: value.lastName!,
       dateOfBirth: value.dateOfBirth || undefined,
-      parents: value.parents as any[],
+      parents: (value.parents as any[]).map((p: any) => ({
+        firstName: p.firstName,
+        lastName: p.lastName,
+        email: p.email?.trim() || undefined,
+        phone: p.phone?.trim() || undefined,
+      })),
     };
 
     const request$ = this.isEdit()
