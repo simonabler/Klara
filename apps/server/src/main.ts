@@ -21,6 +21,10 @@ async function bootstrap() {
   app.enableCors();
   app.set('trust proxy', 1);
 
+  // Statische Uploads (Avatare) unter /uploads bereitstellen
+  const uploadDir = process.env.UPLOAD_DIR ?? './uploads/avatars';
+  app.useStaticAssets(require('path').resolve(uploadDir, '..'), { prefix: '/uploads' });
+
   app.use(
     helmet({
       contentSecurityPolicy: {

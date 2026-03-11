@@ -17,7 +17,7 @@ export default registerAs('database', () => {
     // When SSL enabled, whether to reject unauthorized certs (default true)
     sslRejectUnauthorized: sslRejectEnv === undefined ? true : !(sslRejectEnv === '0' || sslRejectEnv === 'false'),
     // SQLite fallback path (used when no url is present)
-    sqlitePath: process.env.TYPEORM_DB ?? './signpacks.sqlite',
+    sqlitePath: process.env.TYPEORM_DB ?? './dev.sqlite',
     // Synchronize schema (dev default true)
     synchronize: syncEnv === undefined ? true : !(syncEnv === '0' || syncEnv === 'false'),
   } as const;

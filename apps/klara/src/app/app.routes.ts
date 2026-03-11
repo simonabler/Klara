@@ -16,14 +16,42 @@ export const appRoutes: Route[] = [
   },
   {
     path: '',
-    component: HomeComponent,
     canActivate: [authGuard],
-    title: 'Klara',
+    children: [
+      { path: '', component: HomeComponent, title: 'Klara' },
+      {
+        path: 'students',
+        loadComponent: () =>
+          import('./features/students/list/student-list.component').then(
+            (m) => m.StudentListComponent,
+          ),
+        title: 'Schüler – Klara',
+      },
+      {
+        path: 'students/new',
+        loadComponent: () =>
+          import('./features/students/form/student-form.component').then(
+            (m) => m.StudentFormComponent,
+          ),
+        title: 'Neuer Schüler – Klara',
+      },
+      {
+        path: 'students/:id',
+        loadComponent: () =>
+          import('./features/students/detail/student-detail.component').then(
+            (m) => m.StudentDetailComponent,
+          ),
+        title: 'Schülerprofil – Klara',
+      },
+      {
+        path: 'students/:id/edit',
+        loadComponent: () =>
+          import('./features/students/form/student-form.component').then(
+            (m) => m.StudentFormComponent,
+          ),
+        title: 'Schüler bearbeiten – Klara',
+      },
+    ],
   },
-  // Weitere geschützte Routen ab Issue 4:
-  // { path: 'students', canActivate: [authGuard], ... }
-  {
-    path: '**',
-    redirectTo: '',
-  },
+  { path: '**', redirectTo: '' },
 ];

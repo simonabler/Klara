@@ -1,14 +1,17 @@
 import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
+  imports: [CommonModule],
   template: `
     <main class="login-page">
       <div class="login-card">
         <h1>Klara</h1>
         <p class="tagline">Dokumentationstool für Lehrkräfte</p>
+
         <button class="google-btn" (click)="login()">
           <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -18,6 +21,14 @@ import { AuthService } from '../../auth/auth.service';
           </svg>
           Mit Google anmelden
         </button>
+
+        @if (isDev()) {
+          <div class="divider"><span>oder</span></div>
+          <button class="demo-btn" (click)="demoLogin()">
+            Demo-Zugang verwenden
+          </button>
+          <p class="demo-hint">Kein Google-Konto erforderlich</p>
+        }
       </div>
     </main>
   `,
@@ -62,17 +73,63 @@ import { AuthService } from '../../auth/auth.service';
       cursor: pointer;
       transition: background 0.15s, box-shadow 0.15s;
       color: #333;
+      width: 100%;
+      justify-content: center;
     }
     .google-btn:hover {
       background: #f5f5f5;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1.25rem 0;
+      color: #ccc;
+      font-size: 0.8rem;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #eee;
+    }
+    .divider span { color: #bbb; }
+    .demo-btn {
+      width: 100%;
+      padding: 0.7rem 1.5rem;
+      border: 1.5px dashed #ccc;
+      border-radius: 8px;
+      background: white;
+      font-size: 0.9rem;
+      color: #666;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .demo-btn:hover {
+      background: #f9f9f9;
+      border-color: #aaa;
+      color: #333;
+    }
+    .demo-hint {
+      margin: 0.5rem 0 0;
+      font-size: 0.78rem;
+      color: #bbb;
     }
   `],
 })
 export class LoginComponent {
   private readonly authService = inject(AuthService);
 
+  isDev(): boolean {
+    return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  }
+
   login(): void {
     this.authService.loginWithGoogle();
+  }
+
+  demoLogin(): void {
+    window.location.href = '/api/auth/demo';
   }
 }

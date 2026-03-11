@@ -14,6 +14,7 @@ import { GoogleAuthGuard } from './google-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentTeacher } from './current-teacher.decorator';
 import { Teacher } from '../teacher/teacher.entity';
+import { TeacherService } from '../teacher/teacher.service';
 import { JwtPayload } from './jwt-payload.interface';
 
 @ApiTags('auth')
@@ -22,7 +23,33 @@ export class AuthController {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly teacherService: TeacherService,
   ) {}
+
+  /**
+   * Demo-Login – erstellt oder findet einen festen Demo-User und gibt ein JWT zurück.
+   * Nur außerhalb von Produktion aktiv.
+   */
+  @Get('demo')
+  @ApiOperation({ summary: 'Demo-Login (nur in Entwicklung)' })
+  async demoLogin(@Res() res: Response) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new UnauthorizedException('Demo-Login ist in der Produktion nicht verfügbar');
+    }
+
+    const teacher = await this.teacherService.findOrCreate({
+      googleId: 'demo-user',
+      email: 'demo@klara.local',
+      displayName: 'Demo Lehrkraft',
+      avatarUrl: undefined,
+    });
+
+    const payload: JwtPayload = { sub: teacher.id, email: teacher.email };
+    const token = this.jwtService.sign(payload);
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:4200';
+
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+  }
 
   /**
    * Leitet zur Google OAuth2 Anmeldeseite weiter.
@@ -31,7 +58,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Google OAuth2 Login starten' })
   @UseGuards(GoogleAuthGuard)
   googleLogin() {
-    // Guard übernimmt den Redirect – diese Methode wird nicht erreicht
+    // Guard übernimmt den Redirect
   }
 
   /**
@@ -51,12 +78,11 @@ export class AuthController {
     const token = this.jwtService.sign(payload);
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:4200';
 
-    // Token als HttpOnly-Cookie setzen und zum Frontend weiterleiten
     res.cookie('klara_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 8 * 60 * 60 * 1000, // 8 Stunden
+      maxAge: 8 * 60 * 60 * 1000,
     });
 
     res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
