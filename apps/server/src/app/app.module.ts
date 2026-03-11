@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
+import { AuthModule } from './auth/auth.module';
+import { TeacherModule } from './teacher/teacher.module';
 
 @Module({
   imports: [
@@ -51,7 +53,6 @@ import databaseConfig from './config/database.config';
             }),
           };
         }
-        // SQLite-Fallback für lokale Entwicklung ohne DB-Konfiguration
         return {
           type: 'sqlite' as const,
           database: db?.sqlitePath ?? process.env.TYPEORM_DB ?? './klara.sqlite',
@@ -61,8 +62,11 @@ import databaseConfig from './config/database.config';
       },
     }),
 
-    // Feature-Module werden ab Issue 2 hier eingehängt
-    // z.B. TeacherModule, StudentModule, ClassModule, ...
+    AuthModule,
+    TeacherModule,
+
+    // Weitere Feature-Module ab Issue 3:
+    // StudentModule, ClassModule, SubjectModule, ...
   ],
   controllers: [AppController],
   providers: [AppService],
