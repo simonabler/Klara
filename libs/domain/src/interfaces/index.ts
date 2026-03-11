@@ -1,1 +1,2 @@
-// Interfaces werden in späteren Issues hinzugefügt
+// Interfaces werden ab Issue 3 hinzugefügt
+export {};

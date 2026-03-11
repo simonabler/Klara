@@ -1,12 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../auth/auth.service';
-import { CommonModule } from '@angular/common';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-auth-callback',
   standalone: true,
-  imports: [CommonModule],
   template: `
     <main class="callback-page">
       <p>Anmeldung wird verarbeitet…</p>
@@ -24,11 +22,9 @@ import { CommonModule } from '@angular/common';
   `],
 })
 export class AuthCallbackComponent implements OnInit {
-  constructor(
-    private readonly route: ActivatedRoute,
-    private readonly authService: AuthService,
-    private readonly router: Router,
-  ) {}
+  private readonly route = inject(ActivatedRoute);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   async ngOnInit(): Promise<void> {
     const token = this.route.snapshot.queryParamMap.get('token');

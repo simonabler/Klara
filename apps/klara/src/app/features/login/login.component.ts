@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { AuthService } from '../auth/auth.service';
+import { Component, inject } from '@angular/core';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -70,7 +70,7 @@ import { AuthService } from '../auth/auth.service';
   `],
 })
 export class LoginComponent {
-  constructor(private readonly authService: AuthService) {}
+  private readonly authService = inject(AuthService);
 
   login(): void {
     this.authService.loginWithGoogle();
