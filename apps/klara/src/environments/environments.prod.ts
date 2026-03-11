@@ -1,0 +1,6 @@
+export const environment = {
+  production: true,
+  API_BASE_URL: null,
+  allowUnbanButton: false
+};
+

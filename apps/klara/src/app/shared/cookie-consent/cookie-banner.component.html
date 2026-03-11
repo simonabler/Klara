@@ -1,0 +1,35 @@
+<ng-container *ngIf="visible()">
+  <div class="cookie-banner" role="dialog" aria-live="polite" aria-labelledby="cookie-banner-title" aria-describedby="cookie-banner-description">
+    <div class="cookie-banner__content">
+      <h2 id="cookie-banner-title" class="cookie-banner__title">Cookies &amp; external services</h2>
+      <p id="cookie-banner-description" class="cookie-banner__intro">
+        SimonAPI uses only one technically necessary cookie to store your choice. Your decision is saved in the cookie
+        <code>klara-consent</code> (retention: 180 days, SameSite=Lax).
+      </p>
+      <ul class="cookie-banner__summary">
+        <li><strong>Necessary:</strong> <code>klara-consent</code> records whether you have allowed necessary and/or optional cookies.</li>
+        <li><strong>Functional:</strong> The web tools operate statelessly &ndash; API calls do not set any browser cookies.</li>
+        <li><strong>External media:</strong> The avatar image on the home page is loaded directly from <code>gravatar.com</code>; your IP address is transmitted to Automattic in the process.</li>
+        <li><strong>No analytics/marketing:</strong> No tracking, advertising or social-media scripts are active.</li>
+      </ul>
+      <button type="button" class="cookie-banner__details-toggle" (click)="toggleDetails()" [attr.aria-expanded]="showDetails()">
+        {{ showDetails() ? 'Hide details' : 'Show details' }}
+      </button>
+      <div class="cookie-banner__details" *ngIf="showDetails()">
+        <dl>
+          <dt>klara-consent</dt>
+          <dd>Purpose: Stores your current cookie settings. Category: technically necessary. Retention: 180 days. Content: flags for necessary/optional and a timestamp.</dd>
+          <dt>Gravatar</dt>
+          <dd>When you visit the home page, the avatar is loaded from <code>https://www.gravatar.com/</code>. The service sets no cookies for image delivery but does process your IP address.</dd>
+          <dt>API calls</dt>
+          <dd>All tools send requests directly to SimonAPI. No session or tracking cookies are currently returned.</dd>
+        </dl>
+        <button type="button" class="cookie-banner__reset" (click)="reset()">Reset settings</button>
+      </div>
+      <div class="cookie-banner__actions">
+        <button type="button" class="btn btn-outline-secondary" (click)="acceptEssential()">Necessary only</button>
+        <button type="button" class="btn btn-primary" (click)="acceptAll()">Accept all</button>
+      </div>
+    </div>
+  </div>
+</ng-container>
