@@ -1,8 +1,3 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
-
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
@@ -11,81 +6,64 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       whitelist: true,
-      forbidNonWhitelisted: false,
-    })
+      forbidNonWhitelisted: true,
+    }),
   );
-  app.enableCors();
-  app.set('trust proxy', 1); // Trust one proxy hop (nginx) — exposes real client IP in req.ip
 
-  // Security headers via Helmet.
-  // CSP is relaxed only for /api (Swagger UI) which loads scripts/styles from its own bundle.
-  // All other routes get a strict policy.
+  app.enableCors();
+  app.set('trust proxy', 1);
+
   app.use(
     helmet({
       contentSecurityPolicy: {
         directives: {
-          defaultSrc:     ["'self'"],
-          scriptSrc:      ["'self'", "'unsafe-inline'"],   // Swagger UI requires inline scripts
-          styleSrc:       ["'self'", "'unsafe-inline'"],   // Swagger UI requires inline styles
-          imgSrc:         ["'self'", 'data:', 'blob:'],    // Swagger UI logo + barcode previews
-          connectSrc:     ["'self'"],
-          fontSrc:        ["'self'"],
-          objectSrc:      ["'none'"],
-          frameSrc:       ["'none'"],
-          upgradeInsecureRequests: [],
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'blob:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          frameSrc: ["'none'"],
         },
       },
-      crossOriginEmbedderPolicy: false, // Swagger UI needs this off for its resources
-      xFrameOptions:        { action: 'deny' },
-      xContentTypeOptions:  true,
-      referrerPolicy:       { policy: 'strict-origin-when-cross-origin' },
+      crossOriginEmbedderPolicy: false,
+      xFrameOptions: { action: 'deny' },
+      xContentTypeOptions: true,
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
       hsts: {
-        maxAge:            31_536_000, // 1 year
+        maxAge: 31_536_000,
         includeSubDomains: true,
-        preload:           true,
+        preload: true,
       },
     }),
   );
 
-  // Swagger/OpenAPI
   const config = new DocumentBuilder()
-    .setTitle('Klara')
-    .setDescription('API for standard barcodes and GS1 rendering')
+    .setTitle('Klara API')
+    .setDescription('Lehrkraft-Dokumentationstool – REST API')
     .setVersion('1.0.0')
-    .addServer('https://hub.abler.tirol')
-    .addApiKey(
-      {
-        type: 'apiKey',
-        in: 'header',
-        name: 'x-api-key',
-        description:
-          'API key for authenticated access. ' +
-          'Free tier: no key needed (10 req/min). ' +
-          'Pro (sk_pro_…): 100 req/min · 10k/day. ' +
-          'Industrial (sk_ind_…): 1k req/min. ' +
-          'Request a key at simon@abler.tirol.',
-      },
-      'x-api-key',
-    )
+    .addBearerAuth()
     .build();
+
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document, {
-    useGlobalPrefix: false,
+  SwaggerModule.setup('api/docs', app, document, {
     swaggerOptions: { persistAuthorization: true },
-    customSiteTitle: 'Klara',
+    customSiteTitle: 'Klara API Docs',
   });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  Logger.log(`🚀 App running: http://localhost:${port}`);
-  Logger.log(`📚 Swagger UI: http://localhost:${port}/api`);
+  Logger.log(`🚀 Klara API: http://localhost:${port}/api`);
+  Logger.log(`📚 Swagger: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();

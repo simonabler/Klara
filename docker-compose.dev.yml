@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: klara-db-dev
+    env_file:
+      - ./conf/postgres/.env
+    volumes:
+      - klara-db-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d klara']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    ports:
+      - "5432:5432"
+    networks:
+      - klara-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.backend
+    container_name: klara-backend-dev
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    networks:
+      - klara-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.frontend
+    container_name: klara-frontend-dev
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - klara-network
+
+networks:
+  klara-network:
+    driver: bridge
+
+volumes:
+  klara-db-dev:
