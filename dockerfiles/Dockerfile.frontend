@@ -1,0 +1,43 @@
+# --- Build stage -----------------------------------------------------------
+FROM node:24 AS build
+
+WORKDIR /build/klara
+
+# Install dependencies first (leverages Docker layer cache)
+COPY   ./package*.json ./
+ENV DO_NOT_TRACK=1
+ENV SCARF_ANALYTICS=false
+RUN npm ci
+
+# Copy workspace and build the NestJS server
+COPY ./ ./
+RUN rm -R ./apps/klara-e2e
+RUN npx nx server klara
+
+
+# -------- Runtime (klein & sicher)
+FROM node:24-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=80
+ENV HOST=0.0.0.0
+# Optional hilfreich fürs Debugging von Stacks
+# ENV NODE_OPTIONS=--enable-source-maps
+
+# non-root user
+RUN addgroup -S nodegrp && adduser -S nodeuser -G nodegrp
+USER nodeuser
+
+# Dist & runtime deps übernehmen
+# Pfade für Nx/Angular SSR (Angular 17+): dist/apps/<app>/browser + /server/server.mjs
+ARG APP_NAME=klara
+COPY --from=build /build/klara/dist/apps/${APP_NAME}/browser ./dist/apps/klara/browser
+COPY --from=build /build/klara/dist/apps/${APP_NAME}/server ./dist/apps/klara/server
+# Prod node_modules (nur falls dein Server-Bundle externe deps benötigt)
+COPY --from=build /build/klara/node_modules ./node_modules
+# (Optional) package.json falls der Server sie liest
+COPY package.json ./
+
+EXPOSE 80
+# Start: server.mjs liefert SSR und static Assets aus ./dist/browser
+CMD ["node", "dist/apps/klara/server/main.js"]

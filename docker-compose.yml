@@ -1,0 +1,59 @@
+services:
+  frontend:
+    image: klara-frontend:latest
+    container_name: klara-frontend
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.klara-frontend.tls=true"
+      - "traefik.http.routers.klara-frontend.tls.certresolver=letsEncrypt"
+      - "traefik.http.routers.klara-frontend.entrypoints=websecure"
+      - "traefik.http.routers.klara-frontend.rule=Host(`hub.abler.tirol`) && PathPrefix(`/`)"
+      - "traefik.http.routers.klara-frontend.priority=10"
+      - "traefik.http.routers.klara-frontend.middlewares=klara-frontend-compress"
+      - "traefik.http.middlewares.klara-frontend-compress.compress=true"
+      # Interner Container-Port des Frontends (ggf. anpassen)
+      - "traefik.http.services.klara-frontend.loadbalancer.server.port=80"
+
+  backend:
+    image: klara-backend:latest
+    container_name: klara-backend
+    restart: unless-stopped
+    volumes:
+      - ./.env:/app/.env
+      - /home/simon/klara/data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.klara-backend.tls=true"
+      - "traefik.http.routers.klara-backend.tls.certresolver=letsEncrypt"
+      - "traefik.http.routers.klara-backend.entrypoints=websecure"
+      - "traefik.http.routers.klara-backend.rule=Host(`hub.abler.tirol`) && PathPrefix(`/api`)"
+      # Strippt das Prefix /api bevor es an den Service geht
+     # - "traefik.http.middlewares.klara-backend-strip.stripprefixregex.regex=/api"
+     # - "traefik.http.routers.klara-backend.middlewares=klara-backend-strip@docker"
+      - "traefik.http.routers.klara-backend.priority=100"
+      # Interner Container-Port des Backends (ggf. anpassen)
+      - "traefik.http.services.klara-backend.loadbalancer.server.port=3000"
+    depends_on:
+      - postgres
+    networks:
+      - postgresql
+
+  postgres:
+    image: postgres:17.5-alpine
+    env_file:
+      - ./conf/postgres/.env
+    volumes:
+      - ../postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d klara']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - postgresql
+
+networks:
+  postgresql:
+    name: NET_POSTGRESQL

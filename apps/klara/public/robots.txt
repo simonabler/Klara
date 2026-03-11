@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Admin and internal routes — no indexing needed
+Disallow: /admin/
+Disallow: /_usage
+Disallow: /_admin/
+
+Sitemap: https://hub.abler.tirol/sitemap.xml
