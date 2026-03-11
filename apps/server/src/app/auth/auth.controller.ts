@@ -49,7 +49,7 @@ export class AuthController {
     };
 
     const token = this.jwtService.sign(payload);
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost';
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:4200';
 
     // Token als HttpOnly-Cookie setzen und zum Frontend weiterleiten
     res.cookie('klara_token', token, {
