@@ -16,6 +16,7 @@ export const appRoutes: Route[] = [
       { path: '', component: HomeComponent, title: 'Klara' },
       { path: 'students', loadComponent: () => import('./features/students/list/student-list.component').then(m => m.StudentListComponent), title: 'Schüler – Klara' },
       { path: 'students/new', loadComponent: () => import('./features/students/form/student-form.component').then(m => m.StudentFormComponent), title: 'Neuer Schüler – Klara' },
+      { path: 'students/import', loadComponent: () => import('./features/students/import/student-import.component').then(m => m.StudentImportComponent), title: 'Schüler importieren – Klara' },
       { path: 'students/:id', loadComponent: () => import('./features/students/detail/student-detail.component').then(m => m.StudentDetailComponent), title: 'Schülerprofil – Klara' },
       { path: 'students/:id/edit', loadComponent: () => import('./features/students/form/student-form.component').then(m => m.StudentFormComponent), title: 'Schüler bearbeiten – Klara' },
       { path: 'classes', loadComponent: () => import('./features/classes/list/class-list.component').then(m => m.ClassListComponent), title: 'Klassen – Klara' },

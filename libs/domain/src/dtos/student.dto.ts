@@ -68,3 +68,25 @@ export class UpdateStudentDto {
   @Type(() => CreateParentDto)
   parents?: CreateParentDto[];
 }
+
+// ---------- Bulk Import ----------
+
+export class ImportStudentRowDto {
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
+  parent1FirstName?: string;
+  parent1LastName?: string;
+  parent1Email?: string;
+  parent1Phone?: string;
+}
+
+export class BulkImportStudentsDto {
+  rows!: ImportStudentRowDto[];
+}
+
+export class ImportResultDto {
+  imported!: number;
+  skipped!: number;
+  errors!: { row: number; reason: string }[];
+}

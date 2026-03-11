@@ -23,7 +23,7 @@ import {
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { StudentService } from './student.service';
-import { CreateStudentDto, UpdateStudentDto } from '@app/domain';
+import { CreateStudentDto, UpdateStudentDto, BulkImportStudentsDto } from '@app/domain';
 import { avatarUploadOptions } from './avatar-upload.config';
 
 @ApiTags('students')
@@ -59,6 +59,12 @@ export class StudentController {
     @Req() req: Request,
   ) {
     return this.studentService.update(id, dto, (req.user as any).id);
+  }
+
+  @Post('import')
+  @ApiOperation({ summary: 'Schüler per CSV-Daten importieren (Bulk)' })
+  bulkImport(@Body() dto: BulkImportStudentsDto, @Req() req: Request) {
+    return this.studentService.bulkImport(dto.rows, (req.user as any).id);
   }
 
   @Post(':id/avatar')

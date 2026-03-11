@@ -6,7 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Student } from './student.entity';
 import { Parent } from '../parent/parent.entity';
-import { CreateStudentDto, UpdateStudentDto } from '@app/domain';
+import { CreateStudentDto, ImportStudentRowDto, ImportResultDto, UpdateStudentDto } from '@app/domain';
 
 @Injectable()
 export class StudentService {
@@ -89,6 +89,54 @@ export class StudentService {
     student.avatarUrl = avatarUrl;
     await this.studentRepo.save(student);
     return student;
+  }
+
+  async bulkImport(rows: ImportStudentRowDto[], teacherId: string): Promise<ImportResultDto> {
+    const result: ImportResultDto = { imported: 0, skipped: 0, errors: [] };
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rowNum = i + 1;
+
+      const firstName = row.firstName?.trim();
+      const lastName = row.lastName?.trim();
+
+      if (!firstName || !lastName) {
+        result.skipped++;
+        result.errors.push({ row: rowNum, reason: 'Vor- und Nachname sind Pflichtfelder' });
+        continue;
+      }
+
+      try {
+        const student = this.studentRepo.create({
+          firstName,
+          lastName,
+          dateOfBirth: row.dateOfBirth ? new Date(row.dateOfBirth) : undefined,
+          teacherId,
+        });
+        const saved = await this.studentRepo.save(student);
+
+        const p1First = row.parent1FirstName?.trim();
+        const p1Last = row.parent1LastName?.trim();
+        if (p1First && p1Last) {
+          const parent = this.parentRepo.create({
+            firstName: p1First,
+            lastName: p1Last,
+            email: row.parent1Email?.trim() || undefined,
+            phone: row.parent1Phone?.trim() || undefined,
+            studentId: saved.id,
+          });
+          await this.parentRepo.save(parent);
+        }
+
+        result.imported++;
+      } catch (e) {
+        result.skipped++;
+        result.errors.push({ row: rowNum, reason: 'Datenbankfehler beim Speichern' });
+      }
+    }
+
+    return result;
   }
 
   async remove(id: string, teacherId: string): Promise<void> {
