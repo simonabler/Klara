@@ -24,7 +24,6 @@ import { SeedModule } from './seed/seed.module';
       expandVariables: true,
       envFilePath: [
         `.env.${process.env.NODE_ENV ?? ''}`.replace(/\.$/, ''),
-        '.env.local',
         '.env',
       ],
       load: [appConfig],
