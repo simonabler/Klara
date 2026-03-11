@@ -9,6 +9,11 @@ import {
 import { Type } from 'class-transformer';
 import { CreateParentDto, ParentDto } from './parent.dto';
 
+export class ClassRefDto {
+  id!: string;
+  name!: string;
+}
+
 export class StudentDto {
   id!: string;
   firstName!: string;
@@ -17,6 +22,7 @@ export class StudentDto {
   avatarUrl?: string;
   teacherId!: string;
   parents!: ParentDto[];
+  classes!: ClassRefDto[];
   createdAt!: string;
   updatedAt!: string;
 }
