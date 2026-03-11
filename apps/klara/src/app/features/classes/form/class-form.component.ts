@@ -145,11 +145,19 @@ export class ClassFormComponent implements OnInit {
 
   filteredStudents = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
-    if (!q) return this.allStudents();
-    return this.allStudents().filter(s =>
-      (s.firstName + ' ' + s.lastName).toLowerCase().includes(q) ||
-      (s.lastName + ' ' + s.firstName).toLowerCase().includes(q)
-    );
+    const selected = this.selectedStudentIds();
+    const list = q
+      ? this.allStudents().filter(s =>
+          (s.firstName + ' ' + s.lastName).toLowerCase().includes(q) ||
+          (s.lastName + ' ' + s.firstName).toLowerCase().includes(q)
+        )
+      : this.allStudents();
+    // Ausgewählte Schüler immer oben
+    return [...list].sort((a, b) => {
+      const aSelected = selected.has(a.id) ? 0 : 1;
+      const bSelected = selected.has(b.id) ? 0 : 1;
+      return aSelected - bSelected;
+    });
   });
 
   form = this.fb.group({

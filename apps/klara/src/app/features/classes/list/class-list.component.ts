@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ClassService } from '../class.service';
-import { ClassDto } from '@app/domain';
+import { ClassDto, SchoolLevelDto } from '@app/domain';
 
 @Component({
   selector: 'app-class-list',
@@ -29,9 +29,9 @@ import { ClassDto } from '@app/domain';
                 <div class="class-name">{{ cls.name }}</div>
                 <div class="class-meta">
                   @if (cls.schoolLevel) {
-                    <span class="badge">{{ cls.schoolLevel.name }}{{ cls.schoolLevel.year ? ' · ' + cls.schoolLevel.year : '' }}</span>
+                    <span class="badge">{{ schoolLevelLabel(cls.schoolLevel) }}</span>
                   }
-                  <span class="student-count">{{ cls.studentCount }} {{ cls.studentCount === 1 ? 'Schüler' : 'Schüler' }}</span>
+                  <span class="student-count">{{ studentCount(cls) }} Schüler</span>
                 </div>
               </a>
             </li>
@@ -60,17 +60,25 @@ import { ClassDto } from '@app/domain';
 })
 export class ClassListComponent implements OnInit {
   private readonly classService = inject(ClassService);
-  classes = signal<ClassDto[]>([]);
+  classes = signal<any[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
 
   ngOnInit(): void {
     this.classService.getAll().subscribe({
-      next: (data) => {
-        this.classes.set(data.map(c => ({ ...c, studentCount: c.studentIds?.length ?? 0 })));
-        this.loading.set(false);
-      },
+      next: (data) => { this.classes.set(data); this.loading.set(false); },
       error: () => { this.error.set('Klassen konnten nicht geladen werden.'); this.loading.set(false); },
     });
+  }
+
+  // Backend gibt students[] (Objekte) zurück, kein studentIds[]
+  studentCount(cls: any): number {
+    return cls.students?.length ?? 0;
+  }
+
+  // Zeige name und year nur wenn sie sich unterscheiden
+  schoolLevelLabel(level: SchoolLevelDto): string {
+    if (!level.year || level.year === level.name) return level.name;
+    return `${level.name} · ${level.year}`;
   }
 }
