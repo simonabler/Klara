@@ -7,6 +7,14 @@ import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import { AuthModule } from './auth/auth.module';
 import { TeacherModule } from './teacher/teacher.module';
+import { StudentModule } from './student/student.module';
+import { ParentModule } from './parent/parent.module';
+import { ClassModule } from './class/class.module';
+import { SubjectModule } from './subject/subject.module';
+import { SchoolLevelModule } from './school-level/school-level.module';
+import { NoteModule } from './note/note.module';
+import { AssessmentModule } from './assessment/assessment.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -64,9 +72,14 @@ import { TeacherModule } from './teacher/teacher.module';
 
     AuthModule,
     TeacherModule,
-
-    // Weitere Feature-Module ab Issue 3:
-    // StudentModule, ClassModule, SubjectModule, ...
+    StudentModule,
+    ParentModule,
+    ClassModule,
+    SubjectModule,
+    SchoolLevelModule,
+    NoteModule,
+    AssessmentModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
