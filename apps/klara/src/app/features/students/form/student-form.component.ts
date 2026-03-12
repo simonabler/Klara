@@ -191,6 +191,14 @@ import { StudentDto } from '@app/domain';
       border: 1.5px solid var(--border);
     }
     .btn-secondary:hover { border-color: var(--navy); color: var(--ink); }
+
+    @media (max-width: 768px) {
+      .page { padding: var(--sp-4) var(--sp-3); }
+      h1 { font-size: 22px; }
+      .parent-fields { grid-template-columns: 1fr !important; }
+      .form-actions { flex-direction: column-reverse; gap: var(--sp-2); }
+      .form-actions .btn-primary, .form-actions .btn-secondary { width: 100%; justify-content: center; }
+    }
   `],
 })
 export class StudentFormComponent implements OnInit {

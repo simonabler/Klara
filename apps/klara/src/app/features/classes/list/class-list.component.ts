@@ -91,6 +91,13 @@ import { ClassDto } from '@app/domain';
     .chip-teal { background: var(--light-teal); color: var(--navy); }
     .student-count { font-size: 13px; color: var(--ink-faint); }
     .chevron { color: var(--border); }
+
+    @media (max-width: 768px) {
+      .page { padding: var(--sp-4) var(--sp-3); }
+      .page-header { flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
+      h1 { font-size: 22px; }
+      .class-row { padding: var(--sp-3); }
+    }
   `],
 })
 export class ClassListComponent implements OnInit {

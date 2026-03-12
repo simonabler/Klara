@@ -308,6 +308,18 @@ interface ResultRow {
     .btn-ghost:hover { border-color: var(--navy); }
     .btn-danger-ghost { background: transparent; color: var(--ink-faint); border: 1.5px solid var(--border); }
     .btn-danger-ghost:hover { border-color: var(--error-fg); color: var(--error-fg); }
+
+    @media (max-width: 768px) {
+      .page { padding: var(--sp-4) var(--sp-3); }
+      .event-header { flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
+      h1 { font-size: 20px; }
+      .header-actions { width: 100%; display: flex; gap: var(--sp-2); }
+      .two-col { grid-template-columns: 1fr; }
+      .results-table th:nth-child(4),
+      .results-table td:nth-child(4) { display: none; }
+      .result-inputs { flex-wrap: wrap; gap: var(--sp-2); }
+      .picker-header { flex-wrap: wrap; gap: var(--sp-2); }
+    }
   `],
 })
 export class AssessmentDetailComponent implements OnInit {

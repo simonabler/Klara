@@ -130,6 +130,14 @@ import { StudentDto } from '@app/domain';
 
     .student-name { font-size: 14px; font-weight: 500; color: var(--navy); display: block; }
     .student-meta { font-size: 12px; color: var(--ink-faint); }
+
+    @media (max-width: 768px) {
+      .page { padding: var(--sp-4) var(--sp-3); }
+      .page-header { flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
+      .page-header h1 { font-size: 22px; }
+      .header-actions { width: 100%; justify-content: flex-end; }
+      .student-row { padding: var(--sp-3); gap: var(--sp-3); }
+    }
   `],
 })
 export class StudentListComponent implements OnInit {

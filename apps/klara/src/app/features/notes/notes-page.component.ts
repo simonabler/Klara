@@ -228,6 +228,16 @@ interface StudentNoteEntry {
     }
     .save-btn:hover:not(:disabled) { background: #243350; }
     .save-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    @media (max-width: 768px) {
+      .page { padding: var(--sp-4) var(--sp-3); }
+      h1 { font-size: 22px; }
+      .context-bar { flex-direction: column; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+      .context-field, .context-field--type { min-width: 0; flex: unset; width: 100%; }
+      .type-tabs .type-tab { padding: 6px 8px; font-size: 12px; }
+      .student-entry { border-radius: var(--r-md); }
+      .student-row { padding: var(--sp-2) var(--sp-3); }
+    }
   `],
 })
 export class NotesPageComponent implements OnInit {
