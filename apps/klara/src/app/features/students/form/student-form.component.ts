@@ -20,7 +20,7 @@ import { StudentDto } from '@app/domain';
 
         <!-- Avatar Upload -->
         <section class="form-section">
-          <h2>Profilbild</h2>
+          <div class="section-label">Profilbild</div>
           <div class="avatar-upload">
             <div class="avatar-preview">
               @if (avatarPreview()) {
@@ -29,7 +29,7 @@ import { StudentDto } from '@app/domain';
                 <span class="avatar-placeholder">Kein Bild</span>
               }
             </div>
-            <label class="btn-secondary file-label">
+            <label class="file-label">
               Bild auswählen
               <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onFileSelected($event)" hidden />
             </label>
@@ -38,7 +38,7 @@ import { StudentDto } from '@app/domain';
 
         <!-- Stammdaten -->
         <section class="form-section">
-          <h2>Stammdaten</h2>
+          <div class="section-label">Stammdaten</div>
           <div class="field">
             <label>Vorname *</label>
             <input type="text" formControlName="firstName" [class.invalid]="isInvalid('firstName')" />
@@ -57,7 +57,7 @@ import { StudentDto } from '@app/domain';
 
         <!-- Eltern -->
         <section class="form-section">
-          <h2>Erziehungsberechtigte</h2>
+          <div class="section-label">Erziehungsberechtigte</div>
           <div formArrayName="parents">
             @for (parent of parentsArray.controls; track $index) {
               <div class="parent-row" [formGroupName]="$index">
@@ -91,8 +91,8 @@ import { StudentDto } from '@app/domain';
         }
 
         <div class="form-actions">
-          <a class="btn-secondary" [routerLink]="isEdit() ? ['/students', studentId()] : '/students'">Abbrechen</a>
-          <button type="submit" class="btn-primary" [disabled]="saving()">
+          <a class="btn btn-secondary" [routerLink]="isEdit() ? ['/students', studentId()] : '/students'">Abbrechen</a>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
             {{ saving() ? 'Wird gespeichert…' : (isEdit() ? 'Speichern' : 'Anlegen') }}
           </button>
         </div>
@@ -100,36 +100,97 @@ import { StudentDto } from '@app/domain';
     </div>
   `,
   styles: [`
-    .page { max-width: 600px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-header { margin-bottom: 2rem; }
-    .page-header h1 { font-size: 1.4rem; font-weight: 600; margin: 0.5rem 0 0; }
-    .back-link { color: #888; text-decoration: none; font-size: 0.875rem; }
-    .back-link:hover { color: #333; }
-    .form-section { margin-bottom: 2rem; }
-    .form-section h2 { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #999; margin: 0 0 1rem; }
-    .field { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem; }
-    label { font-size: 0.85rem; color: #555; }
-    input { padding: 0.5rem 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.15s; width: 100%; box-sizing: border-box; }
-    input:focus { border-color: #1a1a1a; }
-    input.invalid { border-color: #c0392b; }
-    .field-error { font-size: 0.8rem; color: #c0392b; }
-    .avatar-upload { display: flex; align-items: center; gap: 1rem; }
-    .avatar-preview { width: 64px; height: 64px; border-radius: 50%; background: #f0f0ee; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .page { max-width: 600px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); }
+
+    .page-header { margin-bottom: var(--sp-6); }
+    .page-header h1 {
+      font-family: var(--font-display);
+      font-size: 26px; font-weight: 400; color: var(--navy);
+      margin: var(--sp-2) 0 0;
+    }
+    .back-link { color: var(--ink-faint); font-size: 13px; transition: color .15s; }
+    .back-link:hover { color: var(--ink); }
+
+    .form-section { margin-bottom: var(--sp-6); }
+    .section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--ink-faint);
+      margin-bottom: var(--sp-4);
+      display: flex; align-items: center; gap: var(--sp-3);
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .field { margin-bottom: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
+    label { font-size: 13px; font-weight: 500; color: var(--ink-light); }
+    input.invalid { border-color: var(--error-fg) !important; }
+    .field-error { font-size: 12px; color: var(--error-fg); }
+
+    /* Avatar */
+    .avatar-upload { display: flex; align-items: center; gap: var(--sp-4); }
+    .avatar-preview {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--light-teal); overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
     .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .avatar-placeholder { font-size: 0.7rem; color: #aaa; text-align: center; }
-    .file-label { cursor: pointer; }
-    .parent-row { border: 1px solid #eee; border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem; }
-    .parent-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
-    .btn-remove { margin-top: 0.5rem; background: none; border: none; color: #c0392b; font-size: 0.82rem; cursor: pointer; padding: 0; }
-    .btn-add { background: none; border: 1px dashed #ccc; border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.875rem; color: #666; cursor: pointer; width: 100%; }
-    .btn-add:hover { background: #f9f9f9; }
-    .form-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 2rem; }
-    .btn-primary { background: #1a1a1a; color: white; padding: 0.6rem 1.25rem; border-radius: 8px; border: none; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary:hover:not(:disabled) { background: #333; }
-    .btn-secondary { border: 1px solid #ddd; background: white; padding: 0.6rem 1.25rem; border-radius: 8px; text-decoration: none; font-size: 0.875rem; color: #333; display: inline-block; }
-    .btn-secondary:hover { background: #f5f5f5; }
-    .server-error { color: #c0392b; font-size: 0.875rem; margin-bottom: 1rem; }
+    .avatar-placeholder { font-size: 11px; color: var(--ink-faint); text-align: center; }
+    .file-label {
+      display: inline-flex; align-items: center;
+      padding: 8px 14px; border: 1.5px solid var(--border);
+      border-radius: var(--r-sm); background: var(--white);
+      font-family: var(--font-body); font-size: 13px; font-weight: 500;
+      color: var(--ink-light); cursor: pointer; transition: all .15s;
+    }
+    .file-label:hover { border-color: var(--teal); color: var(--ink); }
+
+    /* Parents */
+    .parent-row {
+      border: 1px solid var(--border); border-radius: var(--r-md);
+      padding: var(--sp-4); margin-bottom: var(--sp-3);
+      background: var(--surface);
+    }
+    .parent-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--sp-4); }
+    .btn-remove {
+      background: none; border: none; color: var(--ink-faint);
+      font-size: 12px; cursor: pointer; padding: var(--sp-2) 0 0;
+      font-family: var(--font-body); transition: color .15s;
+    }
+    .btn-remove:hover { color: var(--error-fg); }
+    .btn-add {
+      background: none; border: 1.5px dashed var(--border);
+      border-radius: var(--r-sm); padding: var(--sp-3) var(--sp-4);
+      font-family: var(--font-body); font-size: 13px; color: var(--ink-faint);
+      cursor: pointer; width: 100%; transition: all .15s;
+    }
+    .btn-add:hover { border-color: var(--teal); color: var(--ink-light); background: var(--surface); }
+
+    .server-error {
+      color: var(--error-fg); font-size: 13px;
+      background: var(--error-bg); border: 1px solid #f5c0b8;
+      border-radius: var(--r-sm); padding: var(--sp-3) var(--sp-4);
+      margin-bottom: var(--sp-4);
+    }
+
+    .form-actions {
+      display: flex; justify-content: flex-end; gap: var(--sp-3);
+      margin-top: var(--sp-6); padding-top: var(--sp-5);
+      border-top: 1px solid var(--border);
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: var(--r-sm);
+      font-family: var(--font-body); font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; transition: all .15s; text-decoration: none;
+    }
+    .btn-primary { background: var(--navy); color: var(--white); }
+    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary:hover:not(:disabled) { background: #243350; box-shadow: var(--sh-md); }
+    .btn-secondary {
+      background: transparent; color: var(--ink-light);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--navy); color: var(--ink); }
   `],
 })
 export class StudentFormComponent implements OnInit {

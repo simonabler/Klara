@@ -17,7 +17,7 @@ import { StudentDto } from '@app/domain';
       } @else if (student()) {
         <header class="page-header">
           <a class="back-link" routerLink="/students">← Schüler</a>
-          <a class="btn-secondary" [routerLink]="['/students', student()!.id, 'edit']">Bearbeiten</a>
+          <a class="btn-edit" [routerLink]="['/students', student()!.id, 'edit']">Bearbeiten</a>
         </header>
 
         <div class="profile">
@@ -38,7 +38,7 @@ import { StudentDto } from '@app/domain';
         </div>
 
         <section class="info-section">
-          <h2>Stammdaten</h2>
+          <div class="section-label">Stammdaten</div>
           <dl class="info-grid">
             <dt>Vorname</dt><dd>{{ student()!.firstName }}</dd>
             <dt>Nachname</dt><dd>{{ student()!.lastName }}</dd>
@@ -51,7 +51,7 @@ import { StudentDto } from '@app/domain';
 
         @if (student()!.parents?.length) {
           <section class="info-section">
-            <h2>Erziehungsberechtigte</h2>
+            <div class="section-label">Erziehungsberechtigte</div>
             @for (parent of student()!.parents; track parent.id) {
               <div class="parent-card">
                 <span class="parent-name">{{ parent.firstName }} {{ parent.lastName }}</span>
@@ -65,28 +65,76 @@ import { StudentDto } from '@app/domain';
     </div>
   `,
   styles: [`
-    .page { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-    .back-link { color: #666; text-decoration: none; font-size: 0.9rem; }
-    .back-link:hover { color: #333; }
-    .btn-secondary { border: 1px solid #ddd; background: white; padding: 0.4rem 0.9rem; border-radius: 8px; text-decoration: none; font-size: 0.875rem; color: #333; }
-    .btn-secondary:hover { background: #f5f5f5; }
-    .profile { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2.5rem; }
-    .avatar-large { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: #f0f0ee; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .page { max-width: 640px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); }
+
+    .page-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: var(--sp-6);
+    }
+    .back-link { color: var(--ink-faint); font-size: 13px; transition: color .15s; }
+    .back-link:hover { color: var(--ink); }
+    .btn-edit {
+      padding: 7px 14px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+      background: var(--white); font-family: var(--font-body); font-size: 13px;
+      font-weight: 500; color: var(--ink); text-decoration: none; transition: all .15s;
+    }
+    .btn-edit:hover { border-color: var(--navy); color: var(--navy); }
+
+    /* Profile header */
+    .profile {
+      display: flex; align-items: center; gap: var(--sp-5);
+      margin-bottom: var(--sp-6);
+      padding-bottom: var(--sp-6);
+      border-bottom: 1px solid var(--border);
+    }
+    .avatar-large {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--navy); color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; overflow: hidden;
+    }
     .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
-    .avatar-initials { font-size: 1.5rem; font-weight: 600; color: #666; }
-    .profile-main h1 { font-size: 1.4rem; font-weight: 600; margin: 0 0 0.4rem; }
-    .badge { background: #f0f0ee; color: #555; font-size: 0.8rem; padding: 0.2rem 0.6rem; border-radius: 20px; }
-    .info-section { margin-bottom: 2rem; }
-    .info-section h2 { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #999; margin: 0 0 0.75rem; }
-    .info-grid { display: grid; grid-template-columns: 140px 1fr; gap: 0.5rem 1rem; margin: 0; }
-    dt { color: #888; font-size: 0.875rem; }
-    dd { margin: 0; font-size: 0.875rem; }
-    .parent-card { padding: 0.75rem 1rem; border: 1px solid #eee; border-radius: 8px; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; }
-    .parent-name { font-weight: 500; font-size: 0.9rem; }
-    .parent-contact { font-size: 0.82rem; color: #888; }
-    .state-msg { color: #888; }
-    .error { color: #c0392b; }
+    .avatar-initials { font-size: 22px; font-weight: 600; }
+    .profile-main h1 {
+      font-family: var(--font-display);
+      font-size: 24px; font-weight: 400;
+      color: var(--navy); margin: 0 0 var(--sp-2);
+    }
+    .badge {
+      display: inline-flex; align-items: center;
+      background: var(--light-teal); color: var(--navy);
+      font-size: 12px; font-weight: 500;
+      padding: 3px 10px; border-radius: 20px;
+    }
+
+    /* Info sections */
+    .info-section { margin-bottom: var(--sp-6); }
+    .section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--ink-faint);
+      margin-bottom: var(--sp-3);
+      display: flex; align-items: center; gap: var(--sp-3);
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .info-grid { display: grid; grid-template-columns: 140px 1fr; gap: var(--sp-2) var(--sp-4); margin: 0; }
+    dt { color: var(--ink-faint); font-size: 13px; padding-top: 1px; }
+    dd { margin: 0; font-size: 14px; color: var(--ink); }
+
+    .parent-card {
+      padding: var(--sp-3) var(--sp-4);
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      margin-bottom: var(--sp-2);
+      display: flex; flex-direction: column; gap: 3px;
+      box-shadow: var(--sh-sm);
+    }
+    .parent-name { font-weight: 500; font-size: 14px; color: var(--ink); }
+    .parent-contact { font-size: 12px; color: var(--ink-faint); }
+
+    .state-msg { color: var(--ink-faint); font-size: 14px; }
+    .error { color: var(--error-fg); }
   `],
 })
 export class StudentDetailComponent implements OnInit {
