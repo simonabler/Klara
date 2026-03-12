@@ -3,6 +3,9 @@ services:
     image: klara-frontend:latest
     container_name: klara-frontend
     restart: unless-stopped
+    environment:
+      # Absoluter Backend-URL fuer SSR HTTP-Calls (Node-seitig, kein Browser-Proxy verfuegbar)
+      BACKEND_URL: http://backend:3000
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.klara-frontend.tls=true"
