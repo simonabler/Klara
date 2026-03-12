@@ -4,8 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StudentService } from '../student.service';
 import { NoteService } from '../../notes/note.service';
+import { AssessmentService } from '../../assessments/assessment.service';
 import { SubjectService } from '../../classes/reference-data.service';
-import { StudentDto, NoteDto, CreateNoteDto, UpdateNoteDto, SubjectDto } from '@app/domain';
+import { StudentDto, NoteDto, CreateNoteDto, UpdateNoteDto, SubjectDto, StudentResultDto } from '@app/domain';
 import { NoteType } from '@app/domain';
 
 interface SubjectGroup {
@@ -25,7 +26,8 @@ export class StudentDetailComponent implements OnInit {
   private readonly route          = inject(ActivatedRoute);
   private readonly studentService = inject(StudentService);
   private readonly noteService    = inject(NoteService);
-  private readonly subjectService = inject(SubjectService);
+  private readonly subjectService    = inject(SubjectService);
+  private readonly assessmentService = inject(AssessmentService);
 
   student      = signal<StudentDto | null>(null);
   loading      = signal(true);
@@ -34,6 +36,10 @@ export class StudentDetailComponent implements OnInit {
   notes        = signal<NoteDto[]>([]);
   notesLoading = signal(false);
   saving       = signal(false);
+
+  /** Leistungsergebnisse dieses Schülers */
+  results        = signal<StudentResultDto[]>([]);
+  resultsLoading = signal(false);
 
   /** Alle Fächer der Lehrkraft – aus der API geladen */
   subjects     = signal<SubjectDto[]>([]);
@@ -107,6 +113,21 @@ export class StudentDetailComponent implements OnInit {
       next:  (data) => { this.notes.set(data); this.notesLoading.set(false); },
       error: ()     => { this.notesLoading.set(false); },
     });
+  }
+
+  loadResults(): void {
+    const studentId = this.student()?.id;
+    if (!studentId) return;
+    this.resultsLoading.set(true);
+    this.assessmentService.getResultsForStudent(studentId).subscribe({
+      next:  (data) => { this.results.set(data); this.resultsLoading.set(false); },
+      error: ()     => { this.resultsLoading.set(false); },
+    });
+  }
+
+  gradeLabel(grade: number | undefined): string {
+    const labels: Record<number, string> = { 1: 'Sehr gut', 2: 'Gut', 3: 'Befriedigend', 4: 'Genügend', 5: 'Nicht genügend' };
+    return grade != null ? labels[grade] ?? String(grade) : '—';
   }
 
   toggleNewNoteForm(): void {
