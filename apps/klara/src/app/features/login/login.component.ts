@@ -9,7 +9,17 @@ import { AuthService } from '../../auth/auth.service';
   template: `
     <main class="login-page">
       <div class="login-card">
-        <h1>Klara</h1>
+
+        <!-- Logo -->
+        <div class="logo-group">
+          <svg width="36" height="36" viewBox="0 0 44 44" fill="none">
+            <rect x="2" y="2" width="22" height="28" rx="5" fill="#2E3F5C"/>
+            <rect x="16" y="8" width="18" height="18" rx="4" fill="#7BAABA"/>
+            <rect x="22" y="24" width="12" height="12" rx="3" fill="#D4B896" opacity=".9"/>
+          </svg>
+          <span class="logo-name">klara</span>
+        </div>
+
         <p class="tagline">Dokumentationstool für Lehrkräfte</p>
 
         <button class="google-btn" (click)="login()">
@@ -24,11 +34,10 @@ import { AuthService } from '../../auth/auth.service';
 
         @if (isDev()) {
           <div class="divider"><span>oder</span></div>
-          <button class="demo-btn" (click)="demoLogin()">
-            Demo-Zugang verwenden
-          </button>
+          <button class="demo-btn" (click)="demoLogin()">Demo-Zugang verwenden</button>
           <p class="demo-hint">Kein Google-Konto erforderlich</p>
         }
+
       </div>
     </main>
   `,
@@ -38,98 +47,107 @@ import { AuthService } from '../../auth/auth.service';
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: #f8f8f6;
+      background: var(--off-white);
     }
     .login-card {
-      background: white;
-      border-radius: 12px;
-      padding: 3rem 2.5rem;
+      background: var(--white);
+      border-radius: var(--r-lg);
+      padding: var(--sp-7) var(--sp-6);
       text-align: center;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      box-shadow: var(--sh-md);
       max-width: 360px;
       width: 100%;
     }
-    h1 {
-      font-size: 2rem;
-      font-weight: 600;
-      margin: 0 0 0.5rem;
+
+    /* Logo */
+    .logo-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-2);
+    }
+    .logo-name {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 28px;
+      color: var(--navy);
       letter-spacing: -0.5px;
     }
     .tagline {
-      color: #888;
-      font-size: 0.95rem;
-      margin: 0 0 2rem;
+      color: var(--ink-faint);
+      font-size: 13px;
+      margin: 0 0 var(--sp-6);
     }
+
+    /* Google Button */
     .google-btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem 1.5rem;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: white;
-      font-size: 0.95rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s, box-shadow 0.15s;
-      color: #333;
-      width: 100%;
       justify-content: center;
+      gap: var(--sp-3);
+      width: 100%;
+      padding: 11px var(--sp-5);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-sm);
+      background: var(--white);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
     }
     .google-btn:hover {
-      background: #f5f5f5;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-color: var(--teal);
+      box-shadow: var(--sh-sm);
     }
+
+    /* Divider */
     .divider {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      margin: 1.25rem 0;
-      color: #ccc;
-      font-size: 0.8rem;
+      gap: var(--sp-3);
+      margin: var(--sp-5) 0;
+      color: var(--border);
     }
     .divider::before, .divider::after {
       content: '';
       flex: 1;
       height: 1px;
-      background: #eee;
+      background: var(--border);
     }
-    .divider span { color: #bbb; }
+    .divider span { color: var(--ink-faint); font-size: 12px; }
+
+    /* Demo Button */
     .demo-btn {
       width: 100%;
-      padding: 0.7rem 1.5rem;
-      border: 1.5px dashed #ccc;
-      border-radius: 8px;
-      background: white;
-      font-size: 0.9rem;
-      color: #666;
+      padding: 10px var(--sp-5);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--r-sm);
+      background: transparent;
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--ink-light);
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
+      transition: border-color .15s, color .15s;
     }
     .demo-btn:hover {
-      background: #f9f9f9;
-      border-color: #aaa;
-      color: #333;
+      border-color: var(--teal);
+      color: var(--ink);
     }
     .demo-hint {
-      margin: 0.5rem 0 0;
-      font-size: 0.78rem;
-      color: #bbb;
+      margin: var(--sp-2) 0 0;
+      font-size: 11px;
+      color: var(--ink-faint);
     }
   `],
 })
 export class LoginComponent {
   private readonly authService = inject(AuthService);
-
   isDev(): boolean {
     return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   }
-
-  login(): void {
-    this.authService.loginWithGoogle();
-  }
-
-  demoLogin(): void {
-    window.location.href = '/api/auth/demo';
-  }
+  login(): void { this.authService.loginWithGoogle(); }
+  demoLogin(): void { window.location.href = '/api/auth/demo'; }
 }

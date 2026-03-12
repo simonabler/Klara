@@ -16,8 +16,9 @@ import { AuthService } from '../../auth/auth.service';
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      color: #888;
-      font-size: 0.95rem;
+      color: var(--ink-faint);
+      font-size: 14px;
+      background: var(--off-white);
     }
   `],
 })

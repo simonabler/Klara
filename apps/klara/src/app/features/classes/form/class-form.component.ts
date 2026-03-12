@@ -87,43 +87,75 @@ import { StudentDto, SchoolLevelDto } from '@app/domain';
     </div>
   `,
   styles: [`
-    .page { max-width: 600px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .page-header { margin-bottom: 2rem; }
-    .page-header h1 { font-size: 1.4rem; font-weight: 600; margin: 0.5rem 0 0; }
-    .back-link { color: #aaa; text-decoration: none; font-size: 0.875rem; }
-    .back-link:hover { color: #333; }
-    .form-section { margin-bottom: 2rem; }
-    .form-section h2 { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #aaa; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
-    .count-badge { font-size: 0.7rem; background: #1a1a1a; color: white; padding: 0.1rem 0.5rem; border-radius: 20px; font-weight: 500; text-transform: none; letter-spacing: 0; }
-    .field { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem; }
-    label { font-size: 0.85rem; color: #555; }
-    input[type=text], select { padding: 0.5rem 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.15s; width: 100%; box-sizing: border-box; background: white; }
-    input[type=text]:focus, select:focus { border-color: #1a1a1a; }
-    input.invalid { border-color: #c0392b; }
-    .field-error { font-size: 0.8rem; color: #c0392b; }
-    .field-link { font-size: 0.78rem; color: #aaa; text-decoration: none; margin-top: 0.15rem; }
-    .field-link:hover { color: #555; }
-    .search-wrap { margin-bottom: 0.75rem; }
-    .search-input { width: 100%; box-sizing: border-box; padding: 0.45rem 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.875rem; outline: none; background: white; }
-    .search-input:focus { border-color: #1a1a1a; }
-    .student-grid { display: flex; flex-direction: column; gap: 0.35rem; }
-    .student-chip { display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 0.75rem; border: 1.5px solid #eee; border-radius: 8px; cursor: pointer; transition: border-color 0.12s, background 0.12s; user-select: none; }
-    .student-chip:hover { border-color: #ccc; background: #fafafa; }
-    .student-chip.selected { border-color: #1a1a1a; background: #f8f8f6; }
-    .chip-avatar { width: 30px; height: 30px; border-radius: 50%; background: #eee; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.72rem; font-weight: 600; color: #777; }
+    .page { max-width: 600px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); }
+    .page-header { margin-bottom: var(--sp-6); }
+    .page-header h1 { font-family: var(--font-display); font-size: 26px; font-weight: 400; color: var(--navy); margin: var(--sp-2) 0 0; }
+    .back-link { color: var(--ink-faint); font-size: 13px; }
+    .back-link:hover { color: var(--ink); }
+
+    .form-section { margin-bottom: var(--sp-6); }
+    .form-section h2 {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1.2px; color: var(--ink-faint); margin: 0 0 var(--sp-4);
+      display: flex; align-items: center; gap: var(--sp-3);
+    }
+    .count-badge {
+      font-size: 10px; background: var(--navy); color: var(--white);
+      padding: 2px 8px; border-radius: 20px; font-weight: 500;
+      text-transform: none; letter-spacing: 0;
+    }
+
+    .field { margin-bottom: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
+    label { font-size: 13px; font-weight: 500; color: var(--ink-light); }
+    input[type=text], select { /* uses global styles */ }
+    input.invalid { border-color: var(--error-fg); }
+    .field-error { font-size: 12px; color: var(--error-fg); }
+    .field-link { font-size: 12px; color: var(--teal); margin-top: 2px; }
+    .field-link:hover { color: var(--navy); }
+
+    .search-wrap { margin-bottom: var(--sp-3); }
+    .search-input { /* uses global styles */ }
+
+    .student-grid { display: flex; flex-direction: column; gap: var(--sp-2); }
+    .student-chip {
+      display: flex; align-items: center; gap: var(--sp-3);
+      padding: var(--sp-2) var(--sp-3); border: 1.5px solid var(--border);
+      border-radius: var(--r-sm); cursor: pointer;
+      transition: border-color .12s, background .12s; user-select: none;
+    }
+    .student-chip:hover { border-color: var(--teal); background: var(--surface); }
+    .student-chip.selected { border-color: var(--navy); background: var(--surface); }
+    .chip-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--light-teal); color: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 11px; font-weight: 600; overflow: hidden;
+    }
     .chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .chip-name { flex: 1; font-size: 0.875rem; }
-    .chip-check { color: #1a1a1a; font-size: 0.8rem; font-weight: 700; }
-    .state-msg { color: #aaa; font-size: 0.875rem; margin: 0; }
-    .server-error { color: #c0392b; font-size: 0.875rem; margin-bottom: 1rem; }
-    .form-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 2rem; }
-    .btn-primary { background: #1a1a1a; color: white; padding: 0.6rem 1.25rem; border-radius: 8px; border: none; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
-    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
-    .btn-primary:hover:not(:disabled) { background: #333; }
-    .btn-secondary { border: 1px solid #ddd; background: white; padding: 0.6rem 1.25rem; border-radius: 8px; text-decoration: none; font-size: 0.875rem; color: #333; display: inline-flex; align-items: center; }
-    .btn-secondary:hover { background: #f5f5f5; }
-    .btn-danger { background: none; border: 1px solid #e0e0e0; color: #aaa; padding: 0.6rem 1.25rem; border-radius: 8px; font-size: 0.875rem; cursor: pointer; margin-right: auto; }
-    .btn-danger:hover:not(:disabled) { border-color: #e74c3c; color: #e74c3c; background: #fdf3f2; }
+    .chip-name { flex: 1; font-size: 13px; color: var(--ink); }
+    .chip-check { color: var(--navy); font-size: 12px; font-weight: 700; }
+
+    .state-msg { color: var(--ink-faint); font-size: 13px; margin: 0; }
+    .server-error { color: var(--error-fg); font-size: 13px; margin-bottom: var(--sp-4); }
+
+    .form-actions {
+      display: flex; justify-content: flex-end; gap: var(--sp-3);
+      margin-top: var(--sp-6); padding-top: var(--sp-5);
+      border-top: 1px solid var(--border);
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: var(--r-sm);
+      font-family: var(--font-body); font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; transition: all .15s; text-decoration: none;
+    }
+    .btn-primary { background: var(--navy); color: var(--white); }
+    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary:hover:not(:disabled) { background: #243350; box-shadow: var(--sh-md); }
+    .btn-secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--navy); }
+    .btn-danger { background: transparent; color: var(--ink-faint); border: 1.5px solid var(--border); margin-right: auto; }
+    .btn-danger:hover:not(:disabled) { border-color: var(--error-fg); color: var(--error-fg); background: var(--error-bg); }
   `],
 })
 export class ClassFormComponent implements OnInit {
