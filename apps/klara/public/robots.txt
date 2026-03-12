@@ -1,9 +1,12 @@
 User-agent: *
-Allow: /
 
-# Admin and internal routes — no indexing needed
-Disallow: /admin/
-Disallow: /_usage
-Disallow: /_admin/
+# Öffentliche Seiten – indexierbar
+Allow: /$
+Allow: /login$
+Allow: /impressum$
 
-Sitemap: https://hub.abler.tirol/sitemap.xml
+# App-interne Routen – nicht indexieren
+Disallow: /app/
+Disallow: /auth/
+
+Sitemap: https://klara.abler.tirol/sitemap.xml
