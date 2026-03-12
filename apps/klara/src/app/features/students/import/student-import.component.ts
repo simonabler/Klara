@@ -147,14 +147,14 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
               </thead>
               <tbody>
                 @for (row of previewRows().slice(0, 5); track $index) {
-                  <tr [class.error-row]="!row.firstName || !row.lastName">
-                    <td>{{ row.firstName || '—' }}</td>
-                    <td>{{ row.lastName || '—' }}</td>
-                    <td>{{ row.dateOfBirth || '—' }}</td>
+                  <tr [class.error-row]="!row['firstName'] || !row['lastName']" >
+                    <td>{{ row["firstName"] || '—' }}</td>
+                    <td>{{ row["lastName"] || '—' }}</td>
+                    <td>{{ row["dateOfBirth"] || '—' }}</td>
                     <td>
-                      @if (row.parent1FirstName && row.parent1LastName) {
-                        {{ row.parent1FirstName }} {{ row.parent1LastName }}
-                        @if (row.parent1Email) { <span class="email-hint">({{ row.parent1Email }})</span> }
+                      @if (row["parent1FirstName"] && row["parent1LastName"]) {
+                        {{ row["parent1FirstName"] }} {{ row["parent1LastName"] }}
+                        @if (row["parent1Email"]) { <span class="email-hint">({{ row["parent1Email"] }})</span> }
                       } @else { — }
                     </td>
                   </tr>
@@ -359,7 +359,6 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
     .btn-primary:hover:not(:disabled) { background: #243350; box-shadow: var(--sh-md); }
     .btn-secondary { background: transparent; color: var(--ink-light); border: 1.5px solid var(--border); }
     .btn-secondary:hover { border-color: var(--navy); color: var(--ink); }
-  `],
     .result-actions { display: flex; justify-content: center; gap: var(--sp-3); margin-top: var(--sp-5); }
   `],
 })
@@ -386,8 +385,8 @@ export class StudentImportComponent {
   importResult = signal<ImportResult | null>(null);
 
   previewRows = computed(() => this.buildRows(this.csvRows(), this.csvHeaders(), this.mappings()));
-  validCount = computed(() => this.previewRows().filter(r => r.firstName && r.lastName).length);
-  invalidCount = computed(() => this.previewRows().filter(r => !r.firstName || !r.lastName).length);
+  validCount = computed(() => this.previewRows().filter(r => r['firstName'] && r['lastName']).length);
+  invalidCount = computed(() => this.previewRows().filter(r => !r['firstName'] || !r['lastName']).length);
 
   stepDone(id: Step): boolean {
     const order: Step[] = ['upload', 'map', 'preview', 'result'];
