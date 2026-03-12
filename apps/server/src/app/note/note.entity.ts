@@ -10,7 +10,7 @@ import { NoteType } from '@app/domain';
 import { Teacher } from '../teacher/teacher.entity';
 import { Student } from '../student/student.entity';
 import { Subject } from '../subject/subject.entity';
-import { SchoolLevel } from '../school-level/school-level.entity';
+import { Class } from '../class/class.entity';
 
 @Entity('notes')
 export class Note {
@@ -37,6 +37,7 @@ export class Note {
   @Column()
   studentId: string;
 
+  // Fach – Pflicht bei Mitarbeit, optional bei Verhalten/Allgemein
   @ManyToOne(() => Subject, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'subjectId' })
   subject: Subject;
@@ -44,12 +45,13 @@ export class Note {
   @Column({ nullable: true })
   subjectId: string;
 
-  @ManyToOne(() => SchoolLevel, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'schoolLevelId' })
-  schoolLevel: SchoolLevel;
+  // Klasse – trägt Schuljahr + Schulstufe, optional
+  @ManyToOne(() => Class, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'classId' })
+  class: Class;
 
   @Column({ nullable: true })
-  schoolLevelId: string;
+  classId: string;
 
   @CreateDateColumn()
   createdAt: Date;

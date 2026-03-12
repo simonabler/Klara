@@ -12,7 +12,7 @@ import { StudentDto } from '@app/domain';
   template: `
     <div class="page">
       <header class="page-header">
-        <a class="back-link" [routerLink]="isEdit() ? ['/students', studentId()] : '/students'">← Zurück</a>
+        <a class="back-link" [routerLink]="isEdit() ? ['/app/students', studentId()] : '/app/students'">← Zurück</a>
         <h1>{{ isEdit() ? 'Schüler bearbeiten' : 'Neuer Schüler' }}</h1>
       </header>
 
@@ -91,7 +91,7 @@ import { StudentDto } from '@app/domain';
         }
 
         <div class="form-actions">
-          <a class="btn btn-secondary" [routerLink]="isEdit() ? ['/students', studentId()] : '/students'">Abbrechen</a>
+          <a class="btn btn-secondary" [routerLink]="isEdit() ? ['/app/students', studentId()] : '/app/students'">Abbrechen</a>
           <button type="submit" class="btn btn-primary" [disabled]="saving()">
             {{ saving() ? 'Wird gespeichert…' : (isEdit() ? 'Speichern' : 'Anlegen') }}
           </button>

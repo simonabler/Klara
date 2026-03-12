@@ -1,12 +1,12 @@
+import 'reflect-metadata';
 import { NoteType, AssessmentEventType } from '@app/domain';
-import { Student } from '../student/student.entity';
-import { Parent } from '../parent/parent.entity';
-import { Class } from '../class/class.entity';
-import { Subject } from '../subject/subject.entity';
-import { SchoolLevel } from '../school-level/school-level.entity';
-import { Note } from '../note/note.entity';
-import { AssessmentEvent } from '../assessment/assessment-event.entity';
-import { StudentResult } from '../assessment/student-result.entity';
+import { Student } from './student/student.entity';
+import { Parent } from './parent/parent.entity';
+import { Class } from './class/class.entity';
+import { Subject } from './subject/subject.entity';
+import { Note } from './note/note.entity';
+import { AssessmentEvent } from './assessment/assessment-event.entity';
+import { StudentResult } from './assessment/student-result.entity';
 
 describe('Domain Entities – structure smoke tests', () => {
   it('Student has required fields', () => {
@@ -38,13 +38,6 @@ describe('Domain Entities – structure smoke tests', () => {
     s.name = 'Mathematik';
     s.teacherId = 'teacher-uuid';
     expect(s.name).toBe('Mathematik');
-  });
-
-  it('SchoolLevel holds name and year', () => {
-    const sl = new SchoolLevel();
-    sl.name = '3. Klasse';
-    sl.year = '2024/25';
-    expect(sl.year).toBe('2024/25');
   });
 
   it('Note has valid NoteType values', () => {

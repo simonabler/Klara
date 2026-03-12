@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ClassService } from '../class.service';
-import { SchoolLevelDto } from '@app/domain';
+import { ClassDto } from '@app/domain';
 
 @Component({
   selector: 'app-class-list',
@@ -33,11 +33,14 @@ import { SchoolLevelDto } from '@app/domain';
         <ul class="class-list">
           @for (cls of classes(); track cls.id) {
             <li class="class-card">
-              <a [routerLink]="['/classes', cls.id, 'edit']" class="class-link">
+              <a [routerLink]="['/app/classes', cls.id, 'edit']" class="class-link">
                 <span class="class-name">{{ cls.name }}</span>
                 <div class="class-meta">
+                  @if (cls.schoolYear) {
+                    <span class="chip chip-ghost">{{ cls.schoolYear }}</span>
+                  }
                   @if (cls.schoolLevel) {
-                    <span class="chip chip-teal">{{ schoolLevelLabel(cls.schoolLevel) }}</span>
+                    <span class="chip chip-teal">{{ cls.schoolLevel }}. Schulstufe</span>
                   }
                   <span class="student-count">{{ studentCount(cls) }} Schüler</span>
                   <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -105,8 +108,4 @@ export class ClassListComponent implements OnInit {
 
   studentCount(cls: any): number { return cls.students?.length ?? 0; }
 
-  schoolLevelLabel(level: SchoolLevelDto): string {
-    if (!level.year || level.year === level.name) return level.name;
-    return `${level.name} · ${level.year}`;
-  }
 }

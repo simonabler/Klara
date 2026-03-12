@@ -17,15 +17,15 @@ export class ClassService {
   findAll(teacherId: string): Promise<Class[]> {
     return this.classRepo.find({
       where: { teacherId },
-      relations: ['schoolLevel', 'students'],
-      order: { name: 'ASC' },
+      relations: ['students'],
+      order: { schoolYear: 'DESC', name: 'ASC' },
     });
   }
 
   async findOne(id: string, teacherId: string): Promise<Class> {
     const cls = await this.classRepo.findOne({
       where: { id, teacherId },
-      relations: ['schoolLevel', 'students'],
+      relations: ['students'],
     });
     if (!cls) throw new NotFoundException('Klasse nicht gefunden');
     return cls;
@@ -33,9 +33,10 @@ export class ClassService {
 
   async create(dto: CreateClassDto, teacherId: string): Promise<Class> {
     const cls = this.classRepo.create({
-      name: dto.name,
+      name:        dto.name,
+      schoolYear:  dto.schoolYear ?? null,
+      schoolLevel: dto.schoolLevel ?? null,
       teacherId,
-      schoolLevelId: dto.schoolLevelId ?? null,
     });
 
     if (dto.studentIds?.length) {
@@ -53,8 +54,9 @@ export class ClassService {
   async update(id: string, dto: UpdateClassDto, teacherId: string): Promise<Class> {
     const cls = await this.findOne(id, teacherId);
 
-    if (dto.name !== undefined) cls.name = dto.name;
-    if (dto.schoolLevelId !== undefined) cls.schoolLevelId = dto.schoolLevelId;
+    if (dto.name        !== undefined) cls.name        = dto.name;
+    if (dto.schoolYear  !== undefined) cls.schoolYear  = dto.schoolYear;
+    if (dto.schoolLevel !== undefined) cls.schoolLevel = dto.schoolLevel;
 
     if (dto.studentIds !== undefined) {
       cls.students = dto.studentIds.length

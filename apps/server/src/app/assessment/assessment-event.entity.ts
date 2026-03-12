@@ -11,7 +11,6 @@ import { AssessmentEventType } from '@app/domain';
 import { Teacher } from '../teacher/teacher.entity';
 import { Class } from '../class/class.entity';
 import { Subject } from '../subject/subject.entity';
-import { SchoolLevel } from '../school-level/school-level.entity';
 import { StudentResult } from './student-result.entity';
 
 @Entity('assessment_events')
@@ -48,13 +47,6 @@ export class AssessmentEvent {
 
   @Column({ nullable: true })
   subjectId: string;
-
-  @ManyToOne(() => SchoolLevel, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'schoolLevelId' })
-  schoolLevel: SchoolLevel;
-
-  @Column({ nullable: true })
-  schoolLevelId: string;
 
   @OneToMany(() => StudentResult, (result) => result.assessmentEvent, { cascade: true })
   results: StudentResult[];

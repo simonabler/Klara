@@ -1,0 +1,239 @@
+.page { max-width: 680px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); }
+
+/* ── Page Header ── */
+.page-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: var(--sp-6);
+}
+.back-link { color: var(--ink-faint); font-size: 13px; text-decoration: none; transition: color .15s; }
+.back-link:hover { color: var(--ink); }
+.btn-edit {
+  padding: 7px 14px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: var(--white); font-family: var(--font-body); font-size: 13px;
+  font-weight: 500; color: var(--ink); text-decoration: none; transition: all .15s;
+}
+.btn-edit:hover { border-color: var(--navy); color: var(--navy); }
+
+/* ── Profile ── */
+.profile {
+  display: flex; align-items: center; gap: var(--sp-5);
+  margin-bottom: var(--sp-6); padding-bottom: var(--sp-6);
+  border-bottom: 1px solid var(--border);
+}
+.avatar-large {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--navy); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+}
+.avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-initials { font-size: 22px; font-weight: 600; }
+.profile-main h1 {
+  font-family: var(--font-display); font-size: 24px; font-weight: 400;
+  color: var(--navy); margin: 0 0 var(--sp-2);
+}
+.badge-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.badge {
+  display: inline-flex; align-items: center;
+  background: var(--light-teal); color: var(--navy);
+  font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 20px;
+}
+
+/* ── Info Sections ── */
+.info-section { margin-bottom: var(--sp-6); }
+.section-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--ink-faint);
+  margin-bottom: var(--sp-4);
+  display: flex; align-items: center; gap: var(--sp-3);
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.info-grid { display: grid; grid-template-columns: 140px 1fr; gap: var(--sp-2) var(--sp-4); margin: 0; }
+dt { color: var(--ink-faint); font-size: 13px; padding-top: 1px; }
+dd { margin: 0; font-size: 14px; color: var(--ink); }
+
+.parent-card {
+  padding: var(--sp-3) var(--sp-4); background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  margin-bottom: var(--sp-2); display: flex; flex-direction: column;
+  gap: 3px; box-shadow: var(--sh-sm);
+}
+.parent-name { font-weight: 500; font-size: 14px; color: var(--ink); }
+.parent-contact { font-size: 12px; color: var(--ink-faint); }
+
+/* ── Notizen Section ── */
+.notes-section .section-label { margin-bottom: var(--sp-3); }
+
+.btn-add-note {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px;
+  background: var(--light-teal); color: var(--navy);
+  border: none; font-family: var(--font-body); font-size: 12px;
+  font-weight: 500; cursor: pointer; transition: background .15s;
+  flex-shrink: 0;
+}
+.btn-add-note:hover { background: var(--teal); color: var(--white); }
+.btn-add-note.active { background: var(--border); color: var(--ink-faint); }
+
+/* ── Notiz-Eingabe ── */
+.note-form-card {
+  background: var(--white); border: 1.5px solid var(--teal);
+  border-radius: var(--r-md); padding: var(--sp-4);
+  margin-bottom: var(--sp-4); box-shadow: 0 0 0 3px rgba(123,170,186,.12);
+}
+
+.note-type-tabs { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.note-type-tabs--sm { margin-bottom: var(--sp-3); }
+
+.type-tab {
+  padding: 5px 12px; border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: transparent; color: var(--ink-faint);
+  font-family: var(--font-body); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .15s;
+}
+.type-tab:hover { border-color: var(--teal); color: var(--teal); }
+.type-tab.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+
+.note-textarea {
+  width: 100%; resize: vertical; min-height: 72px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  padding: 9px 12px; font-family: var(--font-body); font-size: 14px;
+  color: var(--ink); background: var(--white); outline: none;
+  transition: border-color .15s; margin-bottom: var(--sp-3); box-sizing: border-box;
+}
+.note-textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(123,170,186,.18); }
+.note-textarea--sm { min-height: 60px; }
+
+.note-form-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--sp-3);
+}
+.note-form-actions { display: flex; gap: var(--sp-2); align-items: center; }
+.note-select {
+  padding: 6px 10px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font-body); font-size: 13px; color: var(--ink);
+  background: var(--white); outline: none; cursor: pointer; width: auto;
+}
+
+.btn-cancel {
+  padding: 7px 14px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: transparent; font-family: var(--font-body); font-size: 13px;
+  font-weight: 500; color: var(--ink-light); cursor: pointer; transition: all .15s;
+}
+.btn-cancel:hover { border-color: var(--ink); color: var(--ink); }
+.btn-save {
+  padding: 7px 16px; border: none; border-radius: var(--r-sm);
+  background: var(--navy); font-family: var(--font-body); font-size: 13px;
+  font-weight: 500; color: var(--white); cursor: pointer; transition: background .15s;
+}
+.btn-save:hover:not(:disabled) { background: #243350; }
+.btn-save:disabled { opacity: .5; cursor: not-allowed; }
+.btn-save--sm { padding: 5px 12px; font-size: 12px; }
+
+/* ── Filter ── */
+.notes-filter {
+  display: flex; align-items: center; gap: var(--sp-4);
+  flex-wrap: wrap; margin-bottom: var(--sp-4);
+}
+.filter-chips { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.filter-chip {
+  padding: 4px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+  background: transparent; color: var(--ink-faint);
+  font-family: var(--font-body); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .15s;
+}
+.filter-chip:hover { border-color: var(--teal); color: var(--teal); }
+.filter-chip.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+.filter-select {
+  padding: 5px 10px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font-body); font-size: 13px; color: var(--ink);
+  background: var(--white); outline: none; cursor: pointer; width: auto;
+}
+
+/* ── Note Groups ── */
+.note-group { margin-bottom: var(--sp-5); }
+.note-group-label {
+  font-size: 12px; font-weight: 600; color: var(--teal);
+  letter-spacing: 0.3px; margin-bottom: var(--sp-3); padding-left: var(--sp-1);
+}
+
+/* ── Note Cards ── */
+.note-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-2); box-shadow: var(--sh-sm);
+  border-left: 3px solid var(--teal); transition: box-shadow .15s;
+}
+.note-card:hover { box-shadow: var(--sh-md); }
+.note-card[data-type="BEHAVIOUR"] { border-left-color: var(--sand); }
+.note-card[data-type="GENERAL"]   { border-left-color: var(--border); }
+.note-card.editing { border-color: var(--teal); box-shadow: 0 0 0 2px rgba(123,170,186,.15); }
+
+.note-meta {
+  display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-2);
+}
+.note-type-badge {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+  padding: 2px 8px; border-radius: 20px;
+}
+.note-type-badge[data-type="PARTICIPATION"] { background: var(--light-teal); color: var(--navy); }
+.note-type-badge[data-type="BEHAVIOUR"]     { background: #EDD9C4; color: #7A5A3A; }
+.note-type-badge[data-type="GENERAL"]       { background: var(--surface); color: var(--ink-faint); }
+
+.note-date { font-size: 11px; color: var(--ink-faint); }
+.note-content { font-size: 14px; color: var(--ink-light); line-height: 1.6; margin: 0; }
+
+.note-actions {
+  margin-left: auto; display: flex; gap: var(--sp-1);
+  opacity: 0; transition: opacity .15s;
+}
+.note-card:hover .note-actions { opacity: 1; }
+
+.note-action-btn {
+  width: 26px; height: 26px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: var(--white);
+  color: var(--ink-faint); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.note-action-btn:hover { border-color: var(--teal); color: var(--teal); }
+.note-action-btn--delete:hover { border-color: var(--error-fg); color: var(--error-fg); }
+
+.note-edit-actions {
+  display: flex; justify-content: flex-end; gap: var(--sp-2); margin-top: var(--sp-3);
+}
+
+/* ── Empty ── */
+.notes-empty {
+  padding: var(--sp-6) var(--sp-5); text-align: center;
+  background: var(--white); border: 1px dashed var(--border); border-radius: var(--r-lg);
+}
+.notes-empty p { font-size: 14px; color: var(--ink-faint); margin: 0 0 4px; }
+.notes-empty-hint { font-size: 12px !important; }
+
+.state-msg { color: var(--ink-faint); font-size: 14px; }
+.error-msg { color: var(--error-fg); }
+
+/* ── No-subjects hint ── */
+.note-no-subjects {
+  font-size: 12px; color: var(--ink-faint);
+  display: flex; align-items: center; gap: 4px;
+}
+.note-settings-link {
+  color: var(--teal); text-decoration: none; font-weight: 500;
+}
+.note-settings-link:hover { text-decoration: underline; }
+
+/* ── Edit actions layout ── */
+.note-edit-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-2); margin-top: var(--sp-3);
+}
+.note-edit-btns {
+  display: flex; gap: var(--sp-2);
+}
+.note-select--sm {
+  font-size: 12px; padding: 5px 8px; min-width: 120px;
+}

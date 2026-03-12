@@ -9,7 +9,6 @@ import {
 } from 'typeorm';
 import { Teacher } from '../teacher/teacher.entity';
 import { Student } from '../student/student.entity';
-import { SchoolLevel } from '../school-level/school-level.entity';
 
 @Entity('classes')
 export class Class {
@@ -20,19 +19,20 @@ export class Class {
   @Column()
   name: string;
 
+  // z.B. "2024/25"
+  @Column({ nullable: true })
+  schoolYear: string;
+
+  // z.B. 3 (für 3. Schulstufe)
+  @Column({ nullable: true, type: 'int' })
+  schoolLevel: number;
+
   @ManyToOne(() => Teacher, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'teacherId' })
   teacher: Teacher;
 
   @Column()
   teacherId: string;
-
-  @ManyToOne(() => SchoolLevel, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'schoolLevelId' })
-  schoolLevel: SchoolLevel;
-
-  @Column({ nullable: true })
-  schoolLevelId: string;
 
   @ManyToMany(() => Student, (student) => student.classes)
   @JoinTable({

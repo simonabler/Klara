@@ -1,0 +1,220 @@
+<div class="page">
+
+  @if (loading()) {
+    <p class="state-msg">Wird geladen…</p>
+  } @else if (error()) {
+    <p class="state-msg error-msg">{{ error() }}</p>
+  } @else if (student()) {
+
+    <!-- ── Page-Header ── -->
+    <header class="page-header">
+      <a class="back-link" routerLink="/app/students">← Schüler</a>
+      <a class="btn-edit" [routerLink]="['/app/students', student()!.id, 'edit']">Bearbeiten</a>
+    </header>
+
+    <!-- ── Profil ── -->
+    <div class="profile">
+      <div class="avatar-large">
+        @if (student()!.avatarUrl) {
+          <img [src]="student()!.avatarUrl" [alt]="student()!.firstName" />
+        } @else {
+          <span class="avatar-initials">{{ initials() }}</span>
+        }
+      </div>
+      <div class="profile-main">
+        <h1>{{ student()!.firstName }} {{ student()!.lastName }}</h1>
+        @if (student()!.classes?.length) {
+          <div class="badge-row">
+            @for (cls of student()!.classes; track cls.id) {
+              <span class="badge">{{ cls.name }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ── Stammdaten ── -->
+    <section class="info-section">
+      <div class="section-label">Stammdaten</div>
+      <dl class="info-grid">
+        <dt>Vorname</dt><dd>{{ student()!.firstName }}</dd>
+        <dt>Nachname</dt><dd>{{ student()!.lastName }}</dd>
+        @if (student()!.dateOfBirth) {
+          <dt>Geburtsdatum</dt>
+          <dd>{{ student()!.dateOfBirth | date:'dd.MM.yyyy' }}</dd>
+        }
+      </dl>
+    </section>
+
+    <!-- ── Erziehungsberechtigte ── -->
+    @if (student()!.parents?.length) {
+      <section class="info-section">
+        <div class="section-label">Erziehungsberechtigte</div>
+        @for (parent of student()!.parents; track parent.id) {
+          <div class="parent-card">
+            <span class="parent-name">{{ parent.firstName }} {{ parent.lastName }}</span>
+            @if (parent.email) { <span class="parent-contact">{{ parent.email }}</span> }
+            @if (parent.phone) { <span class="parent-contact">{{ parent.phone }}</span> }
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ══════════════════════════════════════
+         NOTIZEN
+         ══════════════════════════════════════ -->
+    <section class="info-section notes-section">
+
+      <div class="section-label">
+        Notizen
+        <button class="btn-add-note" (click)="toggleNewNoteForm()" [class.active]="showNewNoteForm()">
+          @if (showNewNoteForm()) {
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          } @else {
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          }
+          Notiz
+        </button>
+      </div>
+
+      <!-- Schnelleingabe -->
+      @if (showNewNoteForm()) {
+        <div class="note-form-card">
+          <div class="note-type-tabs">
+            @for (t of noteTypes; track t.value) {
+              <button class="type-tab" [class.active]="newNote.type === t.value" (click)="newNote.type = t.value">
+                {{ t.label }}
+              </button>
+            }
+          </div>
+          <textarea class="note-textarea" [(ngModel)]="newNote.content"
+            placeholder="Beobachtung eingeben…" rows="3"></textarea>
+          <div class="note-form-footer">
+            @if (availableSubjects().length === 0) {
+              <span class="note-no-subjects">
+                Keine Fächer –
+                <a routerLink="/app/settings" class="note-settings-link">Fächer anlegen</a>
+              </span>
+            } @else {
+              <select [(ngModel)]="newNote.subjectId" class="note-select">
+                <option value="">Kein Fach</option>
+                @for (s of availableSubjects(); track s.id) {
+                  <option [value]="s.id">{{ s.name }}</option>
+                }
+              </select>
+            }
+            <div class="note-form-actions">
+              <button class="btn-cancel" (click)="cancelNewNote()">Abbrechen</button>
+              <button class="btn-save" (click)="saveNote()"
+                [disabled]="!newNote.content.trim() || saving()">
+                {{ saving() ? 'Speichern…' : 'Speichern' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Filter -->
+      @if (notes().length > 0) {
+        <div class="notes-filter">
+          <div class="filter-chips">
+            <button class="filter-chip" [class.active]="!filterType()" (click)="setFilterType(null)">Alle</button>
+            @for (t of noteTypes; track t.value) {
+              <button class="filter-chip" [class.active]="filterType() === t.value"
+                (click)="setFilterType(t.value)">{{ t.label }}</button>
+            }
+          </div>
+          @if (availableSubjects().length > 0) {
+            <select class="filter-select" [(ngModel)]="filterSubjectIdValue"
+              (ngModelChange)="filterSubjectId.set($event || null)">
+              <option value="">Alle Fächer</option>
+              @for (s of availableSubjects(); track s.id) {
+                <option [value]="s.id">{{ s.name }}</option>
+              }
+            </select>
+          }
+        </div>
+      }
+
+      <!-- Liste -->
+      @if (notesLoading()) {
+        <p class="state-msg">Notizen werden geladen…</p>
+      } @else if (filteredGroups().length === 0) {
+        <div class="notes-empty">
+          <p>Noch keine Notizen vorhanden.</p>
+          <p class="notes-empty-hint">Klicken Sie auf „+ Notiz" um die erste Beobachtung zu erfassen.</p>
+        </div>
+      } @else {
+        @for (group of filteredGroups(); track group.subjectId) {
+          <div class="note-group">
+            @if (filteredGroups().length > 1 || group.subjectName !== 'Allgemein') {
+              <div class="note-group-label">{{ group.subjectName }}</div>
+            }
+            @for (note of group.notes; track note.id) {
+              <div class="note-card" [class.editing]="editingNoteId() === note.id" [attr.data-type]="note.type">
+
+                @if (editingNoteId() === note.id) {
+                  <div class="note-edit-form">
+                    <div class="note-type-tabs note-type-tabs--sm">
+                      @for (t of noteTypes; track t.value) {
+                        <button class="type-tab" [class.active]="editNote.type === t.value"
+                          (click)="editNote.type = t.value">{{ t.label }}</button>
+                      }
+                    </div>
+                    <textarea class="note-textarea note-textarea--sm" [(ngModel)]="editNote.content" rows="3"></textarea>
+                    <div class="note-edit-actions">
+                      @if (availableSubjects().length > 0) {
+                        <select [(ngModel)]="editNote.subjectId" class="note-select note-select--sm">
+                          <option value="">Kein Fach</option>
+                          @for (s of availableSubjects(); track s.id) {
+                            <option [value]="s.id">{{ s.name }}</option>
+                          }
+                        </select>
+                      }
+                      <div class="note-edit-btns">
+                        <button class="btn-cancel" (click)="cancelEdit()">Abbrechen</button>
+                        <button class="btn-save btn-save--sm" (click)="updateNote(note.id)"
+                          [disabled]="!editNote.content.trim()">Speichern</button>
+                      </div>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="note-meta">
+                    <span class="note-type-badge" [attr.data-type]="note.type">{{ typeLabel(note.type) }}</span>
+                    <span class="note-date">{{ note.createdAt | date:'dd.MM.yyyy' }}</span>
+                    <div class="note-actions">
+                      <button class="note-action-btn" (click)="startEdit(note)" title="Bearbeiten">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      <button class="note-action-btn note-action-btn--delete" (click)="deleteNote(note.id)" title="Löschen">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <p class="note-content">{{ note.content }}</p>
+                }
+
+              </div>
+            }
+          </div>
+        }
+      }
+
+    </section>
+
+  }
+</div>

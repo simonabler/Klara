@@ -11,7 +11,6 @@ import { StudentModule } from './student/student.module';
 import { ParentModule } from './parent/parent.module';
 import { ClassModule } from './class/class.module';
 import { SubjectModule } from './subject/subject.module';
-import { SchoolLevelModule } from './school-level/school-level.module';
 import { NoteModule } from './note/note.module';
 import { AssessmentModule } from './assessment/assessment.module';
 import { SeedModule } from './seed/seed.module';
@@ -75,7 +74,6 @@ import { SeedModule } from './seed/seed.module';
     ParentModule,
     ClassModule,
     SubjectModule,
-    SchoolLevelModule,
     NoteModule,
     AssessmentModule,
     SeedModule,

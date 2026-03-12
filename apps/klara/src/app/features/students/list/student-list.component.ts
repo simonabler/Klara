@@ -42,7 +42,7 @@ import { StudentDto } from '@app/domain';
         <ul class="student-list">
           @for (student of students(); track student.id) {
             <li class="student-row">
-              <a [routerLink]="['/students', student.id]" class="student-link">
+              <a [routerLink]="['/app/students', student.id]" class="student-link">
                 <div class="avatar">
                   @if (student.avatarUrl) {
                     <img [src]="student.avatarUrl" [alt]="student.firstName" />
@@ -57,7 +57,7 @@ import { StudentDto } from '@app/domain';
                   }
                 </div>
               </a>
-              <a [routerLink]="['/students', student.id, 'edit']" class="btn btn-ghost btn-sm">Bearbeiten</a>
+              <a [routerLink]="['/app/students', student.id, 'edit']" class="btn btn-ghost btn-sm">Bearbeiten</a>
             </li>
           }
         </ul>
