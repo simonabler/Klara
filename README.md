@@ -1,10 +1,18 @@
 # Klara
 
-Ein schlankes, intuitives Dokumentationstool für Lehrkräfte zur strukturierten Erfassung von Schülern, Beobachtungen und Leistungen.
+<p align="center">
+  <img src="images/klara-preview.svg" alt="Klara – Schülerübersicht" width="100%"/>
+</p>
 
-> **Kein Schulverwaltungssystem** – sondern ein digitaler Notizblock mit Struktur.
+**Klara** ist ein ruhiges, übersichtliches Werkzeug für Lehrkräfte – entwickelt für den Schulalltag, nicht für die Schulsekretariat.
 
-🌐 **Live:** [https://klara.abler.tirol](https://klara.abler.tirol)
+Statt langer Einführungen und komplizierter Menüs bietet Klara das Wesentliche: Schülerprofile anlegen, Beobachtungen festhalten, Leistungen dokumentieren – alles an einem Ort, ohne Ablenkung.
+
+Ob nach einer Unterrichtsstunde schnell eine Notiz zur Mitarbeit, vor der Notenkonferenz einen Überblick über alle Schularbeiten einer Klasse, oder beim Elterngespräch auf konkrete Beobachtungen zugreifen – Klara ist in Sekunden einsatzbereit.
+
+> Ein digitaler Notizblock mit Struktur. Für Lehrkräfte, die lieber unterrichten als verwalten.
+
+🌐 **[https://klara.abler.tirol](https://klara.abler.tirol)**
 
 ---
 

@@ -1,0 +1,194 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&amp;family=DM+Serif+Display&amp;display=swap');
+    </style>
+    <filter id="shadow-sm">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#1e3246" flood-opacity="0.08"/>
+    </filter>
+    <filter id="shadow-md">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1e3246" flood-opacity="0.10"/>
+    </filter>
+    <clipPath id="round-lg"><rect width="1200" height="700" rx="16"/></clipPath>
+    <clipPath id="avatar1"><circle cx="18" cy="18" r="18"/></clipPath>
+    <clipPath id="avatar2"><circle cx="18" cy="18" r="18"/></clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="700" fill="#F4F2EE" rx="16"/>
+
+  <!-- ── SIDEBAR ── -->
+  <rect width="220" height="700" fill="#2E3F5C" rx="0"/>
+  <rect width="220" height="700" x="204" fill="#2E3F5C"/>
+
+  <!-- Logo -->
+  <g transform="translate(24, 28)">
+    <rect x="0" y="0" width="20" height="26" rx="4" fill="white" opacity="0.9"/>
+    <rect x="12" y="5" width="16" height="16" rx="3" fill="#7BAABA"/>
+    <rect x="18" y="18" width="10" height="10" rx="2.5" fill="#D4B896" opacity="0.9"/>
+    <text x="36" y="18" font-family="'DM Sans', sans-serif" font-weight="300" font-size="19" fill="white" letter-spacing="-0.3">klara</text>
+  </g>
+
+  <!-- Sidebar section label -->
+  <text x="24" y="90" font-family="'DM Sans', sans-serif" font-weight="600" font-size="10" fill="white" opacity="0.35" letter-spacing="1.2">ÜBERSICHT</text>
+
+  <!-- Sidebar items -->
+  <!-- Schüler – active -->
+  <rect x="12" y="100" width="196" height="36" rx="6" fill="white" opacity="0.12"/>
+  <g transform="translate(26, 111)">
+    <path d="M14 14v-1.5a3 3 0 0 0-3-3H3a3 3 0 0 0-3 3V14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="7" cy="5" r="3" stroke="white" stroke-width="1.5"/>
+    <path d="M17 14v-1.5a3 3 0 0 0-2.25-2.9" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <path d="M12 2.1a3 3 0 0 1 0 5.8" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <text x="50" y="123" font-family="'DM Sans', sans-serif" font-weight="500" font-size="13" fill="white">Schüler</text>
+
+  <!-- Notizen -->
+  <g transform="translate(26, 147)">
+    <path d="M11 2H4a1.5 1.5 0 0 0-1.5 1.5v13A1.5 1.5 0 0 0 4 18h10a1.5 1.5 0 0 0 1.5-1.5V7z" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <path d="M11 2v5h5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <line x1="12" y1="12" x2="6" y2="12" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <text x="50" y="162" font-family="'DM Sans', sans-serif" font-weight="450" font-size="13" fill="white" opacity="0.65">Notizen</text>
+
+  <!-- Leistungen -->
+  <g transform="translate(26, 183)">
+    <polyline points="16,9 13,9 11,16 7,2 5,9 1,9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+  <text x="50" y="198" font-family="'DM Sans', sans-serif" font-weight="450" font-size="13" fill="white" opacity="0.65">Leistungen</text>
+
+  <!-- Beurteilung -->
+  <g transform="translate(26, 219)">
+    <path d="M9 2H3a1.5 1.5 0 0 0-1.5 1.5v13A1.5 1.5 0 0 0 3 18h10a1.5 1.5 0 0 0 1.5-1.5V7z" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <polyline points="14,7 9,12 7,10 5,12" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <text x="50" y="234" font-family="'DM Sans', sans-serif" font-weight="450" font-size="13" fill="white" opacity="0.65">Beurteilung</text>
+
+  <!-- Klassen section -->
+  <text x="24" y="274" font-family="'DM Sans', sans-serif" font-weight="600" font-size="10" fill="white" opacity="0.35" letter-spacing="1.2">KLASSEN</text>
+  <text x="50" y="302" font-family="'DM Sans', sans-serif" font-weight="450" font-size="13" fill="white" opacity="0.65">4A · Mathematik</text>
+  <text x="50" y="326" font-family="'DM Sans', sans-serif" font-weight="450" font-size="13" fill="white" opacity="0.65">4A · Deutsch</text>
+  <text x="50" y="350" font-family="'DM Sans', sans-serif" font-weight="450" font-size="13" fill="white" opacity="0.65">3B · Sachunterricht</text>
+
+  <!-- Bottom avatar -->
+  <circle cx="34" cy="666" r="16" fill="#7BAABA"/>
+  <text x="34" y="671" font-family="'DM Sans', sans-serif" font-weight="600" font-size="12" fill="white" text-anchor="middle">MH</text>
+  <text x="58" y="663" font-family="'DM Sans', sans-serif" font-weight="500" font-size="12" fill="white" opacity="0.8">Maria Huber</text>
+  <text x="58" y="676" font-family="'DM Sans', sans-serif" font-size="11" fill="white" opacity="0.45">Klassenlehrerin</text>
+
+  <!-- ── MAIN CONTENT ── -->
+
+  <!-- Header row -->
+  <text x="252" y="54" font-family="'DM Serif Display', Georgia, serif" font-size="26" fill="#2E3F5C">Schülerübersicht</text>
+  <text x="252" y="74" font-family="'DM Sans', sans-serif" font-size="13" fill="#8A9AA8">Klasse 4A · 24 Schülerinnen und Schüler</text>
+
+  <!-- Search + Button row -->
+  <rect x="252" y="90" width="320" height="36" rx="6" fill="white" stroke="#DDE3E8" stroke-width="1.5" filter="url(#shadow-sm)"/>
+  <g transform="translate(268, 103)">
+    <circle cx="7" cy="7" r="6" stroke="#8A9AA8" stroke-width="1.5"/>
+    <line x1="11.5" y1="11.5" x2="15" y2="15" stroke="#8A9AA8" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+  <text x="294" y="113" font-family="'DM Sans', sans-serif" font-size="13" fill="#8A9AA8">Schüler suchen …</text>
+
+  <rect x="996" y="90" width="168" height="36" rx="6" fill="#2E3F5C" filter="url(#shadow-sm)"/>
+  <text x="1068" y="114" font-family="'DM Sans', sans-serif" font-weight="500" font-size="13" fill="white" text-anchor="middle">+ Schüler anlegen</text>
+
+  <!-- Filter chips -->
+  <rect x="252" y="140" width="72" height="26" rx="13" fill="#2E3F5C"/>
+  <text x="288" y="158" font-family="'DM Sans', sans-serif" font-weight="500" font-size="12" fill="white" text-anchor="middle">Alle</text>
+  <rect x="332" y="140" width="94" height="26" rx="13" fill="#F8F7F5" stroke="#DDE3E8" stroke-width="1"/>
+  <text x="379" y="158" font-family="'DM Sans', sans-serif" font-weight="500" font-size="12" fill="#4A5A6A" text-anchor="middle">Klasse 4A</text>
+  <rect x="434" y="140" width="94" height="26" rx="13" fill="#F8F7F5" stroke="#DDE3E8" stroke-width="1"/>
+  <text x="481" y="158" font-family="'DM Sans', sans-serif" font-weight="500" font-size="12" fill="#4A5A6A" text-anchor="middle">Klasse 3B</text>
+
+  <!-- ── STUDENT ROWS ── -->
+
+  <!-- Row 1 -->
+  <rect x="252" y="184" width="912" height="64" rx="10" fill="white" filter="url(#shadow-sm)"/>
+  <circle cx="294" cy="216" r="18" fill="#2E3F5C"/>
+  <text x="294" y="221" font-family="'DM Sans', sans-serif" font-weight="600" font-size="13" fill="white" text-anchor="middle">AM</text>
+  <text x="326" y="211" font-family="'DM Sans', sans-serif" font-weight="500" font-size="15" fill="#2E3F5C">Anna Müller</text>
+  <text x="326" y="228" font-family="'DM Sans', sans-serif" font-size="13" fill="#8A9AA8">Klasse 4A · geb. 12.03.2014</text>
+  <!-- chips -->
+  <rect x="620" y="204" width="82" height="22" rx="11" fill="#B8D0D8"/>
+  <text x="661" y="219" font-family="'DM Sans', sans-serif" font-weight="500" font-size="11" fill="#2E3F5C" text-anchor="middle">Mathematik</text>
+  <rect x="710" y="204" width="68" height="22" rx="11" fill="#EDD9C4"/>
+  <text x="744" y="219" font-family="'DM Sans', sans-serif" font-weight="500" font-size="11" fill="#7A5A3A" text-anchor="middle">Deutsch</text>
+  <!-- action button -->
+  <rect x="1096" y="204" width="56" height="28" rx="5" fill="#F8F7F5" stroke="#DDE3E8" stroke-width="1.5"/>
+  <text x="1124" y="222" font-family="'DM Sans', sans-serif" font-weight="500" font-size="12" fill="#2E3F5C" text-anchor="middle">Profil</text>
+
+  <!-- Row 2 -->
+  <rect x="252" y="256" width="912" height="64" rx="10" fill="white" filter="url(#shadow-sm)"/>
+  <circle cx="294" cy="288" r="18" fill="#7BAABA"/>
+  <text x="294" y="293" font-family="'DM Sans', sans-serif" font-weight="600" font-size="13" fill="white" text-anchor="middle">LK</text>
+  <text x="326" y="283" font-family="'DM Sans', sans-serif" font-weight="500" font-size="15" fill="#2E3F5C">Lukas Koch</text>
+  <text x="326" y="300" font-family="'DM Sans', sans-serif" font-size="13" fill="#8A9AA8">Klasse 4A · geb. 05.07.2014</text>
+  <rect x="620" y="276" width="82" height="22" rx="11" fill="#B8D0D8"/>
+  <text x="661" y="291" font-family="'DM Sans', sans-serif" font-weight="500" font-size="11" fill="#2E3F5C" text-anchor="middle">Mathematik</text>
+  <rect x="1096" y="276" width="56" height="28" rx="5" fill="#F8F7F5" stroke="#DDE3E8" stroke-width="1.5"/>
+  <text x="1124" y="294" font-family="'DM Sans', sans-serif" font-weight="500" font-size="12" fill="#2E3F5C" text-anchor="middle">Profil</text>
+
+  <!-- Row 3 -->
+  <rect x="252" y="328" width="912" height="64" rx="10" fill="white" filter="url(#shadow-sm)"/>
+  <circle cx="294" cy="360" r="18" fill="#EDD9C4"/>
+  <text x="294" y="365" font-family="'DM Sans', sans-serif" font-weight="600" font-size="13" fill="#7A5A3A" text-anchor="middle">SP</text>
+  <text x="326" y="355" font-family="'DM Sans', sans-serif" font-weight="500" font-size="15" fill="#2E3F5C">Sofia Pichler</text>
+  <text x="326" y="372" font-family="'DM Sans', sans-serif" font-size="13" fill="#8A9AA8">Klasse 4A · geb. 22.11.2013</text>
+  <rect x="620" y="348" width="68" height="22" rx="11" fill="#EDD9C4"/>
+  <text x="654" y="363" font-family="'DM Sans', sans-serif" font-weight="500" font-size="11" fill="#7A5A3A" text-anchor="middle">Deutsch</text>
+  <rect x="696" y="348" width="108" height="22" rx="11" fill="#B8D0D8"/>
+  <text x="750" y="363" font-family="'DM Sans', sans-serif" font-weight="500" font-size="11" fill="#2E3F5C" text-anchor="middle">Sachunterricht</text>
+  <rect x="1096" y="348" width="56" height="28" rx="5" fill="#F8F7F5" stroke="#DDE3E8" stroke-width="1.5"/>
+  <text x="1124" y="366" font-family="'DM Sans', sans-serif" font-weight="500" font-size="12" fill="#2E3F5C" text-anchor="middle">Profil</text>
+
+  <!-- ── NOTE CARD (right panel) ── -->
+  <rect x="252" y="414" width="430" height="112" rx="10" fill="white" filter="url(#shadow-sm)"/>
+  <rect x="252" y="414" width="4" height="112" rx="2" fill="#7BAABA"/>
+  <text x="272" y="436" font-family="'DM Sans', sans-serif" font-weight="600" font-size="11" fill="#7BAABA">MITARBEIT · MATHEMATIK</text>
+  <text x="620" y="436" font-family="'DM Sans', sans-serif" font-size="11" fill="#8A9AA8" text-anchor="end">10. März 2026</text>
+  <text x="272" y="456" font-family="'DM Sans', sans-serif" font-size="14" fill="#4A5A6A">Zeigt regelmäßige Beteiligung und stellt</text>
+  <text x="272" y="474" font-family="'DM Sans', sans-serif" font-size="14" fill="#4A5A6A">präzise Rückfragen. Hausaufgaben vollständig.</text>
+  <text x="272" y="498" font-family="'DM Sans', sans-serif" font-size="12" fill="#8A9AA8">Anna Müller</text>
+  <!-- badge -->
+  <rect x="272" y="508" width="52" height="20" rx="4" fill="#E8F4F8"/>
+  <text x="298" y="522" font-family="'DM Sans', sans-serif" font-weight="600" font-size="11" fill="#2E7D9A" text-anchor="middle">Notiz</text>
+
+  <!-- ── ASSESSMENT CARD ── -->
+  <rect x="702" y="414" width="462" height="112" rx="10" fill="white" filter="url(#shadow-sm)"/>
+  <rect x="702" y="414" width="4" height="112" rx="2" fill="#D4B896"/>
+  <text x="722" y="436" font-family="'DM Sans', sans-serif" font-weight="600" font-size="11" fill="#B08060">SCHULARBEIT · MATHEMATIK</text>
+  <text x="1160" y="436" font-family="'DM Sans', sans-serif" font-size="11" fill="#8A9AA8" text-anchor="end">5. März 2026</text>
+  <!-- Result grid -->
+  <g transform="translate(722, 450)">
+    <!-- Student 1 -->
+    <circle cx="14" cy="10" r="12" fill="#2E3F5C"/>
+    <text x="14" y="14" font-family="'DM Sans', sans-serif" font-weight="600" font-size="10" fill="white" text-anchor="middle">AM</text>
+    <rect x="30" y="3" width="20" height="20" rx="4" fill="#E8F5E9"/>
+    <text x="40" y="17" font-family="'DM Sans', sans-serif" font-weight="700" font-size="13" fill="#2E7D32" text-anchor="middle">1</text>
+    <!-- Student 2 -->
+    <circle cx="84" cy="10" r="12" fill="#7BAABA"/>
+    <text x="84" y="14" font-family="'DM Sans', sans-serif" font-weight="600" font-size="10" fill="white" text-anchor="middle">LK</text>
+    <rect x="100" y="3" width="20" height="20" rx="4" fill="#E8F4F8"/>
+    <text x="110" y="17" font-family="'DM Sans', sans-serif" font-weight="700" font-size="13" fill="#2E7D9A" text-anchor="middle">2</text>
+    <!-- Student 3 -->
+    <circle cx="154" cy="10" r="12" fill="#EDD9C4"/>
+    <text x="154" y="14" font-family="'DM Sans', sans-serif" font-weight="600" font-size="10" fill="#7A5A3A" text-anchor="middle">SP</text>
+    <rect x="170" y="3" width="20" height="20" rx="4" fill="#FFF8E1"/>
+    <text x="180" y="17" font-family="'DM Sans', sans-serif" font-weight="700" font-size="13" fill="#F57F17" text-anchor="middle">3</text>
+    <!-- Student 4 -->
+    <circle cx="224" cy="10" r="12" fill="#2E3F5C" opacity="0.6"/>
+    <text x="224" y="14" font-family="'DM Sans', sans-serif" font-weight="600" font-size="10" fill="white" text-anchor="middle">MF</text>
+    <rect x="240" y="3" width="20" height="20" rx="4" fill="#E8F5E9"/>
+    <text x="250" y="17" font-family="'DM Sans', sans-serif" font-weight="700" font-size="13" fill="#2E7D32" text-anchor="middle">1</text>
+    <!-- count -->
+    <text x="0" y="48" font-family="'DM Sans', sans-serif" font-size="12" fill="#8A9AA8">18 von 24 bewertet</text>
+    <rect x="150" y="36" width="90" height="20" rx="4" fill="#FFF8E1"/>
+    <text x="195" y="50" font-family="'DM Sans', sans-serif" font-weight="600" font-size="11" fill="#F57F17" text-anchor="middle">6 ausstehend</text>
+  </g>
+
+  <!-- ── BOTTOM BAR ── -->
+  <rect x="252" y="554" width="912" height="1" fill="#DDE3E8"/>
+  <text x="252" y="586" font-family="'DM Sans', sans-serif" font-size="12" fill="#8A9AA8">3 aktuelle Notizen diese Woche</text>
+  <text x="252" y="603" font-family="'DM Serif Display', Georgia, serif" font-size="15" fill="#2E3F5C">Klara dokumentiert – damit du unterrichten kannst.</text>
+</svg>
