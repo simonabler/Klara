@@ -22,8 +22,6 @@ services:
     image: klara-backend:latest
     container_name: klara-backend
     restart: unless-stopped
-    environment:
-      UPLOAD_DIR: /data/uploads/avatars
     volumes:
       - ./.env:/app/.env
       - /home/simon/klara/data:/data

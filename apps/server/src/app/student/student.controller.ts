@@ -77,7 +77,7 @@ export class StudentController {
     @Req() req: Request,
   ) {
     // Relativer Pfad – funktioniert hinter jedem Reverse-Proxy
-    const avatarUrl = `/uploads/avatars/${file.filename}`;
+    const avatarUrl = `/api/uploads/avatars/${file.filename}`;
     return this.studentService.updateAvatar(id, (req.user as any).id, avatarUrl);
   }
 

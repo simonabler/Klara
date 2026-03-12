@@ -27,9 +27,9 @@ async function bootstrap() {
   const uploadDir = process.env.UPLOAD_DIR ?? './uploads/avatars';
   const absoluteUploadDir = nodePath.resolve(uploadDir);
   nodeFs.mkdirSync(absoluteUploadDir, { recursive: true });
-  // /uploads → Elternverzeichnis (z.B. /data/uploads enthält /avatars)
+  // Unter /api/uploads/ erreichbar → Traefik leitet alles mit /api zum Backend
   const uploadsRoot = nodePath.resolve(absoluteUploadDir, '..');
-  app.useStaticAssets(uploadsRoot, { prefix: '/uploads' });
+  app.useStaticAssets(uploadsRoot, { prefix: '/api/uploads' });
 
   app.use(
     helmet({
