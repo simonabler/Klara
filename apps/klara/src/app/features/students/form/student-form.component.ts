@@ -303,11 +303,11 @@ export class StudentFormComponent implements OnInit {
       next: (student) => {
         if (this.selectedFile) {
           this.studentService.uploadAvatar(student.id, this.selectedFile).subscribe({
-            next: () => this.router.navigate(['/students', student.id]),
-            error: () => this.router.navigate(['/students', student.id]),
+            next: () => this.router.navigate(['/app/students', student.id]),
+            error: () => this.router.navigate(['/app/students', student.id]),
           });
         } else {
-          this.router.navigate(['/students', student.id]);
+          this.router.navigate(['/app/students', student.id]);
         }
       },
       error: () => {

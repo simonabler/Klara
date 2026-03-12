@@ -49,7 +49,7 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
   template: `
     <div class="page">
       <header class="page-header">
-        <a class="back-link" routerLink="/students">← Schüler</a>
+        <a class="back-link" routerLink="/app/students">← Schüler</a>
         <h1>Schüler importieren</h1>
       </header>
 
@@ -211,7 +211,7 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
 
             <div class="result-actions">
               <button class="btn-secondary" (click)="reset()">Weiteren Import starten</button>
-              <a class="btn-primary" routerLink="/students">Zur Schülerliste →</a>
+              <a class="btn-primary" routerLink="/app/students">Zur Schülerliste →</a>
             </div>
           }
         </section>

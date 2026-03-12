@@ -25,7 +25,7 @@ import { AuthService } from '../auth/auth.service';
 
         <ul class="nav-list">
           <li>
-            <a routerLink="/students" routerLinkActive="active" class="nav-item">
+            <a routerLink="/app/students" routerLinkActive="active" class="nav-item">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
@@ -34,7 +34,7 @@ import { AuthService } from '../auth/auth.service';
             </a>
           </li>
           <li>
-            <a routerLink="/classes" routerLinkActive="active" class="nav-item">
+            <a routerLink="/app/classes" routerLinkActive="active" class="nav-item">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                 <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
@@ -48,7 +48,7 @@ import { AuthService } from '../auth/auth.service';
           <div class="nav-section-label">System</div>
           <ul class="nav-list">
             <li>
-              <a routerLink="/settings" routerLinkActive="active" class="nav-item">
+              <a routerLink="/app/settings" routerLinkActive="active" class="nav-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="3"/>
                   <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>

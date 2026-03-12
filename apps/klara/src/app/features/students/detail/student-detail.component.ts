@@ -16,7 +16,7 @@ import { StudentDto } from '@app/domain';
         <p class="state-msg error">{{ error() }}</p>
       } @else if (student()) {
         <header class="page-header">
-          <a class="back-link" routerLink="/students">← Schüler</a>
+          <a class="back-link" routerLink="/app/students">← Schüler</a>
           <a class="btn-edit" [routerLink]="['/students', student()!.id, 'edit']">Bearbeiten</a>
         </header>
 
