@@ -16,8 +16,12 @@ import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { NoteService } from './note.service';
-import { CreateNoteDto, NoteFilterDto, UpdateNoteDto } from '@app/domain';
 import { NoteType } from '@app/domain';
+import {
+  CreateNoteValidationDto,
+  NoteFilterValidationDto,
+  UpdateNoteValidationDto,
+} from './note-validation.dto';
 
 @ApiTags('notes')
 @ApiBearerAuth()
@@ -33,7 +37,7 @@ export class NoteController {
   @ApiQuery({ name: 'type',       required: false, enum: NoteType })
   @ApiQuery({ name: 'from',       required: false, description: 'ISO-Datum' })
   @ApiQuery({ name: 'to',         required: false, description: 'ISO-Datum' })
-  findAll(@Query() filter: NoteFilterDto, @Req() req: Request) {
+  findAll(@Query() filter: NoteFilterValidationDto, @Req() req: Request) {
     return this.noteService.findAll((req.user as any).id, filter);
   }
 
@@ -45,7 +49,7 @@ export class NoteController {
 
   @Post()
   @ApiOperation({ summary: 'Notiz anlegen' })
-  create(@Body() dto: CreateNoteDto, @Req() req: Request) {
+  create(@Body() dto: CreateNoteValidationDto, @Req() req: Request) {
     return this.noteService.create(dto, (req.user as any).id);
   }
 
@@ -53,7 +57,7 @@ export class NoteController {
   @ApiOperation({ summary: 'Notiz bearbeiten' })
   update(
     @Param('id') id: string,
-    @Body() dto: UpdateNoteDto,
+    @Body() dto: UpdateNoteValidationDto,
     @Req() req: Request,
   ) {
     return this.noteService.update(id, dto, (req.user as any).id);

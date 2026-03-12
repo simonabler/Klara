@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SchoolLevelService } from './school-level.service';
-import { CreateSchoolLevelDto, UpdateSchoolLevelDto } from '@app/domain';
+import { CreateSchoolLevelValidationDto, UpdateSchoolLevelValidationDto } from '../class/class-validation.dto';
 
 @ApiTags('school-levels')
 @ApiBearerAuth()
@@ -24,12 +24,12 @@ export class SchoolLevelController {
   }
 
   @Post()
-  create(@Body() dto: CreateSchoolLevelDto, @Req() req: Request) {
+  create(@Body() dto: CreateSchoolLevelValidationDto, @Req() req: Request) {
     return this.service.create(dto, (req.user as any).id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateSchoolLevelDto, @Req() req: Request) {
+  update(@Param('id') id: string, @Body() dto: UpdateSchoolLevelValidationDto, @Req() req: Request) {
     return this.service.update(id, dto, (req.user as any).id);
   }
 

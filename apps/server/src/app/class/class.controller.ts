@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ClassService } from './class.service';
-import { CreateClassDto, UpdateClassDto } from '@app/domain';
+import { CreateClassValidationDto, UpdateClassValidationDto } from './class-validation.dto';
 
 @ApiTags('classes')
 @ApiBearerAuth()
@@ -24,12 +24,12 @@ export class ClassController {
   }
 
   @Post()
-  create(@Body() dto: CreateClassDto, @Req() req: Request) {
+  create(@Body() dto: CreateClassValidationDto, @Req() req: Request) {
     return this.service.create(dto, (req.user as any).id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateClassDto, @Req() req: Request) {
+  update(@Param('id') id: string, @Body() dto: UpdateClassValidationDto, @Req() req: Request) {
     return this.service.update(id, dto, (req.user as any).id);
   }
 

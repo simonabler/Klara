@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SubjectService } from './subject.service';
-import { CreateSubjectDto, UpdateSubjectDto } from '@app/domain';
+import { CreateSubjectValidationDto, UpdateSubjectValidationDto } from '../class/class-validation.dto';
 
 @ApiTags('subjects')
 @ApiBearerAuth()
@@ -24,12 +24,12 @@ export class SubjectController {
   }
 
   @Post()
-  create(@Body() dto: CreateSubjectDto, @Req() req: Request) {
+  create(@Body() dto: CreateSubjectValidationDto, @Req() req: Request) {
     return this.service.create(dto, (req.user as any).id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateSubjectDto, @Req() req: Request) {
+  update(@Param('id') id: string, @Body() dto: UpdateSubjectValidationDto, @Req() req: Request) {
     return this.service.update(id, dto, (req.user as any).id);
   }
 

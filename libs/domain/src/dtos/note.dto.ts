@@ -1,11 +1,3 @@
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUUID,
-  MinLength,
-} from 'class-validator';
 import { NoteType } from '../enums';
 
 // ── Response DTO ────────────────────────────────────────────────────────────
@@ -35,68 +27,31 @@ export class NoteDto {
 }
 
 // ── Create ──────────────────────────────────────────────────────────────────
+// Dekoratoren leben nur im Backend (NestJS) – hier plain TypeScript
 
 export class CreateNoteDto {
-  @IsString()
-  @MinLength(1)
   content!: string;
-
-  @IsEnum(NoteType)
   type!: NoteType;
-
-  @IsUUID()
   studentId!: string;
-
-  @IsOptional()
-  @IsUUID()
   subjectId?: string;
-
-  @IsOptional()
-  @IsUUID()
   schoolLevelId?: string;
 }
 
 // ── Update ──────────────────────────────────────────────────────────────────
 
 export class UpdateNoteDto {
-  @IsOptional()
-  @IsString()
-  @MinLength(1)
   content?: string;
-
-  @IsOptional()
-  @IsEnum(NoteType)
   type?: NoteType;
-
-  @IsOptional()
-  @IsUUID()
   subjectId?: string;
-
-  @IsOptional()
-  @IsUUID()
   schoolLevelId?: string;
 }
 
 // ── Query / Filter ──────────────────────────────────────────────────────────
 
 export class NoteFilterDto {
-  @IsOptional()
-  @IsUUID()
   studentId?: string;
-
-  @IsOptional()
-  @IsUUID()
   subjectId?: string;
-
-  @IsOptional()
-  @IsEnum(NoteType)
   type?: NoteType;
-
-  @IsOptional()
-  @IsString()
   from?: string;
-
-  @IsOptional()
-  @IsString()
   to?: string;
 }

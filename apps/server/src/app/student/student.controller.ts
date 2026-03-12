@@ -23,7 +23,8 @@ import {
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { StudentService } from './student.service';
-import { CreateStudentDto, UpdateStudentDto, BulkImportStudentsDto } from '@app/domain';
+import { BulkImportStudentsDto } from '@app/domain';
+import { CreateStudentValidationDto, UpdateStudentValidationDto } from './student-validation.dto';
 import { avatarUploadOptions } from './avatar-upload.config';
 
 @ApiTags('students')
@@ -47,7 +48,7 @@ export class StudentController {
 
   @Post()
   @ApiOperation({ summary: 'Schüler anlegen' })
-  create(@Body() dto: CreateStudentDto, @Req() req: Request) {
+  create(@Body() dto: CreateStudentValidationDto, @Req() req: Request) {
     return this.studentService.create(dto, (req.user as any).id);
   }
 
@@ -55,7 +56,7 @@ export class StudentController {
   @ApiOperation({ summary: 'Schülerdaten bearbeiten' })
   update(
     @Param('id') id: string,
-    @Body() dto: UpdateStudentDto,
+    @Body() dto: UpdateStudentValidationDto,
     @Req() req: Request,
   ) {
     return this.studentService.update(id, dto, (req.user as any).id);
