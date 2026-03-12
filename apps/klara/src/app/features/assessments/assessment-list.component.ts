@@ -83,13 +83,13 @@ import { AssessmentEventType } from '@app/domain';
 
       <!-- Filter -->
       <div class="filter-bar">
-        <select [(ngModel)]="filterClassId" (ngModelChange)="filterClassId = $event">
+        <select [ngModel]="filterClassId()" (ngModelChange)="filterClassId.set($event)">
           <option value="">Alle Klassen</option>
           @for (cls of classes(); track cls.id) {
             <option [value]="cls.id">{{ cls.name }}{{ cls.schoolYear ? ' · ' + cls.schoolYear : '' }}</option>
           }
         </select>
-        <select [(ngModel)]="filterSubjectId">
+        <select [ngModel]="filterSubjectId()" (ngModelChange)="filterSubjectId.set($event)">
           <option value="">Alle Fächer</option>
           @for (s of subjects(); track s.id) {
             <option [value]="s.id">{{ s.name }}</option>
@@ -230,13 +230,13 @@ export class AssessmentListComponent implements OnInit {
   saving   = signal(false);
   serverError = signal<string | null>(null);
 
-  filterClassId   = '';
-  filterSubjectId = '';
+  filterClassId   = signal('');
+  filterSubjectId = signal('');
 
   filtered = computed(() => {
     let list = this.events();
-    if (this.filterClassId)   list = list.filter(e => e.classId   === this.filterClassId);
-    if (this.filterSubjectId) list = list.filter(e => e.subjectId === this.filterSubjectId);
+    if (this.filterClassId())   list = list.filter(e => e.classId   === this.filterClassId());
+    if (this.filterSubjectId()) list = list.filter(e => e.subjectId === this.filterSubjectId());
     return list;
   });
 
