@@ -52,7 +52,13 @@ interface ResultRow {
       @if (showStudentPicker() && event()) {
         <div class="picker-panel">
           <div class="picker-header">
-            <span class="picker-title">Schüler für dieses Ereignis</span>
+            <span class="picker-title">
+              @if (classStudents().length) {
+                Schüler der Klasse {{ event()?.className ?? '' }}
+              } @else {
+                Alle Schüler
+              }
+            </span>
             <button class="btn-icon-sm" (click)="showStudentPicker.set(false)">✕</button>
           </div>
           <div class="picker-search">
@@ -312,6 +318,7 @@ export class AssessmentDetailComponent implements OnInit {
   loading        = signal(true);
   showStudentPicker = signal(false);
   allStudents    = signal<StudentDto[]>([]);
+  classStudents  = signal<StudentDto[]>([]);   // Schüler der gesetzten Klasse
   pickerSearch   = '';
   assignedIds    = signal<Set<string>>(new Set());
   savingAssignment = signal(false);
@@ -334,13 +341,15 @@ export class AssessmentDetailComponent implements OnInit {
   });
 
   filteredPickerStudents = computed(() => {
+    // Wenn Klasse gesetzt → nur Klassenschüler; sonst alle
+    const base = this.classStudents().length ? this.classStudents() : this.allStudents();
     const q = this.pickerSearch.toLowerCase().trim();
     return q
-      ? this.allStudents().filter(s =>
+      ? base.filter(s =>
           (s.firstName + ' ' + s.lastName).toLowerCase().includes(q) ||
           (s.lastName + ' ' + s.firstName).toLowerCase().includes(q)
         )
-      : this.allStudents();
+      : base;
   });
 
   readonly eventTypes = [
@@ -435,14 +444,15 @@ export class AssessmentDetailComponent implements OnInit {
   toggleStudentPicker(): void {
     this.showStudentPicker.update(v => !v);
     if (this.showStudentPicker()) {
-      // Klassenschüler zuerst laden wenn Klasse gesetzt
       const classId = this.event()?.classId;
       if (classId) {
+        // Nur die Schüler dieser Klasse im Picker zeigen
         this.classService.getOne(classId).subscribe(cls => {
-          const classStudents = (cls.students ?? []) as StudentDto[];
-          const others = this.allStudents().filter(s => !classStudents.find(cs => cs.id === s.id));
-          this.allStudents.set([...classStudents, ...others]);
+          this.classStudents.set((cls.students ?? []) as StudentDto[]);
         });
+      } else {
+        // Kein Klassenkontext → alle Schüler zeigen
+        this.classStudents.set([]);
       }
     }
   }
