@@ -68,3 +68,44 @@ export class UpdateStudentValidationDto {
   @Type(() => CreateParentValidationDto)
   parents?: CreateParentValidationDto[];
 }
+
+// ── Bulk Import ──────────────────────────────────────────────────────────────
+
+export class ImportStudentRowValidationDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  dateOfBirth?: string;
+
+  @IsOptional()
+  @IsString()
+  parent1FirstName?: string;
+
+  @IsOptional()
+  @IsString()
+  parent1LastName?: string;
+
+  @IsOptional()
+  @IsString()
+  parent1Email?: string;
+
+  @IsOptional()
+  @IsString()
+  parent1Phone?: string;
+}
+
+export class BulkImportStudentsValidationDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ImportStudentRowValidationDto)
+  rows!: ImportStudentRowValidationDto[];
+}

@@ -1,3 +1,3 @@
-Vorname,Nachname,Geburtsdatum,Erziehungsberechtigter_Vorname,Erziehungsberechtigter_Nachname,Erziehungsberechtigter_Email,Erziehungsberechtigter_Telefon
-Anna,Musterfrau,2015-09-12,Maria,Musterfrau,maria.musterfrau@example.com,+43 664 123456
-Max,Mustermann,2014-03-22,Hans,Mustermann,hans.mustermann@example.com,
+Vorname;Nachname;Geburtsdatum;Erziehungsberechtigter_Vorname;Erziehungsberechtigter_Nachname;Erziehungsberechtigter_Email;Erziehungsberechtigter_Telefon
+Anna;Musterfrau;2015-09-12;Maria;Musterfrau;maria.musterfrau@example.com;+43 664 123456
+Max;Mustermann;2014-03-22;Hans;Mustermann;hans.mustermann@example.com;

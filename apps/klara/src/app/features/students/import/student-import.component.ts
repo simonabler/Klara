@@ -22,13 +22,13 @@ const TARGET_FIELDS: TargetField[] = [
 
 // ── Auto-Mapping Hints ───────────────────────────────────────────────────────
 const MAPPING_HINTS: { patterns: RegExp[]; key: string }[] = [
-  { patterns: [/vorname/i, /first.?name/i, /given.?name/i],            key: 'firstName'        },
-  { patterns: [/nachname/i, /last.?name/i, /family.?name/i, /^name$/i],key: 'lastName'         },
-  { patterns: [/geburt/i, /birth/i, /dob/i, /datum/i],                 key: 'dateOfBirth'      },
-  { patterns: [/erz.*vorname/i, /parent.*first/i, /mutter.*vor/i, /vater.*vor/i, /erziehungsberechtigter_vorname/i], key: 'parent1FirstName' },
-  { patterns: [/erz.*nach/i, /parent.*last/i, /erziehungsberechtigter_nachname/i],                key: 'parent1LastName'  },
-  { patterns: [/erz.*mail/i, /parent.*mail/i, /erziehungsberechtigter_email/i],                   key: 'parent1Email'     },
-  { patterns: [/erz.*tel/i, /parent.*phone/i, /telefon/i, /erziehungsberechtigter_telefon/i],     key: 'parent1Phone'     },
+  { patterns: [/^vorname$/i, /^first.?name$/i, /^given.?name$/i],            key: 'firstName'        },
+  { patterns: [/^nachname$/i, /^last.?name$/i, /^family.?name$/i, /^name$/i], key: 'lastName'         },
+  { patterns: [/geburt/i, /birth/i, /^dob$/i, /^datum$/i],                    key: 'dateOfBirth'      },
+  { patterns: [/erziehungsberechtigter_vorname/i, /erz.*vorname/i, /parent.*first/i, /mutter.*vor/i, /vater.*vor/i], key: 'parent1FirstName' },
+  { patterns: [/erziehungsberechtigter_nachname/i, /erz.*nach/i, /parent.*last/i],                                   key: 'parent1LastName'  },
+  { patterns: [/erziehungsberechtigter_email/i, /erz.*mail/i, /parent.*mail/i],                                      key: 'parent1Email'     },
+  { patterns: [/erziehungsberechtigter_telefon/i, /erz.*tel/i, /parent.*phone/i, /^telefon$/i],                      key: 'parent1Phone'     },
 ];
 
 function autoDetect(header: string): string {
@@ -68,7 +68,7 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
       @if (step() === 'upload') {
         <section class="card">
           <h2>CSV-Datei auswählen</h2>
-          <p class="hint">Die erste Zeile muss Spaltenbezeichnungen enthalten. Trennzeichen: Komma oder Semikolon.</p>
+          <p class="hint">Die erste Zeile muss Spaltenbezeichnungen enthalten. Trennzeichen: Semikolon (;) – wie es Excel auf deutschen Systemen verwendet.</p>
 
           <div class="dropzone" [class.drag-over]="dragOver()"
                (dragover)="$event.preventDefault(); dragOver.set(true)"
