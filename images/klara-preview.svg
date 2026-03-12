@@ -19,7 +19,6 @@
 
   <!-- ── SIDEBAR ── -->
   <rect width="220" height="700" fill="#2E3F5C" rx="0"/>
-  <rect width="220" height="700" x="204" fill="#2E3F5C"/>
 
   <!-- Logo -->
   <g transform="translate(24, 28)">
