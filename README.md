@@ -4,6 +4,8 @@ Ein schlankes, intuitives Dokumentationstool für Lehrkräfte zur strukturierten
 
 > **Kein Schulverwaltungssystem** – sondern ein digitaler Notizblock mit Struktur.
 
+🌐 **Live:** [https://klara.abler.tirol](https://klara.abler.tirol)
+
 ---
 
 ## Inhalt
@@ -15,6 +17,7 @@ Ein schlankes, intuitives Dokumentationstool für Lehrkräfte zur strukturierten
 - [Umgebungsvariablen](#umgebungsvariablen)
 - [Verfügbare Skripte](#verfügbare-skripte)
 - [Architekturprinzipien](#architekturprinzipien)
+- [API](#api)
 
 ---
 
@@ -39,6 +42,7 @@ Klara hilft Lehrkräften dabei, schnell und ohne Aufwand folgendes zu dokumentie
 | Datenbank | [PostgreSQL 17](https://www.postgresql.org) |
 | ORM | [TypeORM](https://typeorm.io) |
 | Containerisierung | Docker / Docker Compose |
+| Reverse Proxy | [Traefik](https://traefik.io) mit automatischem TLS (Let's Encrypt) |
 
 ---
 
@@ -133,10 +137,14 @@ TYPEORM_SYNC=true
 NODE_ENV=production
 PORT=3000
 
-# Auth (ab Issue 2)
+# Uploads (Avatare)
+# Vollständiger Pfad zum Upload-Verzeichnis inkl. Unterordner
+UPLOAD_DIR=/data/uploads/avatars
+
+# Auth
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-GOOGLE_CALLBACK_URL=http://localhost/api/auth/google/callback
+GOOGLE_CALLBACK_URL=https://klara.abler.tirol/api/auth/google/callback
 JWT_SECRET=change-me-in-production
 JWT_EXPIRES_IN=8h
 ```
@@ -180,14 +188,36 @@ Klara ist kein Schulverwaltungssystem. Es ist ein fokussiertes Werkzeug, das Leh
 
 ## API
 
-Das Backend ist unter `/api` erreichbar. Die Swagger-Dokumentation ist verfügbar unter:
+Das Backend ist unter `/api` erreichbar.
+
+| Umgebung | URL |
+|---|---|
+| Produktion | `https://klara.abler.tirol/api` |
+| Lokal (Docker) | `http://localhost/api` |
+| Lokal (ohne Docker) | `http://localhost:3000/api` |
+
+**Swagger-Dokumentation:**
 
 ```
-http://localhost/api/docs      # lokal via Docker
-http://localhost:3000/api/docs # lokal ohne Docker
+https://klara.abler.tirol/api/docs   # Produktion
+http://localhost/api/docs            # lokal via Docker
+http://localhost:3000/api/docs       # lokal ohne Docker
 ```
 
 Health-Check: `GET /api/healthz` → `{ "status": "ok" }`
+
+### Endpunkte (Übersicht)
+
+| Ressource | Pfad |
+|---|---|
+| Schüler | `/api/students` |
+| Avatar-Upload | `/api/students/:id/avatar` |
+| CSV-Import | `/api/students/import` |
+| Klassen | `/api/classes` |
+| Fächer | `/api/subjects` |
+| Notizen | `/api/notes` |
+| Leistungsereignisse | `/api/assessments` |
+| Schülerergebnisse | `/api/assessments/:id/results` |
 
 ---
 
