@@ -13,14 +13,14 @@ import { StudentDto } from '@app/domain';
       <header class="page-header">
         <h1>Schüler</h1>
         <div class="header-actions">
-          <a class="btn btn-ghost" routerLink="/students/import">
+          <a class="btn btn-ghost" routerLink="/app/students/import">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
               <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
             </svg>
             Import
           </a>
-          <a class="btn btn-primary" routerLink="/students/new">
+          <a class="btn btn-primary" routerLink="/app/students/new">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -36,7 +36,7 @@ import { StudentDto } from '@app/domain';
       } @else if (students().length === 0) {
         <div class="empty-state">
           <p>Noch keine Schüler angelegt.</p>
-          <a class="btn btn-primary" routerLink="/students/new">Ersten Schüler anlegen</a>
+          <a class="btn btn-primary" routerLink="/app/students/new">Ersten Schüler anlegen</a>
         </div>
       } @else {
         <ul class="student-list">

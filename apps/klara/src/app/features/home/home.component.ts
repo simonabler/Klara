@@ -13,7 +13,7 @@ import { RouterLink } from '@angular/router';
       </div>
 
       <div class="card-grid">
-        <a routerLink="/students" class="feature-card">
+        <a routerLink="/app/students" class="feature-card">
           <div class="card-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
@@ -25,7 +25,7 @@ import { RouterLink } from '@angular/router';
             <div class="card-desc">Profile, Stammdaten, Elterninformationen</div>
           </div>
         </a>
-        <a routerLink="/classes" class="feature-card">
+        <a routerLink="/app/classes" class="feature-card">
           <div class="card-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
@@ -37,7 +37,7 @@ import { RouterLink } from '@angular/router';
             <div class="card-desc">Klassen anlegen und Schüler zuordnen</div>
           </div>
         </a>
-        <a routerLink="/settings" class="feature-card">
+        <a routerLink="/app/settings" class="feature-card">
           <div class="card-icon" style="background: #EDD9C4;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7A5A3A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"/>

@@ -36,6 +36,6 @@ export class AuthCallbackComponent implements OnInit {
     }
 
     await this.authService.handleCallback(token);
-    this.router.navigate(['/']);
+    this.router.navigate(['/app']);
   }
 }

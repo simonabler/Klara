@@ -15,7 +15,7 @@ import { StudentDto, SchoolLevelDto } from '@app/domain';
   template: `
     <div class="page">
       <header class="page-header">
-        <a class="back-link" routerLink="/classes">← Klassen</a>
+        <a class="back-link" routerLink="/app/classes">← Klassen</a>
         <h1>{{ isEdit() ? 'Klasse bearbeiten' : 'Neue Klasse' }}</h1>
       </header>
 
@@ -35,7 +35,7 @@ import { StudentDto, SchoolLevelDto } from '@app/domain';
                 <option [value]="level.id">{{ level.name }}{{ level.year ? ' · ' + level.year : '' }}</option>
               }
             </select>
-            <a class="field-link" routerLink="/settings">Schulstufen verwalten →</a>
+            <a class="field-link" routerLink="/app/settings">Schulstufen verwalten →</a>
           </div>
         </section>
 
@@ -78,7 +78,7 @@ import { StudentDto, SchoolLevelDto } from '@app/domain';
           @if (isEdit()) {
             <button type="button" class="btn-danger" (click)="deleteClass()" [disabled]="saving()">Löschen</button>
           }
-          <a class="btn-secondary" routerLink="/classes">Abbrechen</a>
+          <a class="btn-secondary" routerLink="/app/classes">Abbrechen</a>
           <button type="submit" class="btn-primary" [disabled]="saving()">
             {{ saving() ? 'Wird gespeichert…' : (isEdit() ? 'Speichern' : 'Anlegen') }}
           </button>
@@ -246,7 +246,7 @@ export class ClassFormComponent implements OnInit {
       ? this.classService.update(this.classId()!, dto)
       : this.classService.create(dto);
     req$.subscribe({
-      next: () => this.router.navigate(['/classes']),
+      next: () => this.router.navigate(['/app/classes']),
       error: () => { this.serverError.set('Speichern fehlgeschlagen.'); this.saving.set(false); },
     });
   }
@@ -254,7 +254,7 @@ export class ClassFormComponent implements OnInit {
   deleteClass(): void {
     if (!confirm('Klasse wirklich löschen?')) return;
     this.classService.delete(this.classId()!).subscribe({
-      next: () => this.router.navigate(['/classes']),
+      next: () => this.router.navigate(['/app/classes']),
     });
   }
 }
