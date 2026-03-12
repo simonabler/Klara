@@ -12,7 +12,7 @@ import { StudentDto } from '@app/domain';
     <div class="page">
       <header class="page-header">
         <h1>Schüler</h1>
-        <a class="btn-primary" routerLink="/students/new">+ Neu</a>
+        <div class="header-actions"><a class="btn-secondary" routerLink="/students/import">↑ Import</a><a class="btn-primary" routerLink="/students/new">+ Neu</a></div>
       </header>
 
       @if (loading()) {
@@ -50,7 +50,7 @@ import { StudentDto } from '@app/domain';
     .page { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
     h1 { font-size: 1.5rem; font-weight: 600; margin: 0; }
-    .btn-primary { background: #1a1a1a; color: white; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+    .header-actions { display: flex; gap: 0.5rem; } .btn-primary { background: #1a1a1a; color: white; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem; font-weight: 500; } .btn-secondary { border: 1px solid #ddd; background: white; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; font-size: 0.875rem; color: #555; }
     .btn-primary:hover { background: #333; }
     .state-msg { color: #888; }
     .error { color: #c0392b; }
