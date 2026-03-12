@@ -277,3 +277,31 @@ dd { margin: 0; font-size: 14px; color: var(--ink); }
 .grade-chip[data-grade="4"] { background: #E65100; }
 .grade-chip[data-grade="5"] { background: #C62828; }
 .points-chip { font-size: 12px; color: var(--ink-faint); }
+
+/* ── Leistungen nach Fach ─────────────────────────────────────── */
+.section-header-row {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3);
+}
+.result-group { margin-bottom: var(--sp-4); }
+.result-group-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .9px; color: var(--ink-faint); margin-bottom: var(--sp-2);
+}
+.result-date { font-size: 11px; color: var(--ink-faint); }
+.result-comment { font-size: 12px; cursor: default; }
+
+/* ── Leistungen-Section Header ── */
+.section-label-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--sp-4);
+}
+.section-label.no-line::after { display: none; }
+.section-label.no-line { margin-bottom: 0; }
+
+.result-group-label {
+  font-size: 12px; font-weight: 600; color: var(--teal);
+  letter-spacing: 0.3px; margin-bottom: var(--sp-3); padding-left: var(--sp-1);
+  text-transform: none;
+}
+.result-date-meta { font-size: 11px; color: var(--ink-faint); margin-top: 2px; display: block; }
+.result-has-comment { font-size: 12px; cursor: default; }

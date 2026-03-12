@@ -15,6 +15,12 @@ interface SubjectGroup {
   notes: NoteDto[];
 }
 
+interface ResultGroup {
+  subjectId: string | null;
+  subjectName: string;
+  results: StudentResultDto[];
+}
+
 @Component({
   selector: 'app-student-detail',
   standalone: true,
@@ -40,6 +46,28 @@ export class StudentDetailComponent implements OnInit {
   /** Leistungsergebnisse dieses Schülers */
   results        = signal<StudentResultDto[]>([]);
   resultsLoading = signal(false);
+
+  /** Leistungen nach Fach gruppiert */
+  resultGroups = computed<ResultGroup[]>(() => {
+    const groups = new Map<string, ResultGroup>();
+    for (const result of this.results()) {
+      const key = result.assessmentEvent?.subjectId ?? '__none__';
+      if (!groups.has(key)) {
+        groups.set(key, {
+          subjectId:   result.assessmentEvent?.subjectId ?? null,
+          subjectName: result.assessmentEvent?.subjectName ?? 'Allgemein',
+          results: [],
+        });
+      }
+      groups.get(key)!.results.push(result);
+    }
+    // Sortierung: Fächer alphabetisch, Allgemein ans Ende
+    return Array.from(groups.values()).sort((a, b) => {
+      if (a.subjectId === null) return 1;
+      if (b.subjectId === null) return -1;
+      return a.subjectName.localeCompare(b.subjectName);
+    });
+  });
 
   /** Alle Fächer der Lehrkraft – aus der API geladen */
   subjects     = signal<SubjectDto[]>([]);
@@ -90,7 +118,7 @@ export class StudentDetailComponent implements OnInit {
       next: (data) => this.subjects.set(data),
     });
     this.studentService.getOne(id).subscribe({
-      next:  (data) => { this.student.set(data); this.loading.set(false); this.loadNotes(); },
+      next:  (data) => { this.student.set(data); this.loading.set(false); this.loadNotes(); this.loadResults(); },
       error: ()     => { this.error.set('Schüler konnte nicht geladen werden.'); this.loading.set(false); },
     });
   }

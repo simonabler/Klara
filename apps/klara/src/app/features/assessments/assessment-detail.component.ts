@@ -86,6 +86,8 @@ interface ResultRow {
       <!-- Ergebnistabelle -->
       @if (loading()) {
         <p class="state-msg">Lade Leistungsereignis…</p>
+      } @else if (loadError()) {
+        <p class="state-msg state-error">Leistungsereignis konnte nicht geladen werden.</p>
       } @else if (!event()) {
         <p class="state-msg">Nicht gefunden.</p>
       } @else if (rows().length === 0) {
@@ -286,6 +288,7 @@ interface ResultRow {
 
     /* ── States ── */
     .state-msg { color: var(--ink-faint); font-size: 14px; }
+    .state-error { color: var(--error-fg); }
     .empty-state { padding: var(--sp-7) var(--sp-5); text-align: center; background: var(--white); border: 1px dashed var(--border); border-radius: var(--r-lg); }
     .empty-state p { font-size: 14px; color: var(--ink-faint); margin: 0 0 var(--sp-2); }
     .empty-hint { font-size: 13px !important; }
@@ -316,6 +319,7 @@ export class AssessmentDetailComponent implements OnInit {
 
   event          = signal<AssessmentEventDto | null>(null);
   loading        = signal(true);
+  loadError      = signal(false);
   showStudentPicker = signal(false);
   allStudents    = signal<StudentDto[]>([]);
   classStudents  = signal<StudentDto[]>([]);   // Schüler der gesetzten Klasse
@@ -373,7 +377,7 @@ export class AssessmentDetailComponent implements OnInit {
         this.buildRows(event);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => { this.loading.set(false); this.loadError.set(true); },
     });
   }
 
