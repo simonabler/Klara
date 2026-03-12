@@ -171,6 +171,8 @@ import { SeoService } from '../../core/seo.service';
           <span class="footer-claim">A clear and quiet tool for teachers</span>
           <span class="footer-sep">·</span>
           <a routerLink="/impressum" class="footer-link">Impressum</a>
+          <span class="footer-sep">·</span>
+          <a routerLink="/datenschutz" class="footer-link">Datenschutz</a>
         </div>
       </footer>
 

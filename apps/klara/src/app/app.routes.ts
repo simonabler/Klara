@@ -19,6 +19,11 @@ export const appRoutes: Route[] = [
     loadComponent: () => import('./features/impressum/impressum.component').then(m => m.ImpressumComponent),
     title: 'Impressum – Klara',
   },
+  {
+    path: 'datenschutz',
+    loadComponent: () => import('./features/datenschutz/datenschutz.component').then(m => m.DatenschutzComponent),
+    title: 'Datenschutzerklärung – Klara',
+  },
 
   // ── App (geschützt) ─────────────────────────────────────────────────────
   {

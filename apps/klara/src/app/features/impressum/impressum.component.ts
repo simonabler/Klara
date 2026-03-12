@@ -157,6 +157,8 @@ import { SeoService } from '../../core/seo.service';
         <span>© {{ year }} Simon Abler</span>
         <span class="footer-sep">·</span>
         <a routerLink="/impressum" class="footer-link footer-link--active">Impressum</a>
+        <span class="footer-sep">·</span>
+        <a routerLink="/datenschutz" class="footer-link">Datenschutz</a>
       </footer>
 
     </div>
