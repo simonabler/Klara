@@ -33,7 +33,7 @@ import { SchoolLevelDto } from '@app/domain';
         <ul class="class-list">
           @for (cls of classes(); track cls.id) {
             <li class="class-card">
-              <a [routerLink]="['/classes', cls.id, 'edit']" class="class-link">
+              <a [routerLink]="['/app/classes', cls.id, 'edit']" class="class-link">
                 <span class="class-name">{{ cls.name }}</span>
                 <div class="class-meta">
                   @if (cls.schoolLevel) {
