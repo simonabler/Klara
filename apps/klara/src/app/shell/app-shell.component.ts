@@ -66,6 +66,7 @@ import { AuthService } from '../auth/auth.service';
               </button>
             </li>
           </ul>
+          <a routerLink="/impressum" class="impressum-link">Impressum</a>
         </div>
       </nav>
 
@@ -164,6 +165,17 @@ import { AuthService } from '../auth/auth.service';
       border-top: 1px solid rgba(255,255,255,.08);
       padding-top: var(--sp-3);
     }
+    .impressum-link {
+      display: block;
+      padding: var(--sp-2) var(--sp-4);
+      margin-top: var(--sp-2);
+      font-size: 11px;
+      color: rgba(255,255,255,.22);
+      text-decoration: none;
+      transition: color .15s;
+      letter-spacing: 0.2px;
+    }
+    .impressum-link:hover { color: rgba(255,255,255,.5); }
 
     /* ── Content ── */
     .shell-content {

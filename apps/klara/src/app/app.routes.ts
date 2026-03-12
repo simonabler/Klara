@@ -9,6 +9,11 @@ export const appRoutes: Route[] = [
   { path: 'login', component: LoginComponent, title: 'Klara – Anmelden' },
   { path: 'auth/callback', component: AuthCallbackComponent },
   {
+    path: 'impressum',
+    loadComponent: () => import('./features/impressum/impressum.component').then(m => m.ImpressumComponent),
+    title: 'Impressum – Klara',
+  },
+  {
     path: '',
     component: AppShellComponent,
     canActivate: [authGuard],
