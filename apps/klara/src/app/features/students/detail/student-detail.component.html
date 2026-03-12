@@ -214,44 +214,55 @@
         }
       }
 
+    </section>
 
-    <!-- ── Leistungen ──────────────────────────────────────────────── -->
-    <section class="profile-section">
-      <div class="section-header">
-        <div class="section-label">Leistungen</div>
+    <!-- ══════════════════════════════════════
+         LEISTUNGEN
+         ══════════════════════════════════════ -->
+    <section class="info-section">
+      <div class="section-label-row">
+        <div class="section-label no-line">Leistungen</div>
         <a class="section-link" routerLink="/app/assessments">Alle Leistungen →</a>
       </div>
 
       @if (resultsLoading()) {
         <p class="state-msg-sm">Lade Leistungen…</p>
       } @else if (results().length === 0) {
-        <p class="state-msg-sm">Noch keine Leistungen erfasst.</p>
-      } @else {
-        <div class="results-list">
-          @for (result of results(); track result.id) {
-            <a class="result-row" [routerLink]="['/app/assessments', result.assessmentEventId]">
-              <div class="result-type-dot" [attr.data-type]="result.assessmentEvent?.type ?? ''"></div>
-              <div class="result-info">
-                <span class="result-title">{{ result.assessmentEvent?.title ?? '—' }}</span>
-                <div class="result-meta">
-                  @if (result.assessmentEvent?.subjectName) { <span>{{ result.assessmentEvent!.subjectName }}</span> }
-                  <span>{{ result.assessmentEvent?.date | date:'dd.MM.yyyy' }}</span>
-                </div>
-              </div>
-              <div class="result-scores">
-                @if (result.grade != null) {
-                  <span class="grade-chip" [attr.data-grade]="result.grade">{{ result.grade }}</span>
-                }
-                @if (result.points != null) {
-                  <span class="points-chip">{{ result.points }} Pkt.</span>
-                }
-              </div>
-            </a>
-          }
+        <div class="notes-empty">
+          <p>Noch keine Leistungen erfasst.</p>
+          <p class="notes-empty-hint">Leistungsereignisse können unter „Leistungen" angelegt werden.</p>
         </div>
+      } @else {
+        @for (group of resultGroups(); track group.subjectId) {
+          <div class="result-group">
+            @if (resultGroups().length > 1 || group.subjectName !== 'Allgemein') {
+              <div class="result-group-label">{{ group.subjectName }}</div>
+            }
+            <div class="results-list">
+              @for (result of group.results; track result.id) {
+                <a class="result-row" [routerLink]="['/app/assessments', result.assessmentEventId]">
+                  <div class="result-type-dot" [attr.data-type]="result.assessmentEvent?.type ?? ''"></div>
+                  <div class="result-info">
+                    <span class="result-title">{{ result.assessmentEvent?.title ?? '—' }}</span>
+                    <span class="result-date-meta">{{ result.assessmentEvent?.date | date:'dd.MM.yyyy' }}</span>
+                  </div>
+                  <div class="result-scores">
+                    @if (result.grade != null) {
+                      <span class="grade-chip" [attr.data-grade]="result.grade">{{ result.grade }}</span>
+                    }
+                    @if (result.points != null) {
+                      <span class="points-chip">{{ result.points }} Pkt.</span>
+                    }
+                    @if (result.comment) {
+                      <span class="result-has-comment" title="{{ result.comment }}">💬</span>
+                    }
+                  </div>
+                </a>
+              }
+            </div>
+          </div>
+        }
       }
-    </section>
-
     </section>
 
   }

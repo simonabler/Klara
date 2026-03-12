@@ -7,6 +7,7 @@ export class AssessmentEventRefDto {
   title!: string;
   type!: AssessmentEventType;
   date!: string;
+  subjectId?: string;
   subjectName?: string;
   className?: string;
 }
