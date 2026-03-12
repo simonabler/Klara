@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { SubjectDto, CreateSubjectDto, UpdateSubjectDto, SchoolLevelDto, CreateSchoolLevelDto, UpdateSchoolLevelDto } from '@app/domain';
+import { SubjectDto, CreateSubjectDto, UpdateSubjectDto } from '@app/domain';
 
 @Injectable({ providedIn: 'root' })
 export class SubjectService {
@@ -14,13 +14,6 @@ export class SubjectService {
   delete(id: string): Observable<void> { return this.http.delete<void>(`${this.base}/${id}`); }
 }
 
+// SchoolLevelService bleibt als leerer Stub damit alte Imports nicht crashen
 @Injectable({ providedIn: 'root' })
-export class SchoolLevelService {
-  private readonly http = inject(HttpClient);
-  private readonly base = '/api/school-levels';
-
-  getAll(): Observable<SchoolLevelDto[]> { return this.http.get<SchoolLevelDto[]>(this.base); }
-  create(dto: CreateSchoolLevelDto): Observable<SchoolLevelDto> { return this.http.post<SchoolLevelDto>(this.base, dto); }
-  update(id: string, dto: UpdateSchoolLevelDto): Observable<SchoolLevelDto> { return this.http.patch<SchoolLevelDto>(`${this.base}/${id}`, dto); }
-  delete(id: string): Observable<void> { return this.http.delete<void>(`${this.base}/${id}`); }
-}
+export class SchoolLevelService {}

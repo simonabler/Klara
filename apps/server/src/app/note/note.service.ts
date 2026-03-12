@@ -18,9 +18,10 @@ export class NoteService {
   async findAll(teacherId: string, filter: NoteFilterDto): Promise<Note[]> {
     const where: Record<string, unknown> = { teacherId };
 
-    if (filter.studentId)  where['studentId']  = filter.studentId;
-    if (filter.subjectId)  where['subjectId']   = filter.subjectId;
-    if (filter.type)       where['type']         = filter.type;
+    if (filter.studentId) where['studentId'] = filter.studentId;
+    if (filter.subjectId) where['subjectId'] = filter.subjectId;
+    if (filter.classId)   where['classId']   = filter.classId;
+    if (filter.type)      where['type']       = filter.type;
 
     if (filter.from && filter.to) {
       where['createdAt'] = Between(new Date(filter.from), new Date(filter.to));
@@ -32,7 +33,7 @@ export class NoteService {
 
     return this.noteRepo.find({
       where,
-      relations: ['subject', 'schoolLevel'],
+      relations: ['subject', 'class'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -40,7 +41,7 @@ export class NoteService {
   async findOne(id: string, teacherId: string): Promise<Note> {
     const note = await this.noteRepo.findOne({
       where: { id, teacherId },
-      relations: ['subject', 'schoolLevel'],
+      relations: ['subject', 'class'],
     });
     if (!note) throw new NotFoundException('Notiz nicht gefunden');
     return note;
@@ -48,27 +49,23 @@ export class NoteService {
 
   async create(dto: CreateNoteDto, teacherId: string): Promise<Note> {
     const note = this.noteRepo.create({
-      content:       dto.content,
-      type:          dto.type,
-      studentId:     dto.studentId,
-      subjectId:     dto.subjectId,
-      schoolLevelId: dto.schoolLevelId,
+      content:   dto.content,
+      type:      dto.type,
+      studentId: dto.studentId,
+      subjectId: dto.subjectId ?? null,
+      classId:   dto.classId   ?? null,
       teacherId,
     });
     const saved = await this.noteRepo.save(note);
     return this.findOne(saved.id, teacherId);
   }
 
-  async update(
-    id: string,
-    dto: UpdateNoteDto,
-    teacherId: string,
-  ): Promise<Note> {
+  async update(id: string, dto: UpdateNoteDto, teacherId: string): Promise<Note> {
     const note = await this.findOne(id, teacherId);
-    if (dto.content       !== undefined) note.content       = dto.content;
-    if (dto.type          !== undefined) note.type          = dto.type;
-    if (dto.subjectId     !== undefined) note.subjectId     = dto.subjectId;
-    if (dto.schoolLevelId !== undefined) note.schoolLevelId = dto.schoolLevelId;
+    if (dto.content   !== undefined) note.content   = dto.content;
+    if (dto.type      !== undefined) note.type       = dto.type;
+    if (dto.subjectId !== undefined) note.subjectId  = dto.subjectId ?? null;
+    if (dto.classId   !== undefined) note.classId    = dto.classId   ?? null;
     await this.noteRepo.save(note);
     return this.findOne(id, teacherId);
   }

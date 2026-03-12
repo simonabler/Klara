@@ -46,7 +46,7 @@ export class StudentDetailComponent implements OnInit {
   filterSubjectIdValue = '';
 
   newNote = { content: '', type: NoteType.PARTICIPATION, subjectId: '' };
-  editNote = { content: '', type: NoteType.PARTICIPATION, subjectId: '' };
+  editNote = { content: '', type: NoteType.PARTICIPATION, subjectId: '', classId: '' };
 
   readonly noteTypes = [
     { value: NoteType.PARTICIPATION, label: 'Mitarbeit' },
@@ -150,7 +150,7 @@ export class StudentDetailComponent implements OnInit {
 
   startEdit(note: NoteDto): void {
     this.editingNoteId.set(note.id);
-    this.editNote = { content: note.content, type: note.type, subjectId: note.subjectId ?? '' };
+    this.editNote = { content: note.content, type: note.type, subjectId: note.subjectId ?? '', classId: note.classId ?? '' };
   }
 
   cancelEdit(): void {
@@ -163,6 +163,7 @@ export class StudentDetailComponent implements OnInit {
       content:   this.editNote.content.trim(),
       type:      this.editNote.type,
       subjectId: this.editNote.subjectId || undefined,
+      classId:   this.editNote.classId || undefined,
     };
     this.noteService.update(id, dto).subscribe({
       next: (updated) => {

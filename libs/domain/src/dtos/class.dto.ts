@@ -1,21 +1,3 @@
-// ---------- SchoolLevel ----------
-
-export class SchoolLevelDto {
-  id!: string;
-  name!: string;
-  year?: string;
-}
-
-export class CreateSchoolLevelDto {
-  name!: string;
-  year?: string;
-}
-
-export class UpdateSchoolLevelDto {
-  name?: string;
-  year?: string;
-}
-
 // ---------- Subject ----------
 
 export class SubjectDto {
@@ -33,23 +15,41 @@ export class UpdateSubjectDto {
 
 // ---------- Class ----------
 
+export class StudentRefDto {
+  id!: string;
+  firstName!: string;
+  lastName!: string;
+  avatarUrl?: string;
+}
+
 export class ClassDto {
   id!: string;
   name!: string;
-  schoolLevelId?: string;
-  schoolLevel?: SchoolLevelDto;
+  schoolYear?: string;
+  schoolLevel?: number;
   studentIds!: string[];
   studentCount!: number;
+  students?: StudentRefDto[];
 }
 
 export class CreateClassDto {
   name!: string;
-  schoolLevelId?: string;
+  schoolYear?: string;
+  schoolLevel?: number;
   studentIds?: string[];
 }
 
 export class UpdateClassDto {
   name?: string;
-  schoolLevelId?: string;
+  schoolYear?: string;
+  schoolLevel?: number;
   studentIds?: string[];
+}
+
+// Kompakte Referenz für andere DTOs
+export class ClassRefDto {
+  id!: string;
+  name!: string;
+  schoolYear?: string;
+  schoolLevel?: number;
 }

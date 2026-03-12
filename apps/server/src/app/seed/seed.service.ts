@@ -7,7 +7,6 @@ import { Student } from '../student/student.entity';
 import { Parent } from '../parent/parent.entity';
 import { Class } from '../class/class.entity';
 import { Subject } from '../subject/subject.entity';
-import { SchoolLevel } from '../school-level/school-level.entity';
 import { Note } from '../note/note.entity';
 import { AssessmentEvent } from '../assessment/assessment-event.entity';
 import { StudentResult } from '../assessment/student-result.entity';
@@ -24,7 +23,6 @@ export class SeedService implements OnApplicationBootstrap {
     @InjectRepository(Parent) private readonly parentRepo: Repository<Parent>,
     @InjectRepository(Class) private readonly classRepo: Repository<Class>,
     @InjectRepository(Subject) private readonly subjectRepo: Repository<Subject>,
-    @InjectRepository(SchoolLevel) private readonly schoolLevelRepo: Repository<SchoolLevel>,
     @InjectRepository(Note) private readonly noteRepo: Repository<Note>,
     @InjectRepository(AssessmentEvent) private readonly assessmentRepo: Repository<AssessmentEvent>,
     @InjectRepository(StudentResult) private readonly resultRepo: Repository<StudentResult>,
@@ -49,11 +47,6 @@ export class SeedService implements OnApplicationBootstrap {
         displayName: 'Demo Lehrkraft',
         avatarUrl: '',
       }),
-    );
-
-    // SchoolLevel
-    const schoolLevel = await this.schoolLevelRepo.save(
-      this.schoolLevelRepo.create({ name: '3. Klasse', year: '2024/25', teacherId: teacher.id }),
     );
 
     // Subjects
@@ -81,21 +74,22 @@ export class SeedService implements OnApplicationBootstrap {
       this.parentRepo.create({ firstName: 'Eva', lastName: 'Steiner', email: 'eva.steiner@example.com', studentId: students[2].id }),
     ]);
 
-    // Class
+    // Class – mit schoolYear + schoolLevel
     const klasse = await this.classRepo.save(
       this.classRepo.create({
         name: '3A',
+        schoolYear: '2024/25',
+        schoolLevel: 3,
         teacherId: teacher.id,
-        schoolLevelId: schoolLevel.id,
         students,
       }),
     );
 
-    // Notes
+    // Notes – mit classId statt schoolLevelId
     await this.noteRepo.save([
-      this.noteRepo.create({ content: 'Sehr aktive Mitarbeit, stellt gute Fragen.', type: NoteType.PARTICIPATION, teacherId: teacher.id, studentId: students[0].id, subjectId: mathe.id, schoolLevelId: schoolLevel.id }),
-      this.noteRepo.create({ content: 'Hat Schwierigkeiten bei Textaufgaben.', type: NoteType.PARTICIPATION, teacherId: teacher.id, studentId: students[1].id, subjectId: mathe.id, schoolLevelId: schoolLevel.id }),
-      this.noteRepo.create({ content: 'Verhält sich respektvoll, hilft Mitschülern.', type: NoteType.BEHAVIOUR, teacherId: teacher.id, studentId: students[0].id, subjectId: deutsch.id, schoolLevelId: schoolLevel.id }),
+      this.noteRepo.create({ content: 'Sehr aktive Mitarbeit, stellt gute Fragen.', type: NoteType.PARTICIPATION, teacherId: teacher.id, studentId: students[0].id, subjectId: mathe.id, classId: klasse.id }),
+      this.noteRepo.create({ content: 'Hat Schwierigkeiten bei Textaufgaben.', type: NoteType.PARTICIPATION, teacherId: teacher.id, studentId: students[1].id, subjectId: mathe.id, classId: klasse.id }),
+      this.noteRepo.create({ content: 'Verhält sich respektvoll, hilft Mitschülern.', type: NoteType.BEHAVIOUR, teacherId: teacher.id, studentId: students[0].id, subjectId: deutsch.id, classId: klasse.id }),
     ]);
 
     // AssessmentEvent
@@ -107,7 +101,6 @@ export class SeedService implements OnApplicationBootstrap {
         teacherId: teacher.id,
         classId: klasse.id,
         subjectId: mathe.id,
-        schoolLevelId: schoolLevel.id,
       }),
     );
 
@@ -119,6 +112,6 @@ export class SeedService implements OnApplicationBootstrap {
       this.resultRepo.create({ assessmentEventId: exam.id, studentId: students[3].id, grade: 4, points: 24, comment: 'Förderbedarf' }),
     ]);
 
-    this.logger.log('Seed complete ✓');
+    this.logger.log('Seed complete.');
   }
 }

@@ -2,11 +2,9 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
 import { ClassService } from '../class.service';
-import { SchoolLevelService } from '../reference-data.service';
 import { StudentService } from '../../students/student.service';
-import { StudentDto, SchoolLevelDto } from '@app/domain';
+import { StudentDto, StudentRefDto } from '@app/domain';
 
 @Component({
   selector: 'app-class-form',
@@ -22,20 +20,23 @@ import { StudentDto, SchoolLevelDto } from '@app/domain';
       <form [formGroup]="form" (ngSubmit)="submit()">
         <section class="form-section">
           <h2>Klasse</h2>
-          <div class="field">
-            <label>Bezeichnung *</label>
-            <input type="text" formControlName="name" placeholder="z.B. 3A" [class.invalid]="isInvalid('name')" />
-            @if (isInvalid('name')) { <span class="field-error">Bezeichnung ist erforderlich</span> }
+          <div class="field-row">
+            <div class="field">
+              <label>Bezeichnung *</label>
+              <input type="text" formControlName="name" placeholder="z.B. 3A"
+                     [class.invalid]="isInvalid('name')" />
+              @if (isInvalid('name')) { <span class="field-error">Bezeichnung ist erforderlich</span> }
+            </div>
+            <div class="field field--sm">
+              <label>Schulstufe</label>
+              <input type="number" formControlName="schoolLevel" placeholder="z.B. 3" min="1" max="13" />
+              <span class="field-hint">1–13</span>
+            </div>
           </div>
           <div class="field">
-            <label>Schulstufe / Schuljahr</label>
-            <select formControlName="schoolLevelId">
-              <option value="">— keine —</option>
-              @for (level of schoolLevels(); track level.id) {
-                <option [value]="level.id">{{ level.name }}{{ level.year ? ' · ' + level.year : '' }}</option>
-              }
-            </select>
-            <a class="field-link" routerLink="/app/settings">Schulstufen verwalten →</a>
+            <label>Schuljahr</label>
+            <input type="text" formControlName="schoolYear" placeholder="z.B. 2024/25" />
+            <span class="field-hint">Format: 2024/25</span>
           </div>
         </section>
 
@@ -76,10 +77,10 @@ import { StudentDto, SchoolLevelDto } from '@app/domain';
 
         <div class="form-actions">
           @if (isEdit()) {
-            <button type="button" class="btn-danger" (click)="deleteClass()" [disabled]="saving()">Löschen</button>
+            <button type="button" class="btn btn-danger" (click)="deleteClass()" [disabled]="saving()">Löschen</button>
           }
-          <a class="btn-secondary" routerLink="/app/classes">Abbrechen</a>
-          <button type="submit" class="btn-primary" [disabled]="saving()">
+          <a class="btn btn-secondary" routerLink="/app/classes">Abbrechen</a>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
             {{ saving() ? 'Wird gespeichert…' : (isEdit() ? 'Speichern' : 'Anlegen') }}
           </button>
         </div>
@@ -104,18 +105,15 @@ import { StudentDto, SchoolLevelDto } from '@app/domain';
       padding: 2px 8px; border-radius: 20px; font-weight: 500;
       text-transform: none; letter-spacing: 0;
     }
-
+    .field-row { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-4); align-items: start; }
+    .field--sm { min-width: 100px; }
     .field { margin-bottom: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
     label { font-size: 13px; font-weight: 500; color: var(--ink-light); }
-    input[type=text], select { /* uses global styles */ }
+    .field-hint { font-size: 11px; color: var(--ink-faint); }
     input.invalid { border-color: var(--error-fg); }
     .field-error { font-size: 12px; color: var(--error-fg); }
-    .field-link { font-size: 12px; color: var(--teal); margin-top: 2px; }
-    .field-link:hover { color: var(--navy); }
 
     .search-wrap { margin-bottom: var(--sp-3); }
-    .search-input { /* uses global styles */ }
-
     .student-grid { display: flex; flex-direction: column; gap: var(--sp-2); }
     .student-chip {
       display: flex; align-items: center; gap: var(--sp-3);
@@ -134,46 +132,42 @@ import { StudentDto, SchoolLevelDto } from '@app/domain';
     .chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .chip-name { flex: 1; font-size: 13px; color: var(--ink); }
     .chip-check { color: var(--navy); font-size: 12px; font-weight: 700; }
-
     .state-msg { color: var(--ink-faint); font-size: 13px; margin: 0; }
     .server-error { color: var(--error-fg); font-size: 13px; margin-bottom: var(--sp-4); }
-
     .form-actions {
       display: flex; justify-content: flex-end; gap: var(--sp-3);
       margin-top: var(--sp-6); padding-top: var(--sp-5);
       border-top: 1px solid var(--border);
     }
     .btn {
-      display: inline-flex; align-items: center; gap: 6px;
+      display: inline-flex; align-items: center;
       padding: 9px 18px; border-radius: var(--r-sm);
       font-family: var(--font-body); font-size: 13px; font-weight: 500;
       cursor: pointer; border: none; transition: all .15s; text-decoration: none;
     }
     .btn-primary { background: var(--navy); color: var(--white); }
     .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
-    .btn-primary:hover:not(:disabled) { background: #243350; box-shadow: var(--sh-md); }
+    .btn-primary:hover:not(:disabled) { background: #243350; }
     .btn-secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--border); }
     .btn-secondary:hover { border-color: var(--navy); }
     .btn-danger { background: transparent; color: var(--ink-faint); border: 1.5px solid var(--border); margin-right: auto; }
-    .btn-danger:hover:not(:disabled) { border-color: var(--error-fg); color: var(--error-fg); background: var(--error-bg); }
+    .btn-danger:hover:not(:disabled) { border-color: var(--error-fg); color: var(--error-fg); }
   `],
 })
 export class ClassFormComponent implements OnInit {
-  private readonly fb = inject(FormBuilder);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly classService = inject(ClassService);
+  private readonly fb             = inject(FormBuilder);
+  private readonly route          = inject(ActivatedRoute);
+  private readonly router         = inject(Router);
+  private readonly classService   = inject(ClassService);
   private readonly studentService = inject(StudentService);
-  private readonly schoolLevelService = inject(SchoolLevelService);
 
-  isEdit = signal(false);
-  classId = signal<string | null>(null);
-  saving = signal(false);
-  serverError = signal<string | null>(null);
-  allStudents = signal<StudentDto[]>([]);
-  schoolLevels = signal<SchoolLevelDto[]>([]);
+  isEdit             = signal(false);
+  classId            = signal<string | null>(null);
+  saving             = signal(false);
+  serverError        = signal<string | null>(null);
+  allStudents        = signal<StudentDto[]>([]);
   selectedStudentIds = signal<Set<string>>(new Set());
-  searchQuery = signal('');
+  searchQuery        = signal('');
 
   filteredStudents = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
@@ -184,39 +178,34 @@ export class ClassFormComponent implements OnInit {
           (s.lastName + ' ' + s.firstName).toLowerCase().includes(q)
         )
       : this.allStudents();
-    // Ausgewählte Schüler immer oben
     return [...list].sort((a, b) => {
-      const aSelected = selected.has(a.id) ? 0 : 1;
-      const bSelected = selected.has(b.id) ? 0 : 1;
-      return aSelected - bSelected;
+      return (selected.has(a.id) ? 0 : 1) - (selected.has(b.id) ? 0 : 1);
     });
   });
 
   form = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(1)]],
-    schoolLevelId: [''],
+    name:        ['', [Validators.required, Validators.minLength(1)]],
+    schoolYear:  [''],
+    schoolLevel: [null as number | null],
   });
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) { this.isEdit.set(true); this.classId.set(id); }
 
-    forkJoin({
-      students: this.studentService.getAll(),
-      levels: this.schoolLevelService.getAll(),
-      ...(this.isEdit() ? { cls: this.classService.getOne(id!) } : {}),
-    }).subscribe({
-      next: (res: any) => {
-        this.allStudents.set(res.students);
-        this.schoolLevels.set(res.levels);
-        if (res.cls) {
-          this.form.patchValue({ name: res.cls.name, schoolLevelId: res.cls.schoolLevelId ?? '' });
-          // FIX: Backend liefert students[] (Objekte mit .id), nicht studentIds[]
-          const ids: string[] = (res.cls.students ?? []).map((s: StudentDto) => s.id);
-          this.selectedStudentIds.set(new Set(ids));
-        }
-      },
-    });
+    this.studentService.getAll().subscribe(students => this.allStudents.set(students));
+
+    if (this.isEdit()) {
+      this.classService.getOne(id!).subscribe(cls => {
+        this.form.patchValue({
+          name:        cls.name,
+          schoolYear:  cls.schoolYear ?? '',
+          schoolLevel: cls.schoolLevel ?? null,
+        });
+        const ids: string[] = (cls.students ?? []).map((s: StudentRefDto) => s.id);
+        this.selectedStudentIds.set(new Set(ids));
+      });
+    }
   }
 
   isSelected(id: string): boolean { return this.selectedStudentIds().has(id); }
@@ -238,15 +227,16 @@ export class ClassFormComponent implements OnInit {
     this.serverError.set(null);
     const value = this.form.getRawValue();
     const dto = {
-      name: value.name!,
-      schoolLevelId: value.schoolLevelId || undefined,
-      studentIds: [...this.selectedStudentIds()],
+      name:        value.name!,
+      schoolYear:  value.schoolYear || undefined,
+      schoolLevel: value.schoolLevel ?? undefined,
+      studentIds:  [...this.selectedStudentIds()],
     };
     const req$ = this.isEdit()
       ? this.classService.update(this.classId()!, dto)
       : this.classService.create(dto);
     req$.subscribe({
-      next: () => this.router.navigate(['/app/classes']),
+      next:  () => this.router.navigate(['/app/classes']),
       error: () => { this.serverError.set('Speichern fehlgeschlagen.'); this.saving.set(false); },
     });
   }

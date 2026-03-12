@@ -1,30 +1,26 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { NoteDto, CreateNoteDto, UpdateNoteDto } from '@app/domain';
-import { NoteType } from '@app/domain';
-
-export interface NoteFilter {
-  studentId?: string;
-  subjectId?: string;
-  type?: NoteType;
-  from?: string;
-  to?: string;
-}
+import { NoteDto, CreateNoteDto, UpdateNoteDto, NoteFilterDto } from '@app/domain';
 
 @Injectable({ providedIn: 'root' })
 export class NoteService {
   private readonly http = inject(HttpClient);
   private readonly base = '/api/notes';
 
-  getAll(filter: NoteFilter = {}): Observable<NoteDto[]> {
+  getAll(filter: NoteFilterDto = {}): Observable<NoteDto[]> {
     let params = new HttpParams();
-    if (filter.studentId) params = params.set('studentId', filter.studentId);
-    if (filter.subjectId) params = params.set('subjectId', filter.subjectId);
-    if (filter.type)      params = params.set('type',      filter.type);
-    if (filter.from)      params = params.set('from',      filter.from);
-    if (filter.to)        params = params.set('to',        filter.to);
+    if (filter.studentId)  params = params.set('studentId',  filter.studentId);
+    if (filter.subjectId)  params = params.set('subjectId',  filter.subjectId);
+    if (filter.classId)    params = params.set('classId',    filter.classId);
+    if (filter.type)       params = params.set('type',       filter.type);
+    if (filter.from)       params = params.set('from',       filter.from);
+    if (filter.to)         params = params.set('to',         filter.to);
     return this.http.get<NoteDto[]>(this.base, { params });
+  }
+
+  getOne(id: string): Observable<NoteDto> {
+    return this.http.get<NoteDto>(`${this.base}/${id}`);
   }
 
   create(dto: CreateNoteDto): Observable<NoteDto> {

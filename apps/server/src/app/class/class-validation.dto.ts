@@ -1,25 +1,4 @@
-import { IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
-
-export class CreateSchoolLevelValidationDto {
-  @IsString()
-  @MinLength(1)
-  name!: string;
-
-  @IsOptional()
-  @IsString()
-  year?: string;
-}
-
-export class UpdateSchoolLevelValidationDto {
-  @IsOptional()
-  @IsString()
-  @MinLength(1)
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  year?: string;
-}
+import { IsInt, IsOptional, IsString, IsUUID, Max, Min, MinLength } from 'class-validator';
 
 export class CreateSubjectValidationDto {
   @IsString()
@@ -40,8 +19,14 @@ export class CreateClassValidationDto {
   name!: string;
 
   @IsOptional()
-  @IsUUID()
-  schoolLevelId?: string;
+  @IsString()
+  schoolYear?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(13)
+  schoolLevel?: number;
 
   @IsOptional()
   @IsUUID('4', { each: true })
@@ -55,8 +40,14 @@ export class UpdateClassValidationDto {
   name?: string;
 
   @IsOptional()
-  @IsUUID()
-  schoolLevelId?: string;
+  @IsString()
+  schoolYear?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(13)
+  schoolLevel?: number;
 
   @IsOptional()
   @IsUUID('4', { each: true })

@@ -1,17 +1,20 @@
 import { NoteType } from '../enums';
 
-// ── Response DTO ────────────────────────────────────────────────────────────
+// ── Refs ────────────────────────────────────────────────────────────────────
 
 export class NoteSubjectRefDto {
   id!: string;
   name!: string;
 }
 
-export class NoteSchoolLevelRefDto {
+export class NoteClassRefDto {
   id!: string;
   name!: string;
-  year?: string;
+  schoolYear?: string;
+  schoolLevel?: number;
 }
+
+// ── Response DTO ────────────────────────────────────────────────────────────
 
 export class NoteDto {
   id!: string;
@@ -21,20 +24,19 @@ export class NoteDto {
   teacherId!: string;
   subjectId?: string;
   subject?: NoteSubjectRefDto;
-  schoolLevelId?: string;
-  schoolLevel?: NoteSchoolLevelRefDto;
+  classId?: string;
+  class?: NoteClassRefDto;
   createdAt!: string;
 }
 
 // ── Create ──────────────────────────────────────────────────────────────────
-// Dekoratoren leben nur im Backend (NestJS) – hier plain TypeScript
 
 export class CreateNoteDto {
   content!: string;
   type!: NoteType;
   studentId!: string;
   subjectId?: string;
-  schoolLevelId?: string;
+  classId?: string;
 }
 
 // ── Update ──────────────────────────────────────────────────────────────────
@@ -43,14 +45,15 @@ export class UpdateNoteDto {
   content?: string;
   type?: NoteType;
   subjectId?: string;
-  schoolLevelId?: string;
+  classId?: string;
 }
 
-// ── Query / Filter ──────────────────────────────────────────────────────────
+// ── Filter ──────────────────────────────────────────────────────────────────
 
 export class NoteFilterDto {
   studentId?: string;
   subjectId?: string;
+  classId?: string;
   type?: NoteType;
   from?: string;
   to?: string;

@@ -25,7 +25,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     student:       null,
     subjectId:     null,
     subject:       null,
-    schoolLevelId: null,
+    classId: null,
     schoolLevel:   null,
     createdAt:     new Date('2026-03-10T10:00:00Z'),
     ...overrides,
@@ -226,13 +226,13 @@ describe('NoteService', () => {
       expect(noteRepo.save).toHaveBeenCalled();
     });
 
-    it('should persist optional subjectId and schoolLevelId', async () => {
+    it('should persist optional subjectId and classId', async () => {
       const dto = {
         content:       'Verhalten in Mathe',
         type:          NoteType.BEHAVIOUR,
         studentId:     STUDENT_ID,
         subjectId:     SUBJECT_ID,
-        schoolLevelId: 'level-uuid',
+        classId: 'class-uuid',
       };
       const created = makeNote({ subjectId: SUBJECT_ID });
       noteRepo.create.mockReturnValue(created);
@@ -244,7 +244,7 @@ describe('NoteService', () => {
       expect(noteRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({
           subjectId:     SUBJECT_ID,
-          schoolLevelId: 'level-uuid',
+          classId: 'class-uuid',
         }),
       );
     });

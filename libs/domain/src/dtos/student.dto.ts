@@ -1,9 +1,5 @@
 import { CreateParentDto, ParentDto } from './parent.dto';
-
-export class ClassRefDto {
-  id!: string;
-  name!: string;
-}
+import { ClassRefDto } from './class.dto';
 
 export class StudentDto {
   id!: string;

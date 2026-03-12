@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { CreateNoteDto, UpdateNoteDto, NoteFilterDto } from '@app/domain';
+import { CreateNoteValidationDto as CreateNoteDto, UpdateNoteValidationDto as UpdateNoteDto, NoteFilterValidationDto as NoteFilterDto } from './note-validation.dto';
 import { NoteType } from '@app/domain';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ describe('CreateNoteDto – validation', () => {
     const errors = await validationErrors(CreateNoteDto, {
       ...validBase,
       subjectId:     VALID_UUID,
-      schoolLevelId: VALID_UUID,
+      classId: VALID_UUID,
     });
     expect(errors).toHaveLength(0);
   });
@@ -85,10 +85,10 @@ describe('CreateNoteDto – validation', () => {
     expect(errors.length).toBeGreaterThan(0);
   });
 
-  it('should fail if optional schoolLevelId is present but not a UUID', async () => {
+  it('should fail if optional classId is present but not a UUID', async () => {
     const errors = await validationErrors(CreateNoteDto, {
       ...validBase,
-      schoolLevelId: '12345',
+      classId: '12345',
     });
     expect(errors.length).toBeGreaterThan(0);
   });

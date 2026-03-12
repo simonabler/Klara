@@ -1,15 +1,4 @@
-/**
- * Backend-only Validierungs-DTOs für die Note-Endpoints.
- * class-validator Dekoratoren leben hier, nicht in @app/domain,
- * damit das Angular-Frontend kein reflect-metadata braucht.
- */
-import {
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUUID,
-  MinLength,
-} from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 import { NoteType } from '@app/domain';
 
 export class CreateNoteValidationDto {
@@ -29,7 +18,7 @@ export class CreateNoteValidationDto {
 
   @IsOptional()
   @IsUUID()
-  schoolLevelId?: string;
+  classId?: string;
 }
 
 export class UpdateNoteValidationDto {
@@ -48,7 +37,7 @@ export class UpdateNoteValidationDto {
 
   @IsOptional()
   @IsUUID()
-  schoolLevelId?: string;
+  classId?: string;
 }
 
 export class NoteFilterValidationDto {
@@ -59,6 +48,10 @@ export class NoteFilterValidationDto {
   @IsOptional()
   @IsUUID()
   subjectId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  classId?: string;
 
   @IsOptional()
   @IsEnum(NoteType)
