@@ -386,6 +386,17 @@ const NOTE_TYPE_LABEL: Record<NoteType, string> = {
       background: var(--surface); padding: 2px 7px; border-radius: 4px;
       border: 1px solid var(--border);
     }
+
+    @media (max-width: 768px) {
+      .page { padding: var(--sp-4) var(--sp-3); }
+      h1 { font-size: 22px; }
+      .filter-bar { flex-direction: column; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+      .filter-field { min-width: 0; }
+      .student-header { padding: var(--sp-3); }
+      .student-body { padding: var(--sp-3); }
+      .results-row { flex-direction: column; }
+      .result-chip { flex-wrap: wrap; }
+    }
   `],
 })
 export class BeurteilungComponent implements OnInit {

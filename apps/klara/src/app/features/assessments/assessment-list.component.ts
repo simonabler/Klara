@@ -214,6 +214,19 @@ import { AssessmentEventType } from '@app/domain';
     .btn-primary:hover:not(:disabled) { background: #243350; }
     .btn-ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--border); }
     .btn-ghost:hover { border-color: var(--navy); }
+
+    @media (max-width: 768px) {
+      .page { padding: var(--sp-4) var(--sp-3); }
+      .page-header { flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
+      h1 { font-size: 22px; }
+      .filter-bar { gap: var(--sp-3); }
+      .filter-bar select { min-width: 0; width: 100%; }
+      .form-panel { padding: var(--sp-4); }
+      .form-row { flex-direction: column; }
+      .panel-actions { flex-direction: column-reverse; }
+      .event-row { flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-3); }
+      .event-meta { flex-wrap: wrap; }
+    }
   `],
 })
 export class AssessmentListComponent implements OnInit {

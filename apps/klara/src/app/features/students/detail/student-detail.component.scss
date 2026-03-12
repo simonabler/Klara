@@ -305,3 +305,12 @@ dd { margin: 0; font-size: 14px; color: var(--ink); }
 }
 .result-date-meta { font-size: 11px; color: var(--ink-faint); margin-top: 2px; display: block; }
 .result-has-comment { font-size: 12px; cursor: default; }
+
+@media (max-width: 768px) {
+  .page { padding: var(--sp-4) var(--sp-3); }
+  .profile-header { flex-direction: column; align-items: flex-start; }
+  .info-grid { grid-template-columns: 1fr; }
+  .section-header-row { flex-wrap: wrap; gap: var(--sp-2); }
+  .results-list { overflow-x: auto; }
+  .result-row { flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-3); }
+}

@@ -1,6 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, HostListener } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../auth/auth.service';
 
 @Component({
@@ -10,22 +12,33 @@ import { AuthService } from '../auth/auth.service';
   template: `
     <div class="shell">
 
+      <!-- ── Mobile Overlay ── -->
+      @if (sidebarOpen()) {
+        <div class="overlay" (click)="closeSidebar()"></div>
+      }
+
       <!-- ── Sidebar ── -->
-      <nav class="sidebar">
+      <nav class="sidebar" [class.open]="sidebarOpen()">
         <div class="sidebar-brand">
           <svg width="28" height="28" viewBox="0 0 44 44" fill="none">
             <rect x="2" y="2" width="22" height="28" rx="5" fill="#fff" opacity=".9"/>
             <rect x="16" y="8" width="18" height="18" rx="4" fill="#7BAABA"/>
             <rect x="22" y="24" width="12" height="12" rx="3" fill="#D4B896"/>
           </svg>
-          <a routerLink="/" class="brand-name">klara</a>
+          <a routerLink="/" class="brand-name" (click)="closeSidebar()">klara</a>
+          <button class="sidebar-close" (click)="closeSidebar()" aria-label="Menü schließen">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
 
         <div class="nav-section-label">Übersicht</div>
 
         <ul class="nav-list">
           <li>
-            <a routerLink="/app/students" routerLinkActive="active" class="nav-item">
+            <a routerLink="/app/students" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
@@ -34,7 +47,7 @@ import { AuthService } from '../auth/auth.service';
             </a>
           </li>
           <li>
-            <a routerLink="/app/assessments" routerLinkActive="active" class="nav-item">
+            <a routerLink="/app/assessments" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
               </svg>
@@ -42,7 +55,7 @@ import { AuthService } from '../auth/auth.service';
             </a>
           </li>
           <li>
-            <a routerLink="/app/beurteilung" routerLinkActive="active" class="nav-item">
+            <a routerLink="/app/beurteilung" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 11l3 3L22 4"/>
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -51,16 +64,17 @@ import { AuthService } from '../auth/auth.service';
             </a>
           </li>
           <li>
-            <a routerLink="/app/notes" routerLinkActive="active" class="nav-item">
+            <a routerLink="/app/notes" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
                 <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
               </svg>
               Notizen
             </a>
           </li>
           <li>
-            <a routerLink="/app/classes" routerLinkActive="active" class="nav-item">
+            <a routerLink="/app/classes" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                 <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
@@ -74,7 +88,7 @@ import { AuthService } from '../auth/auth.service';
           <div class="nav-section-label">System</div>
           <ul class="nav-list">
             <li>
-              <a routerLink="/app/settings" routerLinkActive="active" class="nav-item">
+              <a routerLink="/app/settings" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="3"/>
                   <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
@@ -92,98 +106,97 @@ import { AuthService } from '../auth/auth.service';
               </button>
             </li>
           </ul>
-          <a routerLink="/impressum" class="impressum-link">Impressum</a>
+          <a routerLink="/impressum" class="impressum-link" (click)="closeSidebar()">Impressum</a>
         </div>
       </nav>
 
       <!-- ── Content ── -->
-      <main class="shell-content">
-        <router-outlet />
-      </main>
+      <div class="content-wrap">
+
+        <!-- Mobile Top-Bar -->
+        <header class="topbar">
+          <button class="hamburger" (click)="toggleSidebar()" aria-label="Menü öffnen">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div class="topbar-brand">
+            <svg width="20" height="20" viewBox="0 0 44 44" fill="none">
+              <rect x="2" y="2" width="22" height="28" rx="5" fill="#2E3F5C"/>
+              <rect x="16" y="8" width="18" height="18" rx="4" fill="#7BAABA"/>
+              <rect x="22" y="24" width="12" height="12" rx="3" fill="#D4B896"/>
+            </svg>
+            <span>klara</span>
+          </div>
+        </header>
+
+        <main class="shell-content">
+          <router-outlet />
+        </main>
+      </div>
 
     </div>
   `,
   styles: [`
-    .shell {
-      display: flex;
-      min-height: 100vh;
-      background: var(--off-white);
+    .shell { display: flex; min-height: 100vh; background: var(--off-white); }
+
+    /* ── Overlay ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(28,43,58,.5);
+      z-index: 99;
+      animation: fadeIn .2s ease;
     }
+    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 
     /* ── Sidebar ── */
     .sidebar {
-      width: 216px;
-      flex-shrink: 0;
+      width: 216px; flex-shrink: 0;
       background: var(--navy);
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       padding: var(--sp-5) 0 var(--sp-4);
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
+      position: sticky; top: 0;
+      height: 100vh; overflow-y: auto;
+      z-index: 100;
     }
-
     .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-3);
+      display: flex; align-items: center; gap: var(--sp-3);
       padding: 0 var(--sp-4) var(--sp-5);
       border-bottom: 1px solid rgba(255,255,255,.08);
       margin-bottom: var(--sp-3);
     }
     .brand-name {
-      font-family: var(--font-body);
-      font-weight: 300;
-      font-size: 22px;
-      color: var(--white);
-      letter-spacing: -0.3px;
+      font-family: var(--font-body); font-weight: 300;
+      font-size: 22px; color: var(--white); letter-spacing: -.3px; flex: 1;
     }
+    .sidebar-close {
+      display: none; background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,.5); padding: 4px; border-radius: var(--r-sm);
+      transition: color .12s; align-items: center; justify-content: center;
+    }
+    .sidebar-close:hover { color: var(--white); }
 
     .nav-section-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,.3);
-      padding: var(--sp-2) var(--sp-4) var(--sp-2);
-      margin-top: var(--sp-2);
+      font-size: 10px; font-weight: 600; letter-spacing: 1.2px;
+      text-transform: uppercase; color: rgba(255,255,255,.3);
+      padding: var(--sp-2) var(--sp-4); margin-top: var(--sp-2);
     }
-
-    .nav-list {
-      list-style: none;
-      padding: 0 var(--sp-3);
-    }
-
+    .nav-list { list-style: none; padding: 0 var(--sp-3); }
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-3);
-      padding: 9px var(--sp-3);
-      border-radius: var(--r-sm);
-      font-size: 13px;
-      font-weight: 450;
-      color: rgba(255,255,255,.6);
-      cursor: pointer;
-      transition: background .12s, color .12s;
-      text-decoration: none;
-      width: 100%;
-      background: none;
-      border: none;
-      text-align: left;
-      margin-bottom: 2px;
+      display: flex; align-items: center; gap: var(--sp-3);
+      padding: 9px var(--sp-3); border-radius: var(--r-sm);
+      font-size: 13px; font-weight: 450; color: rgba(255,255,255,.6);
+      cursor: pointer; transition: background .12s, color .12s;
+      text-decoration: none; width: 100%;
+      background: none; border: none; text-align: left; margin-bottom: 2px;
     }
     .nav-item svg { opacity: .75; flex-shrink: 0; }
-    .nav-item:hover {
-      background: rgba(255,255,255,.08);
-      color: rgba(255,255,255,.9);
-    }
-    .nav-item:hover svg { opacity: 1; }
-    .nav-item.active {
-      background: rgba(255,255,255,.12);
-      color: var(--white);
-    }
-    .nav-item.active svg { opacity: 1; }
+    .nav-item:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.9); }
+    .nav-item:hover svg, .nav-item.active svg { opacity: 1; }
+    .nav-item.active { background: rgba(255,255,255,.12); color: var(--white); }
     .nav-item.logout:hover { color: #f4a4a4; }
 
     .sidebar-footer {
@@ -192,26 +205,70 @@ import { AuthService } from '../auth/auth.service';
       padding-top: var(--sp-3);
     }
     .impressum-link {
-      display: block;
-      padding: var(--sp-2) var(--sp-4);
-      margin-top: var(--sp-2);
-      font-size: 11px;
-      color: rgba(255,255,255,.22);
-      text-decoration: none;
-      transition: color .15s;
-      letter-spacing: 0.2px;
+      display: block; padding: var(--sp-2) var(--sp-4); margin-top: var(--sp-2);
+      font-size: 11px; color: rgba(255,255,255,.22);
+      text-decoration: none; transition: color .15s;
     }
     .impressum-link:hover { color: rgba(255,255,255,.5); }
 
     /* ── Content ── */
-    .shell-content {
-      flex: 1;
-      min-width: 0;
-      overflow-y: auto;
+    .content-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+    /* ── Mobile Top-Bar ── */
+    .topbar {
+      display: none; align-items: center; gap: var(--sp-3);
+      background: var(--navy); padding: 12px var(--sp-4);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .hamburger {
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,.8); padding: 6px; border-radius: var(--r-sm);
+      transition: background .12s; display: flex; align-items: center;
+    }
+    .hamburger:hover { background: rgba(255,255,255,.1); color: var(--white); }
+    .topbar-brand {
+      display: flex; align-items: center; gap: var(--sp-2);
+      font-family: var(--font-body); font-weight: 300;
+      font-size: 18px; color: var(--white); letter-spacing: -.3px;
+    }
+
+    .shell-content { flex: 1; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed; left: 0; top: 0;
+        height: 100dvh;
+        transform: translateX(-100%);
+        transition: transform .25s ease, box-shadow .25s ease;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: var(--sh-lg);
+      }
+      .sidebar-close { display: flex; }
+      .topbar { display: flex; }
+      .content-wrap { width: 100%; }
     }
   `],
 })
 export class AppShellComponent {
   private readonly authService = inject(AuthService);
-  logout(): void { this.authService.logout(); }
+  private readonly router      = inject(Router);
+
+  sidebarOpen = signal(false);
+
+  constructor() {
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe(() => this.sidebarOpen.set(false));
+  }
+
+  toggleSidebar(): void { this.sidebarOpen.update(v => !v); }
+  closeSidebar():  void { this.sidebarOpen.set(false); }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void { this.sidebarOpen.set(false); }
+
+  logout(): void { this.closeSidebar(); this.authService.logout(); }
 }

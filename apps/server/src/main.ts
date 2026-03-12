@@ -21,9 +21,15 @@ async function bootstrap() {
   app.enableCors();
   app.set('trust proxy', 1);
 
-  // Statische Uploads (Avatare) unter /uploads bereitstellen
+  // Upload-Verzeichnis beim Start anlegen + statisch bereitstellen
+  const nodePath = require('path');
+  const nodeFs   = require('fs');
   const uploadDir = process.env.UPLOAD_DIR ?? './uploads/avatars';
-  app.useStaticAssets(require('path').resolve(uploadDir, '..'), { prefix: '/uploads' });
+  const absoluteUploadDir = nodePath.resolve(uploadDir);
+  nodeFs.mkdirSync(absoluteUploadDir, { recursive: true });
+  // Unter /api/uploads/ erreichbar → Traefik leitet alles mit /api zum Backend
+  const uploadsRoot = nodePath.resolve(absoluteUploadDir, '..');
+  app.useStaticAssets(uploadsRoot, { prefix: '/api/uploads' });
 
   app.use(
     helmet({
