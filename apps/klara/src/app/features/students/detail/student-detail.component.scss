@@ -215,3 +215,25 @@ dd { margin: 0; font-size: 14px; color: var(--ink); }
 
 .state-msg { color: var(--ink-faint); font-size: 14px; }
 .error-msg { color: var(--error-fg); }
+
+/* ── No-subjects hint ── */
+.note-no-subjects {
+  font-size: 12px; color: var(--ink-faint);
+  display: flex; align-items: center; gap: 4px;
+}
+.note-settings-link {
+  color: var(--teal); text-decoration: none; font-weight: 500;
+}
+.note-settings-link:hover { text-decoration: underline; }
+
+/* ── Edit actions layout ── */
+.note-edit-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-2); margin-top: var(--sp-3);
+}
+.note-edit-btns {
+  display: flex; gap: var(--sp-2);
+}
+.note-select--sm {
+  font-size: 12px; padding: 5px 8px; min-width: 120px;
+}

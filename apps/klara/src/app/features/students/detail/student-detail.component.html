@@ -96,12 +96,19 @@
           <textarea class="note-textarea" [(ngModel)]="newNote.content"
             placeholder="Beobachtung eingeben…" rows="3"></textarea>
           <div class="note-form-footer">
-            <select [(ngModel)]="newNote.subjectId" class="note-select">
-              <option value="">Kein Fach</option>
-              @for (s of availableSubjects(); track s.id) {
-                <option [value]="s.id">{{ s.name }}</option>
-              }
-            </select>
+            @if (availableSubjects().length === 0) {
+              <span class="note-no-subjects">
+                Keine Fächer –
+                <a routerLink="/app/settings" class="note-settings-link">Fächer anlegen</a>
+              </span>
+            } @else {
+              <select [(ngModel)]="newNote.subjectId" class="note-select">
+                <option value="">Kein Fach</option>
+                @for (s of availableSubjects(); track s.id) {
+                  <option [value]="s.id">{{ s.name }}</option>
+                }
+              </select>
+            }
             <div class="note-form-actions">
               <button class="btn-cancel" (click)="cancelNewNote()">Abbrechen</button>
               <button class="btn-save" (click)="saveNote()"
@@ -162,9 +169,19 @@
                     </div>
                     <textarea class="note-textarea note-textarea--sm" [(ngModel)]="editNote.content" rows="3"></textarea>
                     <div class="note-edit-actions">
-                      <button class="btn-cancel" (click)="cancelEdit()">Abbrechen</button>
-                      <button class="btn-save btn-save--sm" (click)="updateNote(note.id)"
-                        [disabled]="!editNote.content.trim()">Speichern</button>
+                      @if (availableSubjects().length > 0) {
+                        <select [(ngModel)]="editNote.subjectId" class="note-select note-select--sm">
+                          <option value="">Kein Fach</option>
+                          @for (s of availableSubjects(); track s.id) {
+                            <option [value]="s.id">{{ s.name }}</option>
+                          }
+                        </select>
+                      }
+                      <div class="note-edit-btns">
+                        <button class="btn-cancel" (click)="cancelEdit()">Abbrechen</button>
+                        <button class="btn-save btn-save--sm" (click)="updateNote(note.id)"
+                          [disabled]="!editNote.content.trim()">Speichern</button>
+                      </div>
                     </div>
                   </div>
                 } @else {

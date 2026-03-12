@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StudentService } from '../student.service';
 import { NoteService } from '../../notes/note.service';
-import { StudentDto, NoteDto, CreateNoteDto, UpdateNoteDto } from '@app/domain';
+import { SubjectService } from '../../classes/reference-data.service';
+import { StudentDto, NoteDto, CreateNoteDto, UpdateNoteDto, SubjectDto } from '@app/domain';
 import { NoteType } from '@app/domain';
 
 interface SubjectGroup {
@@ -24,6 +25,7 @@ export class StudentDetailComponent implements OnInit {
   private readonly route          = inject(ActivatedRoute);
   private readonly studentService = inject(StudentService);
   private readonly noteService    = inject(NoteService);
+  private readonly subjectService = inject(SubjectService);
 
   student      = signal<StudentDto | null>(null);
   loading      = signal(true);
@@ -33,6 +35,9 @@ export class StudentDetailComponent implements OnInit {
   notesLoading = signal(false);
   saving       = signal(false);
 
+  /** Alle Fächer der Lehrkraft – aus der API geladen */
+  subjects     = signal<SubjectDto[]>([]);
+
   showNewNoteForm = signal(false);
   editingNoteId   = signal<string | null>(null);
 
@@ -41,7 +46,7 @@ export class StudentDetailComponent implements OnInit {
   filterSubjectIdValue = '';
 
   newNote = { content: '', type: NoteType.PARTICIPATION, subjectId: '' };
-  editNote = { content: '', type: NoteType.PARTICIPATION };
+  editNote = { content: '', type: NoteType.PARTICIPATION, subjectId: '' };
 
   readonly noteTypes = [
     { value: NoteType.PARTICIPATION, label: 'Mitarbeit' },
@@ -49,13 +54,8 @@ export class StudentDetailComponent implements OnInit {
     { value: NoteType.GENERAL,       label: 'Allgemein' },
   ];
 
-  availableSubjects = computed<{ id: string; name: string }[]>(() => {
-    const map = new Map<string, string>();
-    for (const n of this.notes()) {
-      if (n.subjectId && n.subject) map.set(n.subjectId, n.subject.name);
-    }
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  });
+  /** Fächer für das Dropdown – direkt aus der API */
+  availableSubjects = computed<SubjectDto[]>(() => this.subjects());
 
   filteredGroups = computed<SubjectGroup[]>(() => {
     let list = this.notes();
@@ -79,6 +79,10 @@ export class StudentDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
+    // Schüler und Fächer parallel laden
+    this.subjectService.getAll().subscribe({
+      next: (data) => this.subjects.set(data),
+    });
     this.studentService.getOne(id).subscribe({
       next:  (data) => { this.student.set(data); this.loading.set(false); this.loadNotes(); },
       error: ()     => { this.error.set('Schüler konnte nicht geladen werden.'); this.loading.set(false); },
@@ -130,6 +134,11 @@ export class StudentDetailComponent implements OnInit {
     };
     this.noteService.create(dto).subscribe({
       next: (created) => {
+        // Subject-Name aus lokaler Liste befüllen für sofortige Anzeige
+        const subject = this.subjects().find(s => s.id === created.subjectId);
+        if (subject && !created.subject) {
+          (created as any).subject = { id: subject.id, name: subject.name };
+        }
         this.notes.update(list => [created, ...list]);
         this.saving.set(false);
         this.showNewNoteForm.set(false);
@@ -141,7 +150,7 @@ export class StudentDetailComponent implements OnInit {
 
   startEdit(note: NoteDto): void {
     this.editingNoteId.set(note.id);
-    this.editNote = { content: note.content, type: note.type };
+    this.editNote = { content: note.content, type: note.type, subjectId: note.subjectId ?? '' };
   }
 
   cancelEdit(): void {
@@ -150,9 +159,18 @@ export class StudentDetailComponent implements OnInit {
 
   updateNote(id: string): void {
     if (!this.editNote.content.trim()) return;
-    const dto: UpdateNoteDto = { content: this.editNote.content.trim(), type: this.editNote.type };
+    const dto: UpdateNoteDto = {
+      content:   this.editNote.content.trim(),
+      type:      this.editNote.type,
+      subjectId: this.editNote.subjectId || undefined,
+    };
     this.noteService.update(id, dto).subscribe({
       next: (updated) => {
+        // Subject-Name aus lokaler Liste befüllen
+        const subject = this.subjects().find(s => s.id === updated.subjectId);
+        if (subject && !updated.subject) {
+          (updated as any).subject = { id: subject.id, name: subject.name };
+        }
         this.notes.update(list => list.map(n => n.id === id ? updated : n));
         this.editingNoteId.set(null);
       },
