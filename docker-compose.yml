@@ -11,7 +11,7 @@ services:
       - "traefik.http.routers.klara-frontend.tls=true"
       - "traefik.http.routers.klara-frontend.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.klara-frontend.entrypoints=websecure"
-      - "traefik.http.routers.klara-frontend.rule=Host(`hub.abler.tirol`) && PathPrefix(`/`)"
+      - "traefik.http.routers.klara-frontend.rule=Host(`klara.abler.tirol`) && PathPrefix(`/`)"
       - "traefik.http.routers.klara-frontend.priority=10"
       - "traefik.http.routers.klara-frontend.middlewares=klara-frontend-compress"
       - "traefik.http.middlewares.klara-frontend-compress.compress=true"
@@ -30,7 +30,7 @@ services:
       - "traefik.http.routers.klara-backend.tls=true"
       - "traefik.http.routers.klara-backend.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.klara-backend.entrypoints=websecure"
-      - "traefik.http.routers.klara-backend.rule=Host(`hub.abler.tirol`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.klara-backend.rule=Host(`klara.abler.tirol`) && PathPrefix(`/api`)"
       # Strippt das Prefix /api bevor es an den Service geht
      # - "traefik.http.middlewares.klara-backend-strip.stripprefixregex.regex=/api"
      # - "traefik.http.routers.klara-backend.middlewares=klara-backend-strip@docker"
