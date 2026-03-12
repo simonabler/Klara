@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
@@ -404,6 +404,7 @@ export class BeurteilungComponent implements OnInit {
   private readonly subjectService = inject(SubjectService);
   private readonly noteService    = inject(NoteService);
   private readonly assessmentService = inject(AssessmentService);
+  private readonly router         = inject(Router);
 
   classes  = signal<ClassDto[]>([]);
   subjects = signal<SubjectDto[]>([]);
@@ -421,7 +422,16 @@ export class BeurteilungComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.classService.getAll().subscribe(c => this.classes.set(c));
+    // Navigation-State vom Klassen-Dashboard auslesen
+    const navState = this.router.getCurrentNavigation()?.extras?.state as { classId?: string } | undefined;
+    const preselectedClassId = navState?.['classId'] ?? (history.state as any)?.['classId'];
+
+    this.classService.getAll().subscribe(c => {
+      this.classes.set(c);
+      if (preselectedClassId && c.some(cls => cls.id === preselectedClassId)) {
+        this.selectedClassId.set(preselectedClassId);
+      }
+    });
     this.subjectService.getAll().subscribe(s => this.subjects.set(s));
   }
 

@@ -29,6 +29,7 @@ export class ClassDto {
   schoolLevel?: number;
   studentIds!: string[];
   studentCount!: number;
+  openAssessmentCount!: number;
   students?: StudentRefDto[];
 }
 
