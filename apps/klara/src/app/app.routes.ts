@@ -27,6 +27,8 @@ export const appRoutes: Route[] = [
     canActivate: [authGuard],
     children: [
       { path: '', component: HomeComponent, title: 'Klara' },
+      { path: 'assessments',       loadComponent: () => import('./features/assessments/assessment-list.component').then(m => m.AssessmentListComponent),   title: 'Leistungen – Klara' },
+      { path: 'assessments/:id',    loadComponent: () => import('./features/assessments/assessment-detail.component').then(m => m.AssessmentDetailComponent), title: 'Leistung – Klara' },
       { path: 'notes',           loadComponent: () => import('./features/notes/notes-page.component').then(m => m.NotesPageComponent),             title: 'Notizen – Klara' },
       { path: 'students',        loadComponent: () => import('./features/students/list/student-list.component').then(m => m.StudentListComponent),   title: 'Schüler – Klara' },
       { path: 'students/new',    loadComponent: () => import('./features/students/form/student-form.component').then(m => m.StudentFormComponent),   title: 'Neuer Schüler – Klara' },

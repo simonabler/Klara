@@ -237,3 +237,43 @@ dd { margin: 0; font-size: 14px; color: var(--ink); }
 .note-select--sm {
   font-size: 12px; padding: 5px 8px; min-width: 120px;
 }
+
+/* ── Leistungen im Profil ─────────────────────────────────────── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+.section-link { font-size: 12px; color: var(--teal); text-decoration: none; }
+.section-link:hover { text-decoration: underline; }
+.state-msg-sm { font-size: 13px; color: var(--ink-faint); margin: 0; }
+
+.results-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.result-row {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface); border-radius: var(--r-sm);
+  border: 1px solid var(--border); text-decoration: none;
+  transition: border-color .12s;
+}
+.result-row:hover { border-color: var(--teal); }
+.result-type-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: var(--light-teal);
+}
+.result-type-dot[data-type="EXAM"] { background: #D4B896; }
+.result-type-dot[data-type="WRITTEN_CHECK"] { background: #7BAABA; }
+.result-info { flex: 1; }
+.result-title { font-size: 13px; font-weight: 500; color: var(--navy); display: block; }
+.result-meta { display: flex; gap: var(--sp-3); font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+.result-meta span::before { content: '·'; margin-right: var(--sp-3); }
+.result-meta span:first-child::before { content: ''; margin: 0; }
+.result-scores { display: flex; align-items: center; gap: var(--sp-2); }
+.grade-chip {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--navy); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+}
+.grade-chip[data-grade="1"] { background: #2E7D32; }
+.grade-chip[data-grade="2"] { background: #558B2F; }
+.grade-chip[data-grade="3"] { background: #F57F17; }
+.grade-chip[data-grade="4"] { background: #E65100; }
+.grade-chip[data-grade="5"] { background: #C62828; }
+.points-chip { font-size: 12px; color: var(--ink-faint); }
