@@ -8,10 +8,13 @@ import { GoogleStrategy } from './google.strategy';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { TeacherModule } from '../teacher/teacher.module';
+import { Teacher } from '../teacher/teacher.entity';
 import { ExportService } from './export.service';
 import { Student } from '../student/student.entity';
 import { Note } from '../note/note.entity';
 import { AssessmentEvent } from '../assessment/assessment-event.entity';
+import { Subject } from '../subject/subject.entity';
+import { Class } from '../class/class.entity';
 
 @Module({
   imports: [
@@ -27,7 +30,7 @@ import { AssessmentEvent } from '../assessment/assessment-event.entity';
       }),
     }),
     TeacherModule,
-    TypeOrmModule.forFeature([Student, Note, AssessmentEvent]),
+    TypeOrmModule.forFeature([Student, Note, AssessmentEvent, Subject, Class, Teacher]),
   ],
   controllers: [AuthController],
   providers: [GoogleStrategy, JwtStrategy, JwtAuthGuard, ExportService],
