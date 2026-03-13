@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Req,
   Res,
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentTeacher } from './current-teacher.decorator';
 import { Teacher } from '../teacher/teacher.entity';
 import { TeacherService } from '../teacher/teacher.service';
+import { ExportService } from './export.service';
 import { JwtPayload } from './jwt-payload.interface';
 
 @ApiTags('auth')
@@ -24,6 +26,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly teacherService: TeacherService,
+    private readonly exportService: ExportService,
   ) {}
 
   /**
@@ -115,5 +118,32 @@ export class AuthController {
   logout(@Res() res: Response) {
     res.clearCookie('klara_token');
     res.json({ message: 'Erfolgreich abgemeldet' });
+  }
+
+  /**
+   * Alle Daten exportieren – Schüler, Notizen, Leistungsereignisse.
+   * DSGVO Art. 20 – Recht auf Datenportabilität.
+   */
+  @Get('export')
+  @ApiOperation({ summary: 'Alle eigenen Daten exportieren (DSGVO Art. 20)' })
+  @UseGuards(JwtAuthGuard)
+  exportAll(@CurrentTeacher() teacher: { id: string }) {
+    return this.exportService.exportAll(teacher.id);
+  }
+
+  /**
+   * Konto löschen – löscht die Lehrkraft und via CASCADE alle verknüpften Daten.
+   * DSGVO Art. 17 – Recht auf Löschung.
+   */
+  @Delete('account')
+  @ApiOperation({ summary: 'Konto und alle Daten unwiderruflich löschen (DSGVO Art. 17)' })
+  @UseGuards(JwtAuthGuard)
+  async deleteAccount(
+    @CurrentTeacher() teacher: { id: string },
+    @Res() res: Response,
+  ) {
+    await this.teacherService.deleteAccount(teacher.id);
+    res.clearCookie('klara_token');
+    res.json({ message: 'Konto und alle Daten wurden gelöscht.' });
   }
 }

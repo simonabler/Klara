@@ -82,6 +82,15 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  /** DSGVO Art. 17 – Konto und alle Daten unwiderruflich löschen */
+  async deleteAccount(): Promise<void> {
+    await firstValueFrom(
+      this.http.delete('/api/auth/account', { withCredentials: true }),
+    );
+    this._clearToken();
+    this.router.navigate(['/login']);
+  }
+
   private _clearToken(): void {
     this._token.set(null);
     this._user.set(null);
