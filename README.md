@@ -226,6 +226,36 @@ Health-Check: `GET /api/healthz` → `{ "status": "ok" }`
 | Notizen | `/api/notes` |
 | Leistungsereignisse | `/api/assessments` |
 | Schülerergebnisse | `/api/assessments/:id/results` |
+| Konto löschen | `DELETE /api/auth/account` |
+
+---
+
+## Datenschutz (DSGVO)
+
+Klara speichert personenbezogene Daten von Schülerinnen und Schülern (Name, Geburtsdatum, Elterndaten, Noten, Beobachtungen). **Der Betreiber einer Klara-Instanz ist für die datenschutzkonforme Nutzung verantwortlich.**
+
+### Pflichten des Betreibers
+
+- Erstellung einer **Datenschutzerklärung** gemäß Art. 13/14 DSGVO
+- Sicherstellung einer **Rechtsgrundlage** für die Verarbeitung (z. B. schulrechtliche Grundlage, Einwilligung)
+- Abschluss eines **Auftragsverarbeitungsvertrags (AVV)** mit dem Hosting-Anbieter
+- Führen eines **Verzeichnisses von Verarbeitungstätigkeiten** (Art. 30 DSGVO)
+- Sicherstellung der **Betroffenenrechte** (siehe unten)
+
+### Betroffenenrechte (Art. 15, 17, 20 DSGVO)
+
+| Recht | Umsetzung in Klara |
+|---|---|
+| **Auskunft** (Art. 15) | Schülerdaten sind in der App einsehbar; vollständiger Export manuell möglich |
+| **Löschung** (Art. 17) | Schüler können einzeln gelöscht werden (inkl. aller verknüpften Daten via CASCADE). Lehrkräfte können ihr Konto unter Einstellungen löschen. |
+| **Portabilität** (Art. 20) | Noch nicht als automatisierter Export umgesetzt – geplant für eine spätere Version |
+
+### Technische Maßnahmen
+
+- Alle Schüler-Verknüpfungen (Notizen, Elterndaten, Leistungsergebnisse) sind mit `onDelete: 'CASCADE'` konfiguriert – ein gelöschter Schüler hinterlässt keine verwaisten Datensätze
+- Beim Löschen einer Lehrkraft werden via CASCADE alle Schüler, Notizen und Leistungsdaten dieser Lehrkraft mitgelöscht
+- Authentifizierung via httpOnly-Cookie (kein Token in URL oder localStorage)
+- `TYPEORM_SYNC` ist in Produktion deaktiviert (kein unbeabsichtigter Datenverlust)
 
 ---
 
