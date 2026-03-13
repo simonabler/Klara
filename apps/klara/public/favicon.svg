@@ -1,16 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0ea5e9"/>
-      <stop offset="100%" stop-color="#10b981"/>
-    </linearGradient>
-  </defs>
-  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#g)"/>
-  <!-- code chevrons -->
-  <g fill="#ffffff">
-    <path d="M26 20 L18 32 L26 44 L30 41 L24 32 L30 23 Z"/>
-    <path d="M38 20 L34 23 L40 32 L34 41 L38 44 L46 32 Z"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Navy rectangle – Hauptblock links -->
+  <rect x="1" y="1" width="16" height="21" rx="4" fill="#2E3F5C"/>
+  <!-- Teal rectangle – mittlere Schicht -->
+  <rect x="11" y="5" width="14" height="14" rx="3" fill="#7BAABA"/>
+  <!-- Sand rectangle – Akzent unten rechts -->
+  <rect x="17" y="17" width="9" height="9" rx="2.5" fill="#D4B896"/>
 </svg>
-
