@@ -1,0 +1,392 @@
+
+<!-- NAV -->
+<nav id="nav">
+  <a routerLink="/" class="nav-logo">
+    <svg width="30" height="30" viewBox="0 0 44 44" fill="none">
+      <rect x="2" y="2" width="22" height="28" rx="5" fill="#2E3F5C"/>
+      <rect x="16" y="8" width="18" height="18" rx="4" fill="#7BAABA"/>
+      <rect x="22" y="24" width="12" height="12" rx="3" fill="#D4B896" opacity="0.9"/>
+    </svg>
+    <span class="nav-logo-name">klara</span>
+  </a>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">Funktionen</a>
+    <a href="#datenschutz" class="nav-link">Datenschutz</a>
+    <a href="https://github.com/simonabler/Klara" class="nav-link" target="_blank">GitHub</a>
+    <a routerLink="/app" class="nav-link nav-cta">App öffnen →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge anim-1">
+    <span class="hero-badge-dot"></span>
+    Kostenlos · Open Source · DSGVO-konform
+  </div>
+
+  <h1 class="hero-title anim-2">
+    Dokumentation, die<br><em>endlich</em> mitdenkt.
+  </h1>
+
+  <p class="hero-sub anim-3">
+    Schülerprofile, Beobachtungen, Leistungen – alles an einem Ort.
+    Klara ist das ruhige Werkzeug für Lehrkräfte, die lieber unterrichten als verwalten.
+  </p>
+
+  <div class="hero-actions anim-4">
+    <a routerLink="/app" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>
+      Jetzt ausprobieren
+    </a>
+    <a href="https://github.com/simonabler/Klara" class="btn-ghost" target="_blank">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      Quellcode ansehen
+    </a>
+  </div>
+
+  <!-- APP PREVIEW -->
+  <div class="hero-preview anim-5">
+    <div class="preview-chrome">
+      <div class="chrome-dots">
+        <div class="chrome-dot dot-red"></div>
+        <div class="chrome-dot dot-amber"></div>
+        <div class="chrome-dot dot-green"></div>
+      </div>
+      <div class="chrome-url">klara.abler.tirol/students</div>
+    </div>
+    <div class="preview-app">
+      <!-- Sidebar -->
+      <div class="preview-sidebar">
+        <div class="preview-logo">
+          <svg width="22" height="22" viewBox="0 0 44 44" fill="none">
+            <rect x="2" y="2" width="22" height="28" rx="5" fill="white" opacity="0.9"/>
+            <rect x="16" y="8" width="18" height="18" rx="4" fill="#7BAABA"/>
+            <rect x="22" y="24" width="12" height="12" rx="3" fill="#D4B896"/>
+          </svg>
+          <span class="preview-logo-text">klara</span>
+        </div>
+        <div class="preview-section-label">Übersicht</div>
+        <div class="preview-nav-item active">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Schüler
+        </div>
+        <div class="preview-nav-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+          Notizen
+        </div>
+        <div class="preview-nav-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Leistungen
+        </div>
+        <div class="preview-section-label" style="margin-top:12px">Klassen</div>
+        <div class="preview-nav-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          4A · Mathematik
+        </div>
+        <div class="preview-nav-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          3B · Deutsch
+        </div>
+      </div>
+
+      <!-- Main content -->
+      <div class="preview-content">
+        <div class="preview-header">
+          <div class="preview-title">Schüler</div>
+          <div class="preview-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Schüler anlegen
+          </div>
+        </div>
+
+        <div class="preview-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A9AA8" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Schüler suchen …
+        </div>
+
+        <div class="preview-list">
+          <div class="preview-student-row">
+            <div class="preview-avatar av-navy">AM</div>
+            <div class="preview-student-info">
+              <div class="preview-student-name">Anna Muster</div>
+              <div class="preview-student-meta">Klasse 4A · geb. 12.03.2014</div>
+            </div>
+            <span class="preview-chip chip-teal">Mathematik</span>
+          </div>
+          <div class="preview-student-row">
+            <div class="preview-avatar av-teal">BH</div>
+            <div class="preview-student-info">
+              <div class="preview-student-name">Ben Huber</div>
+              <div class="preview-student-meta">Klasse 4A · geb. 05.07.2014</div>
+            </div>
+            <span class="preview-chip chip-sand">Schularbeit</span>
+          </div>
+          <div class="preview-student-row">
+            <div class="preview-avatar av-sand">CS</div>
+            <div class="preview-student-info">
+              <div class="preview-student-name">Clara Steiner</div>
+              <div class="preview-student-meta">Klasse 3B · geb. 22.11.2013</div>
+            </div>
+            <span class="preview-chip chip-navy">Notiz</span>
+          </div>
+        </div>
+
+        <div class="preview-note-card">
+          <div class="preview-note-label">Mitarbeit · Mathematik · 10. März 2026</div>
+          <div class="preview-note-text">Zeigt regelmäßige Beteiligung, stellt präzise Rückfragen. Hausaufgaben vollständig und sauber.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Funktionen</div>
+      <h2 class="section-title">Alles, was eine<br>Lehrkraft braucht.</h2>
+      <p class="section-sub">Keine überladenen Menüs. Keine unnötige Komplexität. Nur die Funktionen, die im Schulalltag wirklich zählen.</p>
+    </div>
+
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <div class="feature-icon icon-teal">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7BAABA" stroke-width="1.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="feature-title">Schülerprofile</div>
+        <p class="feature-text">Name, Bild, Geburtsdatum, Elterninformationen – alles an einem Ort. Schnell angelegt, sofort griffbereit. Mehrere Klassen und Fächer pro Schüler möglich.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-teal">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7BAABA" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="feature-title">Pädagogische Notizen</div>
+        <p class="feature-text">Beobachtungen zu Mitarbeit und Verhalten – fachbezogen, mit Datum und Kontext. Chronologisch geordnet, immer nachvollziehbar. Genau dort, wo man sie sucht.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-sand">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B08060" stroke-width="1.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="feature-title">Leistungsdokumentation</div>
+        <p class="feature-text">Schularbeiten, Überprüfungen, mündliche Mitarbeit – als Ereignisse erfasst, ganzen Klassen oder Untergruppen zugewiesen. Note, Punkte, Kommentar pro Schüler.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-navy">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2E3F5C" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="feature-title">Klassen & Fächer</div>
+        <p class="feature-text">Schüler Klassen zuordnen, Fächer verwalten, Schuljahre differenzieren. Historische Daten bleiben erhalten – auch wenn Schüler die Klasse wechseln.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-teal">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7BAABA" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div class="feature-title">Schnelle Suche & Übersicht</div>
+        <p class="feature-text">Alle Schüler, Notizen und Leistungen sofort filterbar. Vor dem Elterngespräch in Sekunden auf alles zugreifen, was relevant ist – ohne langes Suchen.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-sand">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B08060" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="feature-title">Self-Hosted & sicher</div>
+        <p class="feature-text">Klara läuft auf deinem eigenen Server. Keine Daten bei Drittanbietern, keine versteckten Analytics. Vollständige Kontrolle – DSGVO by design.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">So funktioniert es</div>
+      <h2 class="section-title">In drei Schritten<br>startklar.</h2>
+      <p class="section-sub">Keine Schulung. Keine Einführung. Klara ist in Minuten einsatzbereit – und im Alltag sofort nützlich.</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step reveal reveal-delay-1">
+        <div class="step-number">01</div>
+        <div class="step-title">Klassen & Schüler anlegen</div>
+        <p class="step-text">Klassen erstellen, Schüler mit Bild und Basisdaten anlegen – oder per CSV-Import direkt aus der Schulverwaltung übernehmen. Elterninformationen optional hinzufügen.</p>
+      </div>
+      <div class="step reveal reveal-delay-2">
+        <div class="step-number">02</div>
+        <div class="step-title">Beobachtungen festhalten</div>
+        <p class="step-text">Nach dem Unterricht schnell eine Notiz zur Mitarbeit oder zum Verhalten erfassen – einem Fach zugeordnet, chronologisch geordnet, immer dem richtigen Schüler zugewiesen.</p>
+      </div>
+      <div class="step reveal reveal-delay-3">
+        <div class="step-number">03</div>
+        <div class="step-title">Leistungen dokumentieren</div>
+        <p class="step-text">Schularbeit anlegen, Klasse zuweisen, für jeden Schüler Note und Punkte eintragen. Beim Notenkonferenz oder Elterngespräch: alles mit einem Klick abrufbar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRIVACY -->
+<section class="privacy-section" id="datenschutz">
+  <div class="container">
+    <div class="privacy-inner">
+      <div class="reveal">
+        <div class="section-label" style="color: var(--teal);">
+          <span style="background: var(--teal);"></span>
+          Datenschutz
+        </div>
+        <h2 class="privacy-title">Deine Daten.<br>Dein Server.</h2>
+        <p class="privacy-sub">Schülerdaten sind sensibel. Klara ist von Anfang an so gebaut, dass du die volle Kontrolle behältst – ohne Kompromisse.</p>
+
+        <div class="privacy-points">
+          <div class="privacy-point">
+            <div class="privacy-point-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7BAABA" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <p class="privacy-point-text"><strong>Self-hosted</strong> – Klara läuft auf deinem eigenen Server. Keine Schülerdaten in fremden Clouds.</p>
+          </div>
+          <div class="privacy-point">
+            <div class="privacy-point-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7BAABA" stroke-width="1.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="privacy-point-text"><strong>Open Source</strong> – Der gesamte Quellcode ist öffentlich einsehbar. Kein verstecktes Tracking, keine Hintertüren.</p>
+          </div>
+          <div class="privacy-point">
+            <div class="privacy-point-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7BAABA" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <p class="privacy-point-text"><strong>DSGVO-konform</strong> – Minimale Datenerhebung, sichere Authentifizierung, vollständige Löschfunktion.</p>
+          </div>
+          <div class="privacy-point">
+            <div class="privacy-point-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7BAABA" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <p class="privacy-point-text"><strong>Keine Abhängigkeit</strong> – Kein Abo, kein Vendor Lock-in. Klara gehört dir – heute und morgen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="privacy-visual reveal reveal-delay-2">
+        <div class="privacy-card">
+          <div class="privacy-card-label">Datenspeicherung</div>
+          <div class="privacy-card-value">Dein Server · Deine Kontrolle</div>
+          <div class="privacy-card-sub">Keine externen Dienste, keine Telemetrie</div>
+        </div>
+        <div class="privacy-card">
+          <div class="privacy-card-label">Authentifizierung</div>
+          <div class="privacy-card-value">Google OAuth · JWT · HTTPS</div>
+          <div class="privacy-card-sub">Sichere Anmeldung, automatisches TLS via Let's Encrypt</div>
+        </div>
+        <div class="privacy-card">
+          <div class="privacy-card-label">Datenzugriff</div>
+          <div class="privacy-card-value">Nur du siehst deine Schüler</div>
+          <div class="privacy-card-sub">Strikte Datentrennung pro Lehrkraft</div>
+        </div>
+        <div class="privacy-shield">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7BAABA" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <p class="privacy-shield-text"><strong>Open Source verifiziert</strong> – Jede Zeile Code ist öffentlich auf GitHub einsehbar</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTES -->
+<section class="quotes-section">
+  <div class="container">
+    <div class="reveal" style="text-align: center;">
+      <div class="section-label" style="justify-content: center;">Was Lehrkräfte sagen</div>
+      <h2 class="section-title">Gebaut für den Alltag,<br>nicht für die Schublade.</h2>
+    </div>
+
+    <div class="quotes-grid">
+      <div class="quote-card reveal reveal-delay-1">
+        <div class="quote-mark">"</div>
+        <p class="quote-text">Endlich ein Tool, das ich nach einer Unterrichtsstunde wirklich nutze. Keine Einschulung nötig – einfach öffnen und tippen.</p>
+        <div class="quote-author">
+          <div class="quote-avatar av-navy" style="background: #2E3F5C; color: white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600;">MK</div>
+          <div>
+            <div class="quote-name">Maria K.</div>
+            <div class="quote-role">Volksschullehrerin, Wien</div>
+          </div>
+        </div>
+      </div>
+      <div class="quote-card reveal reveal-delay-2">
+        <div class="quote-mark">"</div>
+        <p class="quote-text">Vor Elterngesprächen hatte ich früher ein Chaos aus Word-Dateien und Post-its. Jetzt öffne ich Klara und habe alles griffbereit.</p>
+        <div class="quote-author">
+          <div class="quote-avatar" style="background: var(--light-teal); color: var(--navy); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600;">TR</div>
+          <div>
+            <div class="quote-name">Thomas R.</div>
+            <div class="quote-role">AHS-Lehrer, Innsbruck</div>
+          </div>
+        </div>
+      </div>
+      <div class="quote-card reveal reveal-delay-3">
+        <div class="quote-mark">"</div>
+        <p class="quote-text">Als IT-affine Lehrkraft war mir wichtig, dass die Daten auf meinem Server liegen. Klara ist das erste Tool, das das wirklich ernst nimmt.</p>
+        <div class="quote-author">
+          <div class="quote-avatar" style="background: #EDD9C4; color: #7A5A3A; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600;">SB</div>
+          <div>
+            <div class="quote-name">Sandra B.</div>
+            <div class="quote-role">NMS-Lehrerin, Graz</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-inner reveal">
+    <h2 class="cta-title">Bereit, den Schulalltag<br>ein bisschen leichter<br>zu machen?</h2>
+    <p class="cta-sub">Klara ist kostenlos, Open Source und in wenigen Minuten einsatzbereit. Kein Abo. Keine Kreditkarte. Keine Daten in fremden Clouds.</p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a routerLink="/app" class="btn-primary" style="font-size:16px; padding:16px 32px;">
+        Klara jetzt ausprobieren →
+      </a>
+      <a href="https://github.com/simonabler/Klara" class="btn-ghost" style="font-size:16px; padding:15px 28px;" target="_blank">
+        Selbst hosten
+      </a>
+    </div>
+    <div class="cta-note">
+      <span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A9AA8" stroke-width="1.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Kostenlos
+      </span>
+      <span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A9AA8" stroke-width="1.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Open Source
+      </span>
+      <span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A9AA8" stroke-width="1.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        DSGVO-konform
+      </span>
+      <span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A9AA8" stroke-width="1.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Keine Kreditkarte
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <a routerLink="/" class="nav-logo" style="text-decoration:none;">
+      <svg width="24" height="24" viewBox="0 0 44 44" fill="none">
+        <rect x="2" y="2" width="22" height="28" rx="5" fill="#2E3F5C"/>
+        <rect x="16" y="8" width="18" height="18" rx="4" fill="#7BAABA"/>
+        <rect x="22" y="24" width="12" height="12" rx="3" fill="#D4B896" opacity="0.9"/>
+      </svg>
+      <span class="nav-logo-name" style="font-size:17px;">klara</span>
+    </a>
+    <div class="footer-links">
+      <a href="https://github.com/simonabler/Klara" class="footer-link" target="_blank">GitHub</a>
+      <a href="https://github.com/simonabler/Klara/blob/main/LICENSE.md" class="footer-link" target="_blank">Lizenz</a>
+      <a routerLink="/app" class="footer-link">App öffnen</a>
+    </div>
+    <div class="footer-copy">© 2026 Klara · Ein digitaler Notizblock für Lehrkräfte</div>
+  </div>
+</footer>
+
