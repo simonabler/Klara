@@ -78,6 +78,44 @@
   font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 20px;
 }
 
+/* Klassen-Zuweisung im Profil */
+.classes-row {
+  display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap;
+}
+.no-classes-hint { font-size: 13px; color: var(--ink-faint); }
+.btn-class-edit {
+  width: 26px; height: 26px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: transparent;
+  color: var(--ink-faint); cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.btn-class-edit:hover,
+.btn-class-edit.active { border-color: var(--teal); color: var(--teal); background: rgba(123,170,186,.08); }
+
+.class-picker {
+  display: flex; flex-wrap: wrap; gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.class-picker-empty { font-size: 13px; color: var(--ink-faint); }
+.class-picker-link { color: var(--teal); text-decoration: none; font-weight: 500; }
+.class-picker-link:hover { text-decoration: underline; }
+.class-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--white); color: var(--ink-light);
+  font-family: var(--font-body); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .15s;
+}
+.class-chip:hover:not(:disabled) { border-color: var(--teal); color: var(--teal); }
+.class-chip.selected { background: var(--navy); border-color: var(--navy); color: var(--white); }
+.class-chip:disabled { opacity: .6; cursor: wait; }
+.chip-year { opacity: .65; font-size: 11px; }
+
 /* ── Info Sections ── */
 .info-section { margin-bottom: var(--sp-6); }
 .section-label {
