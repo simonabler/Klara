@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Req,
   Res,
@@ -115,5 +116,21 @@ export class AuthController {
   logout(@Res() res: Response) {
     res.clearCookie('klara_token');
     res.json({ message: 'Erfolgreich abgemeldet' });
+  }
+
+  /**
+   * Konto löschen – löscht die Lehrkraft und via CASCADE alle verknüpften Daten.
+   * DSGVO Art. 17 – Recht auf Löschung.
+   */
+  @Delete('account')
+  @ApiOperation({ summary: 'Konto und alle Daten unwiderruflich löschen (DSGVO Art. 17)' })
+  @UseGuards(JwtAuthGuard)
+  async deleteAccount(
+    @CurrentTeacher() teacher: { id: string },
+    @Res() res: Response,
+  ) {
+    await this.teacherService.deleteAccount(teacher.id);
+    res.clearCookie('klara_token');
+    res.json({ message: 'Konto und alle Daten wurden gelöscht.' });
   }
 }
