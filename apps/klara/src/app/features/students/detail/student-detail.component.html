@@ -173,7 +173,7 @@
               </span>
             } @else {
               <select [(ngModel)]="newNote.subjectId" class="note-select">
-                <option value="">Kein Fach</option>
+                <option value="">Kein Fach (Allgemein)</option>
                 @for (s of availableSubjects(); track s.id) {
                   <option [value]="s.id">{{ s.name }}</option>
                 }
@@ -224,7 +224,12 @@
         @for (group of filteredGroups(); track group.subjectId) {
           <div class="note-group">
             @if (filteredGroups().length > 1 || group.subjectName !== 'Allgemein') {
-              <div class="note-group-label">{{ group.subjectName }}</div>
+              <div class="note-group-label">
+                {{ group.subjectName }}
+                @if (group.subjectId === null) {
+                  <span class="group-label-hint">– ohne Fachzuordnung</span>
+                }
+              </div>
             }
             @for (note of group.notes; track note.id) {
               <div class="note-card" [class.editing]="editingNoteId() === note.id" [attr.data-type]="note.type">
@@ -241,7 +246,7 @@
                     <div class="note-edit-actions">
                       @if (availableSubjects().length > 0) {
                         <select [(ngModel)]="editNote.subjectId" class="note-select note-select--sm">
-                          <option value="">Kein Fach</option>
+                          <option value="">Kein Fach (Allgemein)</option>
                           @for (s of availableSubjects(); track s.id) {
                             <option [value]="s.id">{{ s.name }}</option>
                           }
