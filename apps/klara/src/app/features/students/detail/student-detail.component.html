@@ -9,8 +9,36 @@
     <!-- ── Page-Header ── -->
     <header class="page-header">
       <a class="back-link" routerLink="/app/students">← Schüler</a>
-      <a class="btn-edit" [routerLink]="['/app/students', student()!.id, 'edit']">Bearbeiten</a>
+      <div class="header-actions">
+        <a class="btn-edit" [routerLink]="['/app/students', student()!.id, 'edit']">Bearbeiten</a>
+        <button class="btn-delete-trigger" (click)="confirmDelete.set(true)"
+                [class.active]="confirmDelete()" title="Schüler löschen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
+      </div>
     </header>
+
+    <!-- ── Löschen Bestätigung ── -->
+    @if (confirmDelete()) {
+      <div class="delete-confirm">
+        <span class="delete-confirm-text">
+          <strong>{{ student()!.firstName }} {{ student()!.lastName }}</strong> wirklich löschen?
+          Alle Notizen und Leistungsdaten dieses Schülers werden ebenfalls entfernt.
+        </span>
+        <div class="delete-confirm-actions">
+          <button class="btn-cancel-sm" (click)="confirmDelete.set(false)" [disabled]="deleting()">
+            Abbrechen
+          </button>
+          <button class="btn-danger-sm" (click)="deleteStudent()" [disabled]="deleting()">
+            {{ deleting() ? 'Wird gelöscht…' : 'Ja, löschen' }}
+          </button>
+        </div>
+      </div>
+    }
 
     <!-- ── Profil ── -->
     <div class="profile">

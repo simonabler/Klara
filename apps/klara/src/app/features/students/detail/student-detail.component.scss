@@ -7,12 +7,51 @@
 }
 .back-link { color: var(--ink-faint); font-size: 13px; text-decoration: none; transition: color .15s; }
 .back-link:hover { color: var(--ink); }
+
+.header-actions { display: flex; align-items: center; gap: var(--sp-2); }
+
 .btn-edit {
   padding: 7px 14px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
   background: var(--white); font-family: var(--font-body); font-size: 13px;
   font-weight: 500; color: var(--ink); text-decoration: none; transition: all .15s;
 }
 .btn-edit:hover { border-color: var(--navy); color: var(--navy); }
+
+.btn-delete-trigger {
+  width: 34px; height: 34px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--border); background: var(--white);
+  color: var(--ink-faint); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.btn-delete-trigger:hover,
+.btn-delete-trigger.active { border-color: var(--error-fg); color: var(--error-fg); background: #FEF5F5; }
+
+/* Löschen Bestätigung */
+.delete-confirm {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  background: #FEF5F5; border: 1.5px solid #F5BABA;
+  border-radius: var(--r-md); margin-bottom: var(--sp-5);
+}
+.delete-confirm-text { font-size: 13px; color: var(--ink-light); line-height: 1.5; flex: 1; min-width: 200px; }
+.delete-confirm-text strong { color: var(--ink); }
+.delete-confirm-actions { display: flex; gap: var(--sp-2); flex-shrink: 0; }
+.btn-cancel-sm {
+  padding: 7px 14px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: var(--white); font-family: var(--font-body); font-size: 13px;
+  font-weight: 500; color: var(--ink-light); cursor: pointer; transition: all .15s;
+}
+.btn-cancel-sm:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
+.btn-cancel-sm:disabled { opacity: .5; cursor: not-allowed; }
+.btn-danger-sm {
+  padding: 7px 16px; border: none; border-radius: var(--r-sm);
+  background: #C62828; font-family: var(--font-body); font-size: 13px;
+  font-weight: 500; color: var(--white); cursor: pointer; transition: background .15s;
+}
+.btn-danger-sm:hover:not(:disabled) { background: #a93226; }
+.btn-danger-sm:disabled { opacity: .6; cursor: not-allowed; }
 
 /* ── Profile ── */
 .profile {

@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StudentService } from '../student.service';
@@ -30,6 +30,7 @@ interface ResultGroup {
 })
 export class StudentDetailComponent implements OnInit {
   private readonly route          = inject(ActivatedRoute);
+  private readonly router         = inject(Router);
   private readonly studentService = inject(StudentService);
   private readonly noteService    = inject(NoteService);
   private readonly subjectService    = inject(SubjectService);
@@ -46,6 +47,10 @@ export class StudentDetailComponent implements OnInit {
   /** Leistungsergebnisse dieses Schülers */
   results        = signal<StudentResultDto[]>([]);
   resultsLoading = signal(false);
+
+  /** Löschen-Bestätigung */
+  confirmDelete = signal(false);
+  deleting      = signal(false);
 
   /** Leistungen nach Fach gruppiert */
   resultGroups = computed<ResultGroup[]>(() => {
@@ -236,5 +241,15 @@ export class StudentDetailComponent implements OnInit {
 
   setFilterType(type: NoteType | null): void {
     this.filterType.set(type);
+  }
+
+  deleteStudent(): void {
+    const s = this.student();
+    if (!s) return;
+    this.deleting.set(true);
+    this.studentService.delete(s.id).subscribe({
+      next: () => this.router.navigate(['/app/students']),
+      error: () => { this.deleting.set(false); this.confirmDelete.set(false); },
+    });
   }
 }
