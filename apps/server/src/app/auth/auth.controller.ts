@@ -48,7 +48,15 @@ export class AuthController {
     const token = this.jwtService.sign(payload);
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:4200';
 
-    res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+    // Token nur als httpOnly-Cookie – NICHT als URL-Parameter
+    res.cookie('klara_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 8 * 60 * 60 * 1000,
+    });
+
+    res.redirect(`${frontendUrl}/auth/callback`);
   }
 
   /**
@@ -85,7 +93,7 @@ export class AuthController {
       maxAge: 8 * 60 * 60 * 1000,
     });
 
-    res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+    res.redirect(`${frontendUrl}/auth/callback`);
   }
 
   /**
