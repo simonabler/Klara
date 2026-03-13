@@ -1,12 +1,13 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StudentService } from '../student.service';
 import { NoteService } from '../../notes/note.service';
 import { AssessmentService } from '../../assessments/assessment.service';
 import { SubjectService } from '../../classes/reference-data.service';
-import { StudentDto, NoteDto, CreateNoteDto, UpdateNoteDto, SubjectDto, StudentResultDto } from '@app/domain';
+import { ClassService } from '../../classes/class.service';
+import { StudentDto, NoteDto, CreateNoteDto, UpdateNoteDto, SubjectDto, StudentResultDto, ClassDto } from '@app/domain';
 import { NoteType } from '@app/domain';
 
 interface SubjectGroup {
@@ -30,10 +31,12 @@ interface ResultGroup {
 })
 export class StudentDetailComponent implements OnInit {
   private readonly route          = inject(ActivatedRoute);
+  private readonly router         = inject(Router);
   private readonly studentService = inject(StudentService);
   private readonly noteService    = inject(NoteService);
   private readonly subjectService    = inject(SubjectService);
   private readonly assessmentService = inject(AssessmentService);
+  private readonly classService      = inject(ClassService);
 
   student      = signal<StudentDto | null>(null);
   loading      = signal(true);
@@ -46,6 +49,15 @@ export class StudentDetailComponent implements OnInit {
   /** Leistungsergebnisse dieses Schülers */
   results        = signal<StudentResultDto[]>([]);
   resultsLoading = signal(false);
+
+  /** Löschen-Bestätigung */
+  confirmDelete = signal(false);
+  deleting      = signal(false);
+
+  /** Klassen-Verwaltung im Profil */
+  allClasses       = signal<ClassDto[]>([]);
+  showClassPicker  = signal(false);
+  savingClasses    = signal(false);
 
   /** Leistungen nach Fach gruppiert */
   resultGroups = computed<ResultGroup[]>(() => {
@@ -113,9 +125,12 @@ export class StudentDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
-    // Schüler und Fächer parallel laden
+    // Schüler, Fächer und Klassen parallel laden
     this.subjectService.getAll().subscribe({
       next: (data) => this.subjects.set(data),
+    });
+    this.classService.getAll().subscribe({
+      next: (data) => this.allClasses.set(data),
     });
     this.studentService.getOne(id).subscribe({
       next:  (data) => { this.student.set(data); this.loading.set(false); this.loadNotes(); this.loadResults(); },
@@ -236,5 +251,55 @@ export class StudentDetailComponent implements OnInit {
 
   setFilterType(type: NoteType | null): void {
     this.filterType.set(type);
+  }
+
+  deleteStudent(): void {
+    const s = this.student();
+    if (!s) return;
+    this.deleting.set(true);
+    this.studentService.delete(s.id).subscribe({
+      next: () => this.router.navigate(['/app/students']),
+      error: () => { this.deleting.set(false); this.confirmDelete.set(false); },
+    });
+  }
+
+  /** Ist der Schüler bereits in dieser Klasse? */
+  isInClass(classId: string): boolean {
+    return this.student()?.classes?.some(c => c.id === classId) ?? false;
+  }
+
+  /** Klasse hinzufügen oder entfernen */
+  toggleClass(cls: ClassDto): void {
+    const s = this.student();
+    if (!s || this.savingClasses()) return;
+
+    const currentIds = s.classes?.map(c => c.id) ?? [];
+    const isIn = currentIds.includes(cls.id);
+    const newIds = isIn
+      ? currentIds.filter(id => id !== cls.id)
+      : [...currentIds, cls.id];
+
+    this.savingClasses.set(true);
+    this.classService.update(cls.id, { studentIds: newIds.includes(cls.id)
+      // Wir patchen die Klasse mit allen ihren aktuellen Schülern ± diesem Schüler
+      ? [...(cls.studentIds ?? []), s.id]
+      : (cls.studentIds ?? []).filter((id: string) => id !== s.id)
+    }).subscribe({
+      next: () => {
+        // Schüler-Profil neu laden um aktuelle Klassen zu zeigen
+        this.studentService.getOne(s.id).subscribe({
+          next: (updated) => {
+            this.student.set(updated);
+            this.savingClasses.set(false);
+          },
+          error: () => this.savingClasses.set(false),
+        });
+        // allClasses neu laden
+        this.classService.getAll().subscribe({
+          next: (data) => this.allClasses.set(data),
+        });
+      },
+      error: () => this.savingClasses.set(false),
+    });
   }
 }
