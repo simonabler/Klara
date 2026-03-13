@@ -85,23 +85,28 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder()
-    .setTitle('Klara API')
-    .setDescription('Lehrkraft-Dokumentationstool – REST API')
-    .setVersion('1.0.0')
-    .addBearerAuth()
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: { persistAuthorization: true },
-    customSiteTitle: 'Klara API Docs',
-  });
-
   const port = process.env.PORT || 3000;
+
+  // Swagger nur außerhalb von Produktion – verhindert Information Disclosure
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Klara API')
+      .setDescription('Lehrkraft-Dokumentationstool – REST API')
+      .setVersion('1.0.0')
+      .addBearerAuth()
+      .build();
+
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: { persistAuthorization: true },
+      customSiteTitle: 'Klara API Docs',
+    });
+
+    Logger.log(`📚 Swagger: http://localhost:${port}/api/docs`);
+  }
+
   await app.listen(port);
   Logger.log(`🚀 Klara API: http://localhost:${port}/api`);
-  Logger.log(`📚 Swagger: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();
