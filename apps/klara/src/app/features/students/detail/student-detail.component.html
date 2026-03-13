@@ -11,6 +11,15 @@
       <a class="back-link" routerLink="/app/students">← Schüler</a>
       <div class="header-actions">
         <a class="btn-edit" [routerLink]="['/app/students', student()!.id, 'edit']">Bearbeiten</a>
+        <button class="btn-export" (click)="toggleExportMenu()" title="Daten exportieren"
+                [class.active]="showExportMenu()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
         <button class="btn-delete-trigger" (click)="confirmDelete.set(true)"
                 [class.active]="confirmDelete()" title="Schüler löschen">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -21,6 +30,42 @@
         </button>
       </div>
     </header>
+
+    <!-- ── Export-Menü ── -->
+    @if (showExportMenu()) {
+      <div class="export-menu">
+        <div class="export-menu-title">Daten exportieren</div>
+        <button class="export-option" (click)="exportJson()" [disabled]="exporting()">
+          <span class="export-option-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </span>
+          <span>
+            <span class="export-option-label">JSON herunterladen</span>
+            <span class="export-option-desc">Alle Daten als maschinenlesbare Datei (DSGVO Art. 20)</span>
+          </span>
+        </button>
+        <button class="export-option" (click)="exportPrint()">
+          <span class="export-option-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"/>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+              <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+          </span>
+          <span>
+            <span class="export-option-label">PDF drucken</span>
+            <span class="export-option-desc">Druckansicht öffnen, als PDF speichern</span>
+          </span>
+        </button>
+      </div>
+    }
 
     <!-- ── Löschen Bestätigung ── -->
     @if (confirmDelete()) {

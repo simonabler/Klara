@@ -54,6 +54,10 @@ export class StudentDetailComponent implements OnInit {
   confirmDelete = signal(false);
   deleting      = signal(false);
 
+  /** Export */
+  showExportMenu = signal(false);
+  exporting      = signal(false);
+
   /** Klassen-Verwaltung im Profil */
   allClasses       = signal<ClassDto[]>([]);
   showClassPicker  = signal(false);
@@ -261,6 +265,125 @@ export class StudentDetailComponent implements OnInit {
       next: () => this.router.navigate(['/app/students']),
       error: () => { this.deleting.set(false); this.confirmDelete.set(false); },
     });
+  }
+
+  toggleExportMenu(): void {
+    this.showExportMenu.update(v => !v);
+  }
+
+  exportJson(): void {
+    const s = this.student();
+    if (!s || this.exporting()) return;
+    this.exporting.set(true);
+    this.studentService.exportData(s.id).subscribe({
+      next: (data) => {
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `${s.lastName}_${s.firstName}_export.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.exporting.set(false);
+        this.showExportMenu.set(false);
+      },
+      error: () => this.exporting.set(false),
+    });
+  }
+
+  exportPrint(): void {
+    const s = this.student();
+    if (!s) return;
+    this.showExportMenu.set(false);
+
+    const notes   = this.notes();
+    const results = this.results();
+
+    const formatDate = (d: string | Date | null | undefined) =>
+      d ? new Date(d).toLocaleDateString('de-AT') : '–';
+
+    const notesHtml = notes.length
+      ? notes.map(n => `
+          <tr>
+            <td>${n.type}</td>
+            <td>${(n as any).subjectName ?? '–'}</td>
+            <td>${n.content}</td>
+            <td>${formatDate(n.createdAt)}</td>
+          </tr>`).join('')
+      : '<tr><td colspan="4" style="color:#888">Keine Notizen vorhanden</td></tr>';
+
+    const resultsHtml = results.length
+      ? results.map(r => `
+          <tr>
+            <td>${r.assessmentEvent?.title ?? '–'}</td>
+            <td>${r.assessmentEvent?.subjectName ?? '–'}</td>
+            <td>${formatDate((r.assessmentEvent as any)?.date)}</td>
+            <td>${r.grade ?? '–'}</td>
+            <td>${r.points ?? '–'}</td>
+            <td>${r.comment ?? '–'}</td>
+          </tr>`).join('')
+      : '<tr><td colspan="6" style="color:#888">Keine Leistungen vorhanden</td></tr>';
+
+    const parentsHtml = s.parents?.length
+      ? s.parents.map(p => `${p.firstName} ${p.lastName}`).join(', ')
+      : '–';
+
+    const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>${s.lastName} ${s.firstName} – Klara Export</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; color: #1C2B3A; padding: 32px; font-size: 13px; }
+    h1   { font-size: 22px; font-weight: 400; color: #2E3F5C; margin: 0 0 4px; }
+    .meta { color: #8A9AA8; font-size: 12px; margin-bottom: 24px; }
+    h2   { font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+           color: #8A9AA8; margin: 24px 0 8px; border-bottom: 1px solid #DDE3E8; padding-bottom: 4px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin-bottom: 8px; }
+    .info-row  { display: flex; gap: 8px; }
+    .info-label { color: #8A9AA8; min-width: 110px; }
+    table  { width: 100%; border-collapse: collapse; }
+    th     { text-align: left; font-size: 11px; color: #8A9AA8; font-weight: 600;
+             padding: 6px 8px; border-bottom: 1px solid #DDE3E8; }
+    td     { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    .footer { margin-top: 32px; color: #8A9AA8; font-size: 11px; }
+    @media print { body { padding: 16px; } }
+  </style>
+</head>
+<body>
+  <h1>${s.firstName} ${s.lastName}</h1>
+  <div class="meta">Exportiert am ${new Date().toLocaleDateString('de-AT')} · Klara</div>
+
+  <h2>Stammdaten</h2>
+  <div class="info-grid">
+    <div class="info-row"><span class="info-label">Geburtsdatum</span> ${formatDate(s.dateOfBirth)}</div>
+    <div class="info-row"><span class="info-label">Eltern</span> ${parentsHtml}</div>
+    <div class="info-row"><span class="info-label">Klassen</span> ${s.classes?.map(c => c.name).join(', ') || '–'}</div>
+  </div>
+
+  <h2>Notizen (${notes.length})</h2>
+  <table>
+    <thead><tr><th>Typ</th><th>Fach</th><th>Inhalt</th><th>Datum</th></tr></thead>
+    <tbody>${notesHtml}</tbody>
+  </table>
+
+  <h2>Leistungsergebnisse (${results.length})</h2>
+  <table>
+    <thead><tr><th>Ereignis</th><th>Fach</th><th>Datum</th><th>Note</th><th>Punkte</th><th>Kommentar</th></tr></thead>
+    <tbody>${resultsHtml}</tbody>
+  </table>
+
+  <div class="footer">Erstellt mit Klara · Datenexport gemäß DSGVO Art. 20</div>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 400);
   }
 
   /** Ist der Schüler bereits in dieser Klasse? */

@@ -33,4 +33,9 @@ export class StudentService {
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
+
+  /** DSGVO Art. 20 – alle Daten eines Schülers als strukturiertes Objekt */
+  exportData(id: string): Observable<object> {
+    return this.http.get<object>(`${this.base}/${id}/export`);
+  }
 }
