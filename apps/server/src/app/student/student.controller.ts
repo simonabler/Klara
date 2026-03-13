@@ -81,6 +81,12 @@ export class StudentController {
     return this.studentService.updateAvatar(id, (req.user as any).id, avatarUrl);
   }
 
+  @Get(':id/export')
+  @ApiOperation({ summary: 'Alle Daten eines Schülers exportieren (DSGVO Art. 20)' })
+  exportStudent(@Param('id') id: string, @Req() req: Request) {
+    return this.studentService.findForExport(id, (req.user as any).id);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Schüler löschen' })

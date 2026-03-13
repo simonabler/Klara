@@ -6,6 +6,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Student } from './student.entity';
 import { Parent } from '../parent/parent.entity';
+import { Note } from '../note/note.entity';
+import { StudentResult } from '../assessment/student-result.entity';
 import { CreateStudentDto, ImportStudentRowDto, ImportResultDto, UpdateStudentDto } from '@app/domain';
 
 @Injectable()
@@ -15,6 +17,10 @@ export class StudentService {
     private readonly studentRepo: Repository<Student>,
     @InjectRepository(Parent)
     private readonly parentRepo: Repository<Parent>,
+    @InjectRepository(Note)
+    private readonly noteRepo: Repository<Note>,
+    @InjectRepository(StudentResult)
+    private readonly resultRepo: Repository<StudentResult>,
   ) {}
 
   async findAll(teacherId: string): Promise<Student[]> {
@@ -137,6 +143,71 @@ export class StudentService {
     }
 
     return result;
+  }
+
+  /**
+   * Exportiert alle Daten eines Schülers als strukturiertes Objekt.
+   * DSGVO Art. 20 – Recht auf Datenportabilität.
+   */
+  async findForExport(id: string, teacherId: string): Promise<object> {
+    const student = await this.studentRepo.findOne({
+      where: { id, teacherId },
+      relations: ['parents', 'classes'],
+    });
+    if (!student) throw new NotFoundException('Schüler nicht gefunden');
+
+    const notes = await this.noteRepo.find({
+      where: { studentId: id, teacherId },
+      relations: ['subject', 'class'],
+      order: { createdAt: 'DESC' },
+    });
+
+    const results = await this.resultRepo.find({
+      where: { studentId: id },
+      relations: ['assessmentEvent', 'assessmentEvent.subject', 'assessmentEvent.class'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      exportedAt: new Date().toISOString(),
+      exportVersion: '1.0',
+      student: {
+        id: student.id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        dateOfBirth: student.dateOfBirth,
+        createdAt: student.createdAt,
+      },
+      parents: student.parents.map((p) => ({
+        firstName: p.firstName,
+        lastName: p.lastName,
+        email: p.email ?? null,
+        phone: p.phone ?? null,
+      })),
+      classes: student.classes.map((c) => ({
+        name: (c as any).name,
+        schoolYear: (c as any).schoolYear ?? null,
+      })),
+      notes: notes.map((n) => ({
+        type: n.type,
+        content: n.content,
+        subject: n.subject?.name ?? null,
+        class: (n.class as any)?.name ?? null,
+        createdAt: n.createdAt,
+      })),
+      assessmentResults: results.map((r) => ({
+        event: {
+          title: r.assessmentEvent?.title ?? null,
+          type: r.assessmentEvent?.type ?? null,
+          date: r.assessmentEvent?.date ?? null,
+          subject: (r.assessmentEvent as any)?.subject?.name ?? null,
+        },
+        grade: r.grade ?? null,
+        points: r.points ?? null,
+        comment: r.comment ?? null,
+        createdAt: r.createdAt,
+      })),
+    };
   }
 
   async remove(id: string, teacherId: string): Promise<void> {
