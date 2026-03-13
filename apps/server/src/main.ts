@@ -19,7 +19,22 @@ async function bootstrap() {
     }),
   );
 
-  app.enableCors();
+  // CORS: nur explizit erlaubte Origins zulassen
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:4200';
+  app.enableCors({
+    origin: (origin, callback) => {
+      const allowed = [frontendUrl].filter(Boolean);
+      // Requests ohne Origin (curl, Postman, Server-to-Server) erlauben
+      if (!origin || allowed.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: Origin ${origin} nicht erlaubt`));
+      }
+    },
+    credentials: true,          // notwendig für Cookie-Auth
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
   app.use(cookieParser());
   app.set('trust proxy', 1);
 
