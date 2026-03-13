@@ -1,5 +1,12 @@
 /* ─── Klara – Global Styles ─────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap');
+/* ── Fonts – self-hosted via @fontsource (kein Google CDN) ── */
+@import '@fontsource/dm-sans/latin-300.css';
+@import '@fontsource/dm-sans/latin-300-italic.css';
+@import '@fontsource/dm-sans/latin-400.css';
+@import '@fontsource/dm-sans/latin-500.css';
+@import '@fontsource/dm-sans/latin-600.css';
+@import '@fontsource/dm-serif-display/latin-400.css';
+@import '@fontsource/dm-serif-display/latin-400-italic.css';
 
 :root {
   --navy:       #2E3F5C;
