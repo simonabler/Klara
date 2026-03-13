@@ -2,11 +2,16 @@ import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
 import { GoogleStrategy } from './google.strategy';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { TeacherModule } from '../teacher/teacher.module';
+import { ExportService } from './export.service';
+import { Student } from '../student/student.entity';
+import { Note } from '../note/note.entity';
+import { AssessmentEvent } from '../assessment/assessment-event.entity';
 
 @Module({
   imports: [
@@ -22,9 +27,10 @@ import { TeacherModule } from '../teacher/teacher.module';
       }),
     }),
     TeacherModule,
+    TypeOrmModule.forFeature([Student, Note, AssessmentEvent]),
   ],
   controllers: [AuthController],
-  providers: [GoogleStrategy, JwtStrategy, JwtAuthGuard],
+  providers: [GoogleStrategy, JwtStrategy, JwtAuthGuard, ExportService],
   exports: [JwtAuthGuard, JwtModule],
 })
 export class AuthModule {}

@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { SubjectService } from '../classes/reference-data.service';
 import { SubjectDto } from '@app/domain';
 import { AuthService } from '../../auth/auth.service';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
@@ -55,6 +57,7 @@ import { AuthService } from '../../auth/auth.service';
       <section class="settings-section">
         <div class="section-label">Datenschutz &amp; Konto</div>
 
+        <!-- Info -->
         <div class="privacy-card">
           <div class="privacy-info">
             <div class="privacy-info-icon">
@@ -72,6 +75,26 @@ import { AuthService } from '../../auth/auth.service';
               </a>
             </div>
           </div>
+        </div>
+
+        <!-- Daten exportieren -->
+        <div class="export-card">
+          <div class="export-card-info">
+            <div class="export-card-title">Alle Daten exportieren</div>
+            <div class="export-card-desc">
+              Lädt alle deine gespeicherten Daten herunter – Schülerprofile, Elterndaten, Notizen und Leistungsaufzeichnungen.
+              Gemäß DSGVO Art. 20 (Recht auf Datenportabilität).
+            </div>
+          </div>
+          <button class="btn btn-ghost" (click)="exportAllData()" [disabled]="exporting()">
+            @if (exporting()) {
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              Wird exportiert…
+            } @else {
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Daten herunterladen
+            }
+          </button>
         </div>
 
         <!-- Gefahrenzone -->
@@ -113,11 +136,7 @@ import { AuthService } from '../../auth/auth.service';
                   [disabled]="deleteConfirmText !== 'KONTO LÖSCHEN' || deleting()"
                   (click)="deleteAccount()"
                 >
-                  @if (deleting()) {
-                    Wird gelöscht…
-                  } @else {
-                    Konto endgültig löschen
-                  }
+                  @if (deleting()) { Wird gelöscht… } @else { Konto endgültig löschen }
                 </button>
                 <button class="btn btn-secondary" (click)="cancelDelete()">Abbrechen</button>
               </div>
@@ -143,20 +162,17 @@ import { AuthService } from '../../auth/auth.service';
 
     .item-list {
       background: var(--white); border: 1px solid var(--border);
-      border-radius: var(--r-md); overflow: hidden;
-      margin-bottom: var(--sp-3);
+      border-radius: var(--r-md); overflow: hidden; margin-bottom: var(--sp-3);
     }
     .item-row {
       display: flex; align-items: center; gap: var(--sp-3);
-      padding: 10px var(--sp-4); border-bottom: 1px solid var(--border);
-      transition: background .1s;
+      padding: 10px var(--sp-4); border-bottom: 1px solid var(--border); transition: background .1s;
     }
     .item-row:last-child { border-bottom: none; }
     .item-row:hover { background: var(--surface); }
     .item-name { flex: 1; font-size: 14px; color: var(--ink); }
     .item-empty { flex: 1; font-size: 13px; color: var(--ink-faint); }
     .item-actions { display: flex; gap: var(--sp-1); }
-
     .icon-btn {
       width: 28px; height: 28px; border-radius: var(--r-sm);
       background: none; border: none; cursor: pointer;
@@ -165,21 +181,17 @@ import { AuthService } from '../../auth/auth.service';
     }
     .icon-btn:hover { background: var(--surface); color: var(--ink); }
     .icon-btn-danger:hover { background: var(--error-bg); color: var(--error-fg); }
-
     .inline-input {
       flex: 1; padding: 6px 10px; border: 1.5px solid var(--teal);
       border-radius: var(--r-sm); font-size: 13px; background: var(--white);
       outline: none; box-shadow: 0 0 0 3px rgba(123,170,186,.15);
     }
-
     .add-row { display: flex; gap: var(--sp-2); align-items: center; }
     .add-row input { flex: 1; margin: 0; }
 
-    /* Privacy Card */
     .privacy-card {
       background: var(--white); border: 1px solid var(--border);
-      border-radius: var(--r-md); padding: var(--sp-4);
-      margin-bottom: var(--sp-4);
+      border-radius: var(--r-md); padding: var(--sp-4); margin-bottom: var(--sp-4);
     }
     .privacy-info { display: flex; gap: var(--sp-3); align-items: flex-start; }
     .privacy-info-icon {
@@ -197,16 +209,22 @@ import { AuthService } from '../../auth/auth.service';
     }
     .privacy-link:hover { color: var(--navy); }
 
-    /* Danger Zone */
+    .export-card {
+      display: flex; align-items: center; gap: var(--sp-4);
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--sp-4); margin-bottom: var(--sp-4);
+    }
+    .export-card-info { flex: 1; }
+    .export-card-title { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
+    .export-card-desc { font-size: 12px; color: var(--ink-faint); line-height: 1.5; }
+
     .danger-zone {
-      border: 1.5px solid #F5BABA; border-radius: var(--r-md);
-      overflow: hidden;
+      border: 1.5px solid #F5BABA; border-radius: var(--r-md); overflow: hidden;
     }
     .danger-zone-label {
-      font-size: 11px; font-weight: 600; letter-spacing: 1px;
-      text-transform: uppercase; color: #C62828;
-      padding: 10px var(--sp-4); background: #FEF5F5;
-      border-bottom: 1px solid #F5BABA;
+      font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+      color: #C62828; padding: 10px var(--sp-4);
+      background: #FEF5F5; border-bottom: 1px solid #F5BABA;
     }
     .danger-action {
       display: flex; align-items: center; gap: var(--sp-4);
@@ -215,15 +233,10 @@ import { AuthService } from '../../auth/auth.service';
     .danger-action-info { flex: 1; }
     .danger-action-title { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
     .danger-action-desc { font-size: 12px; color: var(--ink-faint); line-height: 1.5; }
-
-    /* Delete Confirm Panel */
-    .delete-confirm-panel {
-      background: var(--white); padding: var(--sp-5);
-    }
+    .delete-confirm-panel { background: var(--white); padding: var(--sp-5); }
     .delete-confirm-title {
       display: flex; align-items: center; gap: 8px;
-      font-size: 15px; font-weight: 600; color: #C62828;
-      margin-bottom: var(--sp-3);
+      font-size: 15px; font-weight: 600; color: #C62828; margin-bottom: var(--sp-3);
     }
     .delete-confirm-text { font-size: 13px; color: var(--ink-light); line-height: 1.6; margin-bottom: var(--sp-3); }
     .delete-confirm-text strong { color: var(--ink); }
@@ -236,49 +249,37 @@ import { AuthService } from '../../auth/auth.service';
     .confirm-input:focus { border-color: #C62828; box-shadow: 0 0 0 3px rgba(198,40,40,.1); }
     .delete-confirm-actions { display: flex; gap: var(--sp-2); }
 
-    /* Buttons */
     .btn {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 16px; border-radius: var(--r-sm);
       font-family: var(--font-body); font-size: 13px; font-weight: 500;
       cursor: pointer; border: none; transition: all .15s; white-space: nowrap;
     }
-    .btn-primary { background: var(--navy); color: var(--white); }
-    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary { background: var(--navy); color: var(--white); border: none; }
     .btn-primary:hover:not(:disabled) { background: #243350; }
     .btn-secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--border); }
     .btn-secondary:hover { border-color: var(--navy); }
+    .btn-ghost { background: transparent; color: var(--navy); border: 1.5px solid var(--border); }
+    .btn-ghost:hover:not(:disabled) { border-color: var(--navy); background: var(--surface); }
     .btn-sm { padding: 5px 12px; font-size: 12px; }
-
-    /* Danger-Outline Button (rote Außenlinie, nicht gefüllt) */
-    .btn-danger-outline {
-      background: transparent;
-      color: #C62828;
-      border: 1.5px solid #C62828;
-    }
-    .btn-danger-outline:hover:not(:disabled) {
-      background: #FEF5F5;
-    }
-    .btn-danger-outline:disabled { opacity: .45; cursor: not-allowed; }
-
-    /* Gefüllte Danger-Variante nur im Bestätigungs-Panel */
-    .btn-danger-filled {
-      background: #C62828;
-      color: var(--white);
-      border-color: #C62828;
-    }
+    .btn-danger-outline { background: transparent; color: #C62828; border: 1.5px solid #C62828; }
+    .btn-danger-outline:hover:not(:disabled) { background: #FEF5F5; }
+    .btn-danger-filled { background: #C62828; color: var(--white); border-color: #C62828; }
     .btn-danger-filled:hover:not(:disabled) { background: #a93226; border-color: #a93226; }
   `],
 })
 export class SettingsComponent implements OnInit {
   private readonly subjectService = inject(SubjectService);
   private readonly authService    = inject(AuthService);
+  private readonly http           = inject(HttpClient);
   private readonly fb             = inject(FormBuilder);
 
   subjects          = signal<SubjectDto[]>([]);
   editingSubject    = signal<string | null>(null);
   showDeleteConfirm = signal(false);
   deleting          = signal(false);
+  exporting         = signal(false);
   deleteConfirmText = '';
 
   subjectForm = this.fb.group({
@@ -313,6 +314,26 @@ export class SettingsComponent implements OnInit {
     this.subjectService.delete(id).subscribe({ next: () => this.loadSubjects() });
   }
 
+  async exportAllData(): Promise<void> {
+    if (this.exporting()) return;
+    this.exporting.set(true);
+    try {
+      const data = await firstValueFrom(
+        this.http.get<object>('/api/auth/export', { withCredentials: true }),
+      );
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `klara_export_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      this.exporting.set(false);
+    }
+  }
+
   cancelDelete(): void {
     this.showDeleteConfirm.set(false);
     this.deleteConfirmText = '';
@@ -326,153 +347,5 @@ export class SettingsComponent implements OnInit {
     } catch {
       this.deleting.set(false);
     }
-  }
-}
-
-@Component({
-  selector: 'app-settings',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  template: `
-    <div class="page">
-      <header class="page-header">
-        <h1>Einstellungen</h1>
-      </header>
-
-      <!-- Fächer -->
-      <section class="settings-section">
-        <div class="section-label">Fächer</div>
-        <div class="item-list">
-          @for (subject of subjects(); track subject.id) {
-            <div class="item-row">
-              @if (editingSubject() === subject.id) {
-                <input class="inline-input" [value]="subject.name" #subjectInput
-                       (keydown.enter)="saveSubject(subject.id, subjectInput.value)"
-                       (keydown.escape)="editingSubject.set(null)" />
-                <button class="btn btn-sm btn-primary" (click)="saveSubject(subject.id, subjectInput.value)">Speichern</button>
-                <button class="btn btn-sm btn-secondary" (click)="editingSubject.set(null)">Abbrechen</button>
-              } @else {
-                <span class="item-name">{{ subject.name }}</span>
-                <div class="item-actions">
-                  <button class="icon-btn" (click)="editingSubject.set(subject.id)" title="Bearbeiten">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button class="icon-btn icon-btn-danger" (click)="deleteSubject(subject.id)" title="Löschen">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
-                </div>
-              }
-            </div>
-          }
-          @if (subjects().length === 0) {
-            <div class="item-row"><span class="item-empty">Noch keine Fächer angelegt.</span></div>
-          }
-        </div>
-        <form [formGroup]="subjectForm" (ngSubmit)="addSubject()" class="add-row">
-          <input type="text" formControlName="name" placeholder="Neues Fach hinzufügen…" />
-          <button type="submit" class="btn btn-primary" [disabled]="subjectForm.invalid">Hinzufügen</button>
-        </form>
-      </section>
-    </div>
-  `,
-  styles: [`
-    .page { max-width: 600px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); }
-    .page-header { margin-bottom: var(--sp-6); }
-    h1 { font-family: var(--font-display); font-size: 26px; font-weight: 400; color: var(--navy); margin: 0; }
-
-    .settings-section { margin-bottom: var(--sp-7); }
-    .section-label {
-      font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
-      text-transform: uppercase; color: var(--ink-faint);
-      margin-bottom: var(--sp-3);
-      display: flex; align-items: center; gap: var(--sp-3);
-    }
-    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-    .item-list {
-      background: var(--white); border: 1px solid var(--border);
-      border-radius: var(--r-md); overflow: hidden;
-      margin-bottom: var(--sp-3);
-    }
-    .item-row {
-      display: flex; align-items: center; gap: var(--sp-3);
-      padding: 10px var(--sp-4); border-bottom: 1px solid var(--border);
-      transition: background .1s;
-    }
-    .item-row:last-child { border-bottom: none; }
-    .item-row:hover { background: var(--surface); }
-    .item-name { flex: 1; font-size: 14px; color: var(--ink); }
-    .item-empty { flex: 1; font-size: 13px; color: var(--ink-faint); }
-    .item-actions { display: flex; gap: var(--sp-1); }
-
-    .icon-btn {
-      width: 28px; height: 28px; border-radius: var(--r-sm);
-      background: none; border: none; cursor: pointer;
-      color: var(--ink-faint); display: flex; align-items: center; justify-content: center;
-      transition: background .12s, color .12s;
-    }
-    .icon-btn:hover { background: var(--surface); color: var(--ink); }
-    .icon-btn-danger:hover { background: var(--error-bg); color: var(--error-fg); }
-
-    .inline-input {
-      flex: 1; padding: 6px 10px; border: 1.5px solid var(--teal);
-      border-radius: var(--r-sm); font-size: 13px; background: var(--white);
-      outline: none; box-shadow: 0 0 0 3px rgba(123,170,186,.15);
-    }
-
-    .add-row { display: flex; gap: var(--sp-2); align-items: center; }
-    .add-row input { flex: 1; margin: 0; }
-
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 16px; border-radius: var(--r-sm);
-      font-family: var(--font-body); font-size: 13px; font-weight: 500;
-      cursor: pointer; border: none; transition: all .15s; white-space: nowrap;
-    }
-    .btn-primary { background: var(--navy); color: var(--white); }
-    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
-    .btn-primary:hover:not(:disabled) { background: #243350; }
-    .btn-secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--border); }
-    .btn-secondary:hover { border-color: var(--navy); }
-    .btn-sm { padding: 5px 12px; font-size: 12px; }
-  `],
-})
-export class SettingsComponent implements OnInit {
-  private readonly subjectService = inject(SubjectService);
-  private readonly fb             = inject(FormBuilder);
-
-  subjects       = signal<SubjectDto[]>([]);
-  editingSubject = signal<string | null>(null);
-
-  subjectForm = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(1)]],
-  });
-
-  ngOnInit(): void {
-    this.loadSubjects();
-  }
-
-  loadSubjects(): void {
-    this.subjectService.getAll().subscribe({ next: d => this.subjects.set(d) });
-  }
-
-  addSubject(): void {
-    if (this.subjectForm.invalid) return;
-    const v = this.subjectForm.value;
-    this.subjectService.create({ name: v.name! }).subscribe({
-      next: () => { this.subjectForm.reset(); this.loadSubjects(); },
-    });
-  }
-
-  saveSubject(id: string, name: string): void {
-    if (!name.trim()) return;
-    this.subjectService.update(id, { name: name.trim() }).subscribe({
-      next: () => { this.editingSubject.set(null); this.loadSubjects(); },
-    });
-  }
-
-  deleteSubject(id: string): void {
-    if (!confirm('Fach löschen?')) return;
-    this.subjectService.delete(id).subscribe({ next: () => this.loadSubjects() });
   }
 }

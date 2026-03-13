@@ -16,6 +16,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentTeacher } from './current-teacher.decorator';
 import { Teacher } from '../teacher/teacher.entity';
 import { TeacherService } from '../teacher/teacher.service';
+import { ExportService } from './export.service';
 import { JwtPayload } from './jwt-payload.interface';
 
 @ApiTags('auth')
@@ -25,6 +26,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly teacherService: TeacherService,
+    private readonly exportService: ExportService,
   ) {}
 
   /**
@@ -116,6 +118,17 @@ export class AuthController {
   logout(@Res() res: Response) {
     res.clearCookie('klara_token');
     res.json({ message: 'Erfolgreich abgemeldet' });
+  }
+
+  /**
+   * Alle Daten exportieren – Schüler, Notizen, Leistungsereignisse.
+   * DSGVO Art. 20 – Recht auf Datenportabilität.
+   */
+  @Get('export')
+  @ApiOperation({ summary: 'Alle eigenen Daten exportieren (DSGVO Art. 20)' })
+  @UseGuards(JwtAuthGuard)
+  exportAll(@CurrentTeacher() teacher: { id: string }) {
+    return this.exportService.exportAll(teacher.id);
   }
 
   /**
