@@ -2,7 +2,7 @@ import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { Observable, firstValueFrom, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { AuthUserDto } from '@app/domain';
 
@@ -10,8 +10,8 @@ const TOKEN_KEY = 'klara_token';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
-  private readonly router = inject(Router);
+  private readonly http       = inject(HttpClient);
+  private readonly router     = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
 
   private get isBrowser(): boolean {
@@ -24,7 +24,7 @@ export class AuthService {
   private readonly _user = signal<AuthUserDto | null>(null);
 
   readonly isAuthenticated = computed(() => this._token() !== null);
-  readonly currentUser = computed(() => this._user());
+  readonly currentUser     = computed(() => this._user());
 
   /** Wird vom Guard aufgerufen, um das Profil bei Bedarf nachzuladen */
   ensureProfile(): Observable<AuthUserDto | null> {
@@ -40,22 +40,36 @@ export class AuthService {
     );
   }
 
-  async handleCallback(token: string): Promise<void> {
-    this._token.set(token);
-    if (this.isBrowser) {
-      localStorage.setItem(TOKEN_KEY, token);
+  /**
+   * Cookie-Only-Flow (ISSUE-01):
+   * Token kommt nicht mehr als URL-Parameter. Das Backend hat den Cookie gesetzt.
+   * Wir rufen /api/auth/me auf – wenn der Cookie gültig ist, bekommen wir das Profil.
+   * Das Token wird zusätzlich im localStorage gespiegelt, damit der Bearer-Interceptor
+   * weiterhin funktioniert (SSR-Kompatibilität, alle bestehenden API-Calls).
+   */
+  async handleCallbackViaCookie(): Promise<boolean> {
+    try {
+      const user = await firstValueFrom(
+        this.http.get<AuthUserDto & { token?: string }>('/api/auth/me', {
+          withCredentials: true,
+        }),
+      );
+      this._user.set(user);
+      // /me liefert kein Token mehr – isAuthenticated prüft nur noch den User
+      this._token.set('cookie'); // Sentinel: signalisiert eingeloggt, kein echter Token-Wert
+      if (this.isBrowser) {
+        localStorage.setItem(TOKEN_KEY, 'cookie');
+      }
+      return true;
+    } catch {
+      return false;
     }
-    // Profil sofort laden nach Login
-    return new Promise((resolve) => {
-      this.http.get<AuthUserDto>('/api/auth/me').subscribe({
-        next: (user) => { this._user.set(user); resolve(); },
-        error: () => { this._clearToken(); resolve(); },
-      });
-    });
   }
 
   getToken(): string | null {
-    return this._token();
+    const t = this._token();
+    // 'cookie' ist ein Sentinel-Wert – kein echter Bearer-Token
+    return t === 'cookie' ? null : t;
   }
 
   loginWithGoogle(): void {
@@ -64,7 +78,7 @@ export class AuthService {
 
   logout(): void {
     this._clearToken();
-    this.http.get('/api/auth/logout').subscribe();
+    this.http.get('/api/auth/logout', { withCredentials: true }).subscribe();
     this.router.navigate(['/login']);
   }
 

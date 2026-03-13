@@ -4,6 +4,7 @@ import { AppModule } from './app/app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -19,6 +20,7 @@ async function bootstrap() {
   );
 
   app.enableCors();
+  app.use(cookieParser());
   app.set('trust proxy', 1);
 
   // Upload-Verzeichnis beim Start anlegen + statisch bereitstellen

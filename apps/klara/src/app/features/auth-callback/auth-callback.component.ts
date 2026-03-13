@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 
 @Component({
@@ -23,19 +23,18 @@ import { AuthService } from '../../auth/auth.service';
   `],
 })
 export class AuthCallbackComponent implements OnInit {
-  private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
+  private readonly router      = inject(Router);
 
   async ngOnInit(): Promise<void> {
-    const token = this.route.snapshot.queryParamMap.get('token');
+    // Token kommt nicht mehr als URL-Parameter – stattdessen /api/auth/me aufrufen.
+    // Das JWT-Cookie wurde vom Backend gesetzt und wird automatisch mitgesendet.
+    const success = await this.authService.handleCallbackViaCookie();
 
-    if (!token) {
+    if (success) {
+      this.router.navigate(['/app']);
+    } else {
       this.router.navigate(['/login']);
-      return;
     }
-
-    await this.authService.handleCallback(token);
-    this.router.navigate(['/app']);
   }
 }
