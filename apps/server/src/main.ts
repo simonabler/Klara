@@ -4,9 +4,19 @@ import { AppModule } from './app/app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
-import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
+  // Sicherheitscheck: TYPEORM_SYNC=true in Produktion ist gefährlich
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (process.env.TYPEORM_SYNC === 'true' || process.env.TYPEORM_SYNC === '1')
+  ) {
+    throw new Error(
+      'TYPEORM_SYNC darf in Produktion nicht true sein! ' +
+      'Bitte TYPEORM_SYNC=false setzen oder die Variable entfernen.',
+    );
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
@@ -35,7 +45,8 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
-  app.use(cookieParser());
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  app.use(require('cookie-parser')());
   app.set('trust proxy', 1);
 
   // Upload-Verzeichnis beim Start anlegen + statisch bereitstellen

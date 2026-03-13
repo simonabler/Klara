@@ -18,7 +18,8 @@ export default registerAs('database', () => {
     sslRejectUnauthorized: sslRejectEnv === undefined ? true : !(sslRejectEnv === '0' || sslRejectEnv === 'false'),
     // SQLite fallback path (used when no url is present)
     sqlitePath: process.env.TYPEORM_DB ?? './dev.sqlite',
-    // Synchronize schema (dev default true)
-    synchronize: syncEnv === undefined ? true : !(syncEnv === '0' || syncEnv === 'false'),
+    // Synchronize schema – Default ist false (sicher).
+    // Nur explizit auf true setzen via TYPEORM_SYNC=true (ausschliesslich in Entwicklung).
+    synchronize: syncEnv === '1' || syncEnv === 'true',
   } as const;
 });
