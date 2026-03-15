@@ -113,6 +113,10 @@
           <dt>Geburtsdatum</dt>
           <dd>{{ student()!.dateOfBirth | date:'dd.MM.yyyy' }}</dd>
         }
+        @if (student()!.email) {
+          <dt>E-Mail</dt>
+          <dd><a [href]="'mailto:' + student()!.email" class="email-link">{{ student()!.email }}</a></dd>
+        }
       </dl>
     </section>
 
