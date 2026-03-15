@@ -284,7 +284,7 @@ interface ImportResult { imported: number; updated: number; skipped: number; cla
           <div class="card-footer">
             <button class="btn-secondary" (click)="step.set('conflicts')">Zurück</button>
             <button class="btn-primary" [disabled]="importing()" (click)="runImport()">
-              {{ importing() ? 'Importiert…' : validCount() + ' Schüler importieren' }}
+              {{ importing() ? 'Importiert…' : effectiveCount() + ' Schüler verarbeiten' }}
             </button>
           </div>
         </section>
@@ -562,8 +562,20 @@ export class StudentImportComponent {
   hasClassColumn = computed(() => this.mappings().includes('className'));
   hasEmailColumn = computed(() => this.mappings().includes('email'));
 
+  // Anzahl Zeilen die tatsächlich verarbeitet werden (ohne ignorierte Konflikte)
+  effectiveCount = computed(() => {
+    const ignoredIndices = new Set(
+      this.conflicts()
+        .filter(c => (this.rowActions().get(c.rowIndex) ?? 'ignore') === 'ignore')
+        .map(c => c.rowIndex),
+    );
+    return this.previewRows()
+      .filter((r, i) => r['firstName'] && r['lastName'] && !ignoredIndices.has(i))
+      .length;
+  });
+
   stepDone(id: Step): boolean {
-    const order: Step[] = ['upload', 'map', 'preview', 'result'];
+    const order: Step[] = ['upload', 'map', 'conflicts', 'preview', 'result'];
     return order.indexOf(this.step()) > order.indexOf(id);
   }
 
@@ -644,7 +656,8 @@ export class StudentImportComponent {
         result.matches.forEach(m => actions.set(m.rowIndex, 'ignore'));
         this.rowActions.set(actions);
         this.checkingDups.set(false);
-        this.step.set('conflicts');
+        // Direkt zur Vorschau wenn keine Konflikte
+        this.step.set(result.matches.length > 0 ? 'conflicts' : 'preview');
       },
       error: () => {
         // Bei Fehler direkt zur Vorschau (ohne Konflikt-Check)
