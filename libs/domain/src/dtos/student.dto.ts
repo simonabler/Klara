@@ -24,7 +24,7 @@ export class CreateStudentDto {
   dateOfBirth?: string;
   email?: string;
   phone?: string;
-  gender?: Gender;
+  gender?: string;
   parents?: CreateParentDto[];
 }
 
@@ -34,7 +34,7 @@ export class UpdateStudentDto {
   dateOfBirth?: string;
   email?: string;
   phone?: string;
-  gender?: Gender;
+  gender?: string;
   parents?: CreateParentDto[];
 }
 
