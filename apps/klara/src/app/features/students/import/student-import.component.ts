@@ -2,6 +2,26 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+
+// ── Schuljahr-Helfer ─────────────────────────────────────────────────────────
+function buildSchoolYearOptions(): string[] {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const currentStart = month >= 9 ? now.getFullYear() : now.getFullYear() - 1;
+  const years: string[] = [];
+  for (let offset = 1; offset >= -2; offset--) {
+    const start = currentStart + offset;
+    years.push(`${start}/${(start + 1).toString().slice(-2)}`);
+  }
+  return years;
+}
+function currentSchoolYear(): string {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const start = month >= 9 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${start}/${(start + 1).toString().slice(-2)}`;
+}
 
 // ── Ziel-Datenfelder ────────────────────────────────────────────────────────
 export interface TargetField {
@@ -14,6 +34,8 @@ const TARGET_FIELDS: TargetField[] = [
   { key: 'firstName',          label: 'Vorname',                         required: true  },
   { key: 'lastName',           label: 'Nachname',                        required: true  },
   { key: 'dateOfBirth',        label: 'Geburtsdatum',                    required: false },
+  { key: 'email',              label: 'E-Mail (Schüler/in)',             required: false },
+  { key: 'className',          label: 'Klasse',                          required: false },
   { key: 'parent1FirstName',   label: 'Erziehungsber. Vorname',          required: false },
   { key: 'parent1LastName',    label: 'Erziehungsber. Nachname',         required: false },
   { key: 'parent1Email',       label: 'Erziehungsber. E-Mail',           required: false },
@@ -22,13 +44,15 @@ const TARGET_FIELDS: TargetField[] = [
 
 // ── Auto-Mapping Hints ───────────────────────────────────────────────────────
 const MAPPING_HINTS: { patterns: RegExp[]; key: string }[] = [
-  { patterns: [/^vorname$/i, /^first.?name$/i, /^given.?name$/i],            key: 'firstName'        },
-  { patterns: [/^nachname$/i, /^last.?name$/i, /^family.?name$/i, /^name$/i], key: 'lastName'         },
-  { patterns: [/geburt/i, /birth/i, /^dob$/i, /^datum$/i],                    key: 'dateOfBirth'      },
-  { patterns: [/erziehungsberechtigter_vorname/i, /erz.*vorname/i, /parent.*first/i, /mutter.*vor/i, /vater.*vor/i], key: 'parent1FirstName' },
-  { patterns: [/erziehungsberechtigter_nachname/i, /erz.*nach/i, /parent.*last/i],                                   key: 'parent1LastName'  },
-  { patterns: [/erziehungsberechtigter_email/i, /erz.*mail/i, /parent.*mail/i],                                      key: 'parent1Email'     },
-  { patterns: [/erziehungsberechtigter_telefon/i, /erz.*tel/i, /parent.*phone/i, /^telefon$/i],                      key: 'parent1Phone'     },
+  { patterns: [/^vorname$/i, /^first.?name$/i, /^given.?name$/i],                                    key: 'firstName'        },
+  { patterns: [/^nachname$/i, /^familienname$/i, /^last.?name$/i, /^family.?name$/i, /^name$/i],      key: 'lastName'         },
+  { patterns: [/geburt/i, /birth/i, /^dob$/i, /^datum$/i],                                            key: 'dateOfBirth'      },
+  { patterns: [/^email.*sch/i, /^e.?mail.*sch/i, /schüler.*mail/i, /^email$/i, /^e.?mail$/i],        key: 'email'            },
+  { patterns: [/^klasse$/i, /^class$/i, /^gruppe$/i],                                                  key: 'className'        },
+  { patterns: [/erziehungsberechtigter_vorname/i, /erz.*vorname/i, /parent.*first/i],                  key: 'parent1FirstName' },
+  { patterns: [/erziehungsberechtigter_nachname/i, /erz.*nach/i, /parent.*last/i],                     key: 'parent1LastName'  },
+  { patterns: [/erziehungsberechtigter_email/i, /erz.*mail/i, /parent.*mail/i],                        key: 'parent1Email'     },
+  { patterns: [/erziehungsberechtigter_telefon/i, /erz.*tel/i, /parent.*phone/i, /^telefon/i],         key: 'parent1Phone'     },
 ];
 
 function autoDetect(header: string): string {
@@ -40,12 +64,12 @@ function autoDetect(header: string): string {
 
 type Step = 'upload' | 'map' | 'preview' | 'result';
 
-interface ImportResult { imported: number; skipped: number; errors: { row: number; reason: string }[] }
+interface ImportResult { imported: number; skipped: number; classesCreated: number; errors: { row: number; reason: string }[] }
 
 @Component({
   selector: 'app-student-import',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   template: `
     <div class="page">
       <header class="page-header">
@@ -69,6 +93,16 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
         <section class="card">
           <h2>CSV-Datei auswählen</h2>
           <p class="hint">Die erste Zeile muss Spaltenbezeichnungen enthalten. Trennzeichen: Semikolon (;) – wie es Excel auf deutschen Systemen verwendet.</p>
+
+          <div class="field">
+            <label>Schuljahr für den Import</label>
+            <select [(ngModel)]="selectedSchoolYear">
+              @for (y of schoolYearOptions; track y) {
+                <option [value]="y">{{ y }}</option>
+              }
+            </select>
+            <span class="field-hint">Wird neuen Klassen aus der CSV zugewiesen, falls kein Schuljahr in der Datei vorhanden ist.</span>
+          </div>
 
           <div class="dropzone" [class.drag-over]="dragOver()"
                (dragover)="$event.preventDefault(); dragOver.set(true)"
@@ -142,6 +176,8 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
                   <th>Vorname</th>
                   <th>Nachname</th>
                   <th>Geburtsdatum</th>
+                  @if (hasClassColumn()) { <th>Klasse</th> }
+                  @if (hasEmailColumn()) { <th>E-Mail</th> }
                   <th>Erziehungsber.</th>
                 </tr>
               </thead>
@@ -151,6 +187,8 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
                     <td>{{ row["firstName"] || '—' }}</td>
                     <td>{{ row["lastName"] || '—' }}</td>
                     <td>{{ row["dateOfBirth"] || '—' }}</td>
+                    @if (hasClassColumn()) { <td>{{ row["className"] || '—' }}</td> }
+                    @if (hasEmailColumn()) { <td>{{ row["email"] || '—' }}</td> }
                     <td>
                       @if (row["parent1FirstName"] && row["parent1LastName"]) {
                         {{ row["parent1FirstName"] }} {{ row["parent1LastName"] }}
@@ -190,6 +228,12 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
                 <span class="stat-num">{{ r.imported }}</span>
                 <span class="stat-label">importiert</span>
               </div>
+              @if (r.classesCreated > 0) {
+                <div class="stat info">
+                  <span class="stat-num">{{ r.classesCreated }}</span>
+                  <span class="stat-label">{{ r.classesCreated === 1 ? 'Klasse angelegt' : 'Klassen angelegt' }}</span>
+                </div>
+              }
               @if (r.skipped > 0) {
                 <div class="stat warn">
                   <span class="stat-num">{{ r.skipped }}</span>
@@ -276,6 +320,9 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
     .template-hint { margin-top: var(--sp-4); font-size: 12px; color: var(--ink-faint); }
     .template-link { color: var(--teal); font-weight: 500; }
     .template-link:hover { color: var(--navy); }
+    .field { display: flex; flex-direction: column; gap: var(--sp-1); margin-bottom: var(--sp-5); }
+    .field label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-faint); }
+    .field-hint { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
 
     /* Mapping */
     .mapping-table {
@@ -337,6 +384,7 @@ interface ImportResult { imported: number; skipped: number; errors: { row: numbe
     .stat-label { font-size: 12px; color: var(--ink-faint); margin-top: var(--sp-2); }
     .stat.success .stat-num { color: var(--success-fg); }
     .stat.warn .stat-num { color: var(--warn-fg); }
+    .stat.info .stat-num { color: var(--teal); }
     .error-details { text-align: left; margin: var(--sp-4) 0; font-size: 13px; }
     .error-details summary { cursor: pointer; color: var(--ink-faint); }
     .error-list { margin: var(--sp-2) 0 0 var(--sp-4); padding: 0; color: var(--error-fg); }
@@ -366,27 +414,31 @@ export class StudentImportComponent {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
-  readonly targetFields = TARGET_FIELDS;
+  readonly targetFields    = TARGET_FIELDS;
+  readonly schoolYearOptions = buildSchoolYearOptions();
   readonly stepLabels = [
-    { id: 'upload'  as Step, label: 'Datei' },
-    { id: 'map'     as Step, label: 'Zuordnen' },
-    { id: 'preview' as Step, label: 'Vorschau' },
-    { id: 'result'  as Step, label: 'Ergebnis' },
+    { id: 'upload'  as Step, label: 'Datei'     },
+    { id: 'map'     as Step, label: 'Zuordnen'  },
+    { id: 'preview' as Step, label: 'Vorschau'  },
+    { id: 'result'  as Step, label: 'Ergebnis'  },
   ];
 
-  step = signal<Step>('upload');
-  dragOver = signal(false);
-  fileName = signal('');
-  csvHeaders = signal<string[]>([]);
-  csvRows = signal<string[][]>([]);
-  mappings = signal<string[]>([]);
-  mappingError = signal('');
-  importing = signal(false);
-  importResult = signal<ImportResult | null>(null);
+  step            = signal<Step>('upload');
+  dragOver        = signal(false);
+  fileName        = signal('');
+  csvHeaders      = signal<string[]>([]);
+  csvRows         = signal<string[][]>([]);
+  mappings        = signal<string[]>([]);
+  mappingError    = signal('');
+  importing       = signal(false);
+  importResult    = signal<ImportResult | null>(null);
+  selectedSchoolYear = currentSchoolYear();
 
-  previewRows = computed(() => this.buildRows(this.csvRows(), this.csvHeaders(), this.mappings()));
-  validCount = computed(() => this.previewRows().filter(r => r['firstName'] && r['lastName']).length);
-  invalidCount = computed(() => this.previewRows().filter(r => !r['firstName'] || !r['lastName']).length);
+  previewRows    = computed(() => this.buildRows(this.csvRows(), this.csvHeaders(), this.mappings()));
+  validCount     = computed(() => this.previewRows().filter(r => r['firstName'] && r['lastName']).length);
+  invalidCount   = computed(() => this.previewRows().filter(r => !r['firstName'] || !r['lastName']).length);
+  hasClassColumn = computed(() => this.mappings().includes('className'));
+  hasEmailColumn = computed(() => this.mappings().includes('email'));
 
   stepDone(id: Step): boolean {
     const order: Step[] = ['upload', 'map', 'preview', 'result'];
@@ -418,8 +470,9 @@ export class StudentImportComponent {
   }
 
   parseCSV(text: string): void {
-    // Trennzeichen erkennen: Semikolon oder Komma
-    const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
+    // BOM entfernen (UTF-8 BOM: \uFEFF) — verhindert kaputte erste Spalte
+    const clean = text.replace(/^\uFEFF/, '');
+    const lines = clean.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
     if (lines.length < 2) return;
 
     const delimiter = lines[0].includes(';') ? ';' : ',';
@@ -427,7 +480,7 @@ export class StudentImportComponent {
       line.split(delimiter).map(v => v.trim().replace(/^"|"$/g, '').trim());
 
     const headers = parse(lines[0]);
-    const rows = lines.slice(1).filter(l => l.trim()).map(parse);
+    const rows    = lines.slice(1).filter(l => l.trim()).map(parse);
 
     this.csvHeaders.set(headers);
     this.csvRows.set(rows);
@@ -449,10 +502,8 @@ export class StudentImportComponent {
 
   goToPreview(): void {
     const m = this.mappings();
-    const hasFirst = m.includes('firstName');
-    const hasLast = m.includes('lastName');
-    if (!hasFirst || !hasLast) {
-      this.mappingError.set('Bitte weisen Sie mindestens "Vorname" und "Nachname" zu.');
+    if (!m.includes('firstName') || !m.includes('lastName')) {
+      this.mappingError.set('Bitte „Vorname" und „Nachname" zuweisen.');
       return;
     }
     this.mappingError.set('');
@@ -476,16 +527,21 @@ export class StudentImportComponent {
 
   runImport(): void {
     this.importing.set(true);
-    const rows = this.previewRows().filter(r => r['firstName'] && r['lastName']);
+    const rows = this.previewRows()
+      .filter(r => r['firstName'] && r['lastName'])
+      .map(r => ({
+        ...r,
+        // Schuljahr aus Dropdown einfügen wenn keine schoolYear-Spalte gemappt ist
+        schoolYear: r['schoolYear'] || this.selectedSchoolYear,
+      }));
+
     this.http.post<ImportResult>('/api/students/import', { rows }).subscribe({
       next: (result) => {
         this.importResult.set(result);
         this.step.set('result');
         this.importing.set(false);
       },
-      error: () => {
-        this.importing.set(false);
-      },
+      error: () => this.importing.set(false),
     });
   }
 
