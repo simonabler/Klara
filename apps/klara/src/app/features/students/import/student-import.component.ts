@@ -140,10 +140,10 @@ interface ImportResult { imported: number; skipped: number; classesCreated: numb
               <div class="mapping-row" [class.mapped]="mappings()[i]">
                 <span class="col-name">{{ col }}</span>
                 <span class="col-preview">{{ previewValue(i) }}</span>
-                <select class="field-select" [value]="mappings()[i]" (change)="setMapping(i, $any($event.target).value)">
-                  <option value="">— ignorieren —</option>
+                <select class="field-select" (change)="setMapping(i, $any($event.target).value)">
+                  <option value="" [selected]="!mappings()[i]">— ignorieren —</option>
                   @for (field of targetFields; track field.key) {
-                    <option [value]="field.key">
+                    <option [value]="field.key" [selected]="mappings()[i] === field.key">
                       {{ field.label }}{{ field.required ? ' *' : '' }}
                     </option>
                   }
