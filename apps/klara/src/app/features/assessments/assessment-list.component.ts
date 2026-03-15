@@ -168,7 +168,10 @@ import { AssessmentEventType } from '@app/domain';
 
     /* ── Filter ── */
     .filter-bar {
-      display: flex; gap: var(--sp-3); margin-bottom: var(--sp-4); flex-wrap: wrap;
+      display: flex; gap: var(--sp-4); align-items: flex-end; flex-wrap: wrap;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: var(--sp-4) var(--sp-5);
+      margin-bottom: var(--sp-5);
     }
     .filter-bar select { min-width: 160px; }
 
@@ -228,7 +231,7 @@ import { AssessmentEventType } from '@app/domain';
       .page { padding: var(--sp-4) var(--sp-3); }
       .page-header { flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
       h1 { font-size: 22px; }
-      .filter-bar { gap: var(--sp-3); }
+      .filter-bar { flex-direction: column; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
       .filter-bar select { min-width: 0; width: 100%; }
       .form-panel { padding: var(--sp-4); }
       .form-row { flex-direction: column; }
