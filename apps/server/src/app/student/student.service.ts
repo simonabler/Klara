@@ -14,7 +14,7 @@ import { CreateStudentDto, ImportStudentRowDto, ImportResultDto, UpdateStudentDt
  * Unterstützt: YYYY-MM-DD, DD.MM.YYYY, DD.MM.YY
  * Gibt undefined zurück wenn das Datum nicht geparst werden kann.
  */
-function parseDateOfBirth(raw: string | undefined): Date | undefined {
+export function parseDateOfBirth(raw: string | undefined): Date | undefined {
   if (!raw?.trim()) return undefined;
   const s = raw.trim();
 
@@ -43,7 +43,7 @@ function parseDateOfBirth(raw: string | undefined): Date | undefined {
  * Übersetzt einen DB- oder JS-Fehler in eine lesbare Fehlermeldung für den Import.
  * Gibt keine internen Stack-Traces oder SQL nach außen weiter.
  */
-function buildImportErrorReason(e: any, row: ImportStudentRowDto): string {
+export function buildImportErrorReason(e: any, row: ImportStudentRowDto): string {
   const code    = e?.code as string | undefined;
   const message = (e?.message ?? '') as string;
 
