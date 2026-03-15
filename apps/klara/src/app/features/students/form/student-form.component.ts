@@ -53,6 +53,10 @@ import { StudentDto } from '@app/domain';
             <label>Geburtsdatum</label>
             <input type="date" formControlName="dateOfBirth" />
           </div>
+          <div class="field">
+            <label>E-Mail</label>
+            <input type="email" formControlName="email" placeholder="z.B. max.mustermann@schule.at" />
+          </div>
         </section>
 
         <!-- Eltern -->
@@ -218,6 +222,7 @@ export class StudentFormComponent implements OnInit {
     firstName: ['', [Validators.required, Validators.minLength(1)]],
     lastName: ['', [Validators.required, Validators.minLength(1)]],
     dateOfBirth: [''],
+    email: [''],
     parents: this.fb.array([]),
   });
 
@@ -241,6 +246,7 @@ export class StudentFormComponent implements OnInit {
           firstName: student.firstName,
           lastName: student.lastName,
           dateOfBirth: student.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
+          email: student.email ?? '',
         });
         if (student.avatarUrl) this.avatarPreview.set(student.avatarUrl);
         student.parents?.forEach((p) => this.parentsArray.push(this.createParentGroup(p)));
@@ -295,6 +301,7 @@ export class StudentFormComponent implements OnInit {
       firstName: value.firstName!,
       lastName: value.lastName!,
       dateOfBirth: value.dateOfBirth || undefined,
+      email: (value as any).email?.trim() || undefined,
       parents: (value.parents as any[]).map((p: any) => ({
         firstName: p.firstName,
         lastName: p.lastName,
