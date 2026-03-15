@@ -11,6 +11,12 @@ RUN npm ci
 COPY ./ ./
 RUN rm -R ./apps/klara-e2e
 
+# 1. datasource.ts + Migrations kompilieren (CommonJS) → dist/typeorm/
+#    Muss VOR dem NX-Build laufen, damit Webpack die JS-Dateien als Assets kopieren kann.
+RUN npx tsc -p apps/server/tsconfig.typeorm.json --noEmit false
+
+# 2. NestJS App bauen (Webpack Bundle → dist/apps/server/main.js)
+#    Webpack kopiert dabei dist/typeorm/.../migrations/*.js → dist/apps/server/migrations/
 RUN npx nx build server
 
 # --- Runtime stage ---------------------------------------------------------
@@ -40,4 +46,4 @@ RUN npm install pg sharp
 COPY --chown=node:node ./apps/server/entrypoint.backend.sh .
 
 EXPOSE 3000
-CMD ["node", "main.js"]
+CMD ["sh", "entrypoint.backend.sh"]

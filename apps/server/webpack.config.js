@@ -14,7 +14,19 @@ module.exports = {
       compiler: 'tsc',
       main: './src/main.ts',
       tsConfig: './tsconfig.app.json',
-      assets: ['./src/assets'],
+      assets: [
+        './src/assets',
+        // Migrations als kompilierte JS-Dateien ins dist kopieren.
+        // tsc kompiliert sie via tsconfig.typeorm.json separat –
+        // Webpack bundelt sie NICHT (TypeORM lädt sie dynamisch per Glob).
+        // optional: true → Build schlägt nicht fehl wenn tsc noch nicht gelaufen ist.
+        {
+          glob: '**/*.js',
+          input: '../../dist/typeorm/apps/server/src/migrations',
+          output: 'migrations',
+          optional: true,
+        },
+      ],
       optimization: false,
       outputHashing: 'none',
       generatePackageJson: true,
