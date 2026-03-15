@@ -39,8 +39,35 @@ function parseDateOfBirth(raw: string | undefined): Date | undefined {
   return undefined;
 }
 
-@Injectable()
-export class StudentService {
+/**
+ * Übersetzt einen DB- oder JS-Fehler in eine lesbare Fehlermeldung für den Import.
+ * Gibt keine internen Stack-Traces oder SQL nach außen weiter.
+ */
+function buildImportErrorReason(e: any, row: ImportStudentRowDto): string {
+  const code    = e?.code as string | undefined;
+  const message = (e?.message ?? '') as string;
+
+  // PostgreSQL-Fehlercodes
+  if (code === '23505') return `Doppelter Eintrag – ${row.firstName} ${row.lastName} existiert bereits`;
+  if (code === '23503') return 'Ungültige Referenz (Fremdschlüssel)';
+  if (code === '23502') return 'Pflichtfeld fehlt in der Datenbank';
+  if (code === '22007') {
+    const fieldHint = message.includes('timestamp') ? 'Geburtsdatum' : 'Datum';
+    return `Ungültiges ${fieldHint}-Format – erwartet: TT.MM.JJJJ`;
+  }
+  if (code === '22001') return 'Wert zu lang für das Datenbankfeld';
+
+  // Ungültiges Datum vor dem DB-Call (JavaScript-Seite)
+  if (message.includes('Invalid Date') || message.includes('NaN')) {
+    return `Ungültiges Geburtsdatum – erwartet: TT.MM.JJJJ`;
+  }
+
+  // Fallback: Fehlerkategorie ohne interne Details
+  if (code) return `Datenbankfehler (${code})`;
+  return 'Unbekannter Fehler beim Speichern';
+}
+
+
   constructor(
     @InjectRepository(Student)
     private readonly studentRepo: Repository<Student>,
@@ -234,9 +261,11 @@ export class StudentService {
           );
         }
 
-      } catch (e) {
+      } catch (e: any) {
         result.skipped++;
-        result.errors.push({ row: rowNum, reason: 'Datenbankfehler beim Speichern' });
+        // Strukturierte Fehlermeldung: DB-Fehlercode + lesbare Ursache
+        const reason = buildImportErrorReason(e, row);
+        result.errors.push({ row: rowNum, reason });
       }
     }
 
