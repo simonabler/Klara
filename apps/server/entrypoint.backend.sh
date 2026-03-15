@@ -1,11 +1,11 @@
 #!/bin/sh
 set -e
 
-ENV_FILE=".env.$NODE_ENV"
-
-if [ -f "$ENV_FILE" ]; then
+# .env aus /app/.env laden (Docker mountet es als Volume dorthin)
+# Nur wenn vorhanden – in reinen ENV-Var-Setups (CI, k8s) nicht nötig
+if [ -f "/app/.env" ]; then
   set -o allexport
-  . "./$ENV_FILE"
+  . /app/.env
   set +o allexport
 fi
 
@@ -14,13 +14,19 @@ node -e "
 const { DataSource } = require('typeorm');
 const path = require('path');
 
+const host = process.env.TYPEORM_HOST;
+if (!host) {
+  console.error('[klara] TYPEORM_HOST ist nicht gesetzt. Bitte .env prüfen.');
+  process.exit(1);
+}
+
 const ds = new DataSource({
   type: 'postgres',
-  host:     process.env.TYPEORM_HOST     || 'localhost',
+  host:     host,
   port:     Number(process.env.TYPEORM_PORT || 5432),
-  username: process.env.TYPEORM_USERNAME || 'user',
-  password: process.env.TYPEORM_PASSWORD || 'CHANGEME',
-  database: process.env.TYPEORM_DATABASE || 'klara',
+  username: process.env.TYPEORM_USERNAME,
+  password: process.env.TYPEORM_PASSWORD,
+  database: process.env.TYPEORM_DATABASE,
   entities:   [],
   migrations: [path.join(__dirname, 'migrations', '*.js')],
   synchronize:   false,
