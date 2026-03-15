@@ -40,6 +40,8 @@ export class UpdateStudentDto {
 
 // ---------- Bulk Import ----------
 
+export type ImportAction = 'create' | 'update' | 'ignore';
+
 export class ImportStudentRowDto {
   firstName?: string;
   lastName?: string;
@@ -53,6 +55,9 @@ export class ImportStudentRowDto {
   parent1LastName?: string;
   parent1Email?: string;
   parent1Phone?: string;
+  // Gesetzt vom Frontend nach der Konflikt-Auflösung
+  action?: ImportAction;
+  existingStudentId?: string;
 }
 
 export class BulkImportStudentsDto {
@@ -61,7 +66,29 @@ export class BulkImportStudentsDto {
 
 export class ImportResultDto {
   imported!: number;
+  updated!: number;
   skipped!: number;
   classesCreated!: number;
   errors!: { row: number; reason: string }[];
+}
+
+// ---------- Duplicate Check ----------
+
+export class CheckDuplicatesRequestDto {
+  rows!: { firstName: string; lastName: string; dateOfBirth?: string }[];
+}
+
+export class DuplicateMatchDto {
+  rowIndex!: number;
+  existingStudentId!: string;
+  firstName!: string;
+  lastName!: string;
+  dateOfBirth?: string;
+  email?: string;
+  phone?: string;
+  classes!: { id: string; name: string; schoolYear?: string }[];
+}
+
+export class CheckDuplicatesResultDto {
+  matches!: DuplicateMatchDto[];
 }
