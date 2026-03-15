@@ -158,17 +158,66 @@ export class StudentService {
     return student;
   }
 
+  async checkDuplicates(
+    rows: { firstName: string; lastName: string; dateOfBirth?: string }[],
+    teacherId: string,
+  ): Promise<import('@app/domain').CheckDuplicatesResultDto> {
+    const allStudents = await this.studentRepo.find({
+      where: { teacherId },
+      relations: ['classes'],
+    });
+
+    const matches: import('@app/domain').DuplicateMatchDto[] = [];
+
+    rows.forEach((row, index) => {
+      const firstName = row.firstName?.trim().toLowerCase();
+      const lastName  = row.lastName?.trim().toLowerCase();
+      const dob       = parseDateOfBirth(row.dateOfBirth);
+
+      const existing = allStudents.find(s => {
+        const nameMatch =
+          s.firstName.toLowerCase() === firstName &&
+          s.lastName.toLowerCase()  === lastName;
+        if (!nameMatch) return false;
+        if (dob && s.dateOfBirth) {
+          return (
+            dob.getFullYear() === s.dateOfBirth.getFullYear() &&
+            dob.getMonth()    === s.dateOfBirth.getMonth()    &&
+            dob.getDate()     === s.dateOfBirth.getDate()
+          );
+        }
+        return true;
+      });
+
+      if (existing) {
+        matches.push({
+          rowIndex:          index,
+          existingStudentId: existing.id,
+          firstName:         existing.firstName,
+          lastName:          existing.lastName,
+          dateOfBirth:       existing.dateOfBirth?.toISOString().split('T')[0],
+          email:             existing.email  ?? undefined,
+          phone:             existing.phone  ?? undefined,
+          classes:           (existing.classes ?? []).map(c => ({
+            id:         c.id,
+            name:       c.name,
+            schoolYear: c.schoolYear ?? undefined,
+          })),
+        });
+      }
+    });
+
+    return { matches };
+  }
+
   async bulkImport(rows: ImportStudentRowDto[], teacherId: string): Promise<ImportResultDto> {
-    const result: ImportResultDto = { imported: 0, skipped: 0, classesCreated: 0, errors: [] };
+    const result: ImportResultDto = { imported: 0, updated: 0, skipped: 0, classesCreated: 0, errors: [] };
 
-    // Cache für Klassen (name+schoolYear → classId) um mehrfache DB-Abfragen zu vermeiden
-    const classCache = new Map<string, string>();
-
-    // Duplikat-Erkennung innerhalb des Imports: firstName+lastName+dateOfBirth → Student
+    const classCache       = new Map<string, string>();
     const importedStudents = new Map<string, Student>();
 
     for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
+      const row    = rows[i];
       const rowNum = i + 1;
 
       const firstName = row.firstName?.trim();
@@ -180,100 +229,109 @@ export class StudentService {
         continue;
       }
 
+      if (row.action === 'ignore') {
+        result.skipped++;
+        continue;
+      }
+
       try {
-        // ── Duplikat-Erkennung: gleicher Name + Geburtsdatum = selber Schüler ──
-        const dedupKey = `${firstName.toLowerCase()}|${lastName.toLowerCase()}|${row.dateOfBirth ?? ''}`;
-        let student = importedStudents.get(dedupKey);
+        let student: Student;
 
-        if (!student) {
-          // Neuen Schüler anlegen
-          student = this.studentRepo.create({
-            firstName,
-            lastName,
-            dateOfBirth: parseDateOfBirth(row.dateOfBirth),
-            email: row.email?.trim() || undefined,
-            phone: row.phone?.trim() || undefined,
-            gender: row.gender?.trim() || undefined,
-            teacherId,
+        if (row.action === 'update' && row.existingStudentId) {
+          // ── Update ──────────────────────────────────────────────────────────
+          student = await this.studentRepo.findOne({
+            where: { id: row.existingStudentId, teacherId },
+            relations: ['classes'],
           });
-          student = await this.studentRepo.save(student);
-          importedStudents.set(dedupKey, student);
-          result.imported++;
-        }
-        // Bei Duplikat: Schüler existiert bereits, wir springen direkt zur Klassenlogik
+          if (!student) {
+            result.skipped++;
+            result.errors.push({ row: rowNum, reason: 'Schüler für Update nicht gefunden' });
+            continue;
+          }
+          if (row.email?.trim())  student.email  = row.email.trim();
+          if (row.phone?.trim())  student.phone  = row.phone.trim();
+          if (row.gender?.trim()) student.gender = row.gender.trim();
+          await this.studentRepo.save(student);
+          result.updated++;
 
-        // ── Parent speichern (auch bei Duplikat, falls neue Kontaktdaten) ──
+        } else {
+          // ── Neu anlegen ──────────────────────────────────────────────────────
+          const dedupKey = `${firstName.toLowerCase()}|${lastName.toLowerCase()}|${row.dateOfBirth ?? ''}`;
+          student = importedStudents.get(dedupKey);
+
+          if (!student) {
+            student = this.studentRepo.create({
+              firstName,
+              lastName,
+              dateOfBirth: parseDateOfBirth(row.dateOfBirth),
+              email:  row.email?.trim()  || undefined,
+              phone:  row.phone?.trim()  || undefined,
+              gender: row.gender?.trim() || undefined,
+              teacherId,
+            });
+            student = await this.studentRepo.save(student);
+            importedStudents.set(dedupKey, student);
+            result.imported++;
+          }
+        }
+
+        // ── Parent ergänzen (nie ersetzen) ───────────────────────────────────
         const p1First = row.parent1FirstName?.trim();
         const p1Last  = row.parent1LastName?.trim();
         if (p1First && p1Last) {
           const existingParents = await this.parentRepo.find({ where: { studentId: student.id } });
-          const alreadyExists = existingParents.some(
-            p => p.firstName === p1First && p.lastName === p1Last,
-          );
+          const alreadyExists   = existingParents.some(p => p.firstName === p1First && p.lastName === p1Last);
           if (!alreadyExists) {
-            const parent = this.parentRepo.create({
+            await this.parentRepo.save(this.parentRepo.create({
               firstName: p1First,
               lastName:  p1Last,
               email:     row.parent1Email?.trim() || undefined,
               phone:     row.parent1Phone?.trim() || undefined,
               studentId: student.id,
-            });
-            await this.parentRepo.save(parent);
+            }));
           }
         }
 
-        // ── Klasse suchen oder anlegen ──
+        // ── Klasse suchen oder anlegen ───────────────────────────────────────
         const className  = row.className?.trim();
         const schoolYear = row.schoolYear?.trim();
 
         if (className) {
           const cacheKey = `${className}|${schoolYear ?? ''}`;
-          let classId = classCache.get(cacheKey);
+          let classId    = classCache.get(cacheKey);
 
           if (!classId) {
-            // In DB suchen
             const existing = await this.classRepo.findOne({
               where: { name: className, teacherId, ...(schoolYear ? { schoolYear } : {}) },
             });
-
             if (existing) {
               classId = existing.id;
             } else {
-              // Neu anlegen
-              const newCls = this.classRepo.create({
-                name:       className,
-                schoolYear: schoolYear ?? null,
-                teacherId,
-                students:   [],
-              });
-              const saved = await this.classRepo.save(newCls);
+              const saved = await this.classRepo.save(
+                this.classRepo.create({ name: className, schoolYear: schoolYear ?? null, teacherId, students: [] }),
+              );
               classId = saved.id;
               result.classesCreated++;
             }
             classCache.set(cacheKey, classId);
           }
 
-          // Schüler direkt in Join-Tabelle eintragen (kein Cascade-Save)
           await this.classRepo.query(
-            `INSERT INTO class_students ("classId", "studentId")
-             VALUES ($1, $2)
-             ON CONFLICT DO NOTHING`,
+            `INSERT INTO class_students ("classId", "studentId") VALUES ($1, $2) ON CONFLICT DO NOTHING`,
             [classId, student.id],
           );
         }
 
       } catch (e: any) {
         result.skipped++;
-        // Strukturierte Fehlermeldung: DB-Fehlercode + lesbare Ursache
-        const reason = buildImportErrorReason(e, row);
-        result.errors.push({ row: rowNum, reason });
+        result.errors.push({ row: rowNum, reason: buildImportErrorReason(e, row) });
       }
     }
 
     return result;
   }
 
-  async remove(id: string, teacherId: string): Promise<void> {
+    async remove(id: string, teacherId: string): Promise<void> {
     const student = await this.findOne(id, teacherId);
     await this.studentRepo.remove(student);
   }

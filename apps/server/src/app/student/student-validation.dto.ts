@@ -146,6 +146,14 @@ export class ImportStudentRowValidationDto {
   @IsOptional()
   @IsString()
   parent1Phone?: string;
+
+  @IsOptional()
+  @IsIn(['create', 'update', 'ignore'])
+  action?: string;
+
+  @IsOptional()
+  @IsString()
+  existingStudentId?: string;
 }
 
 export class BulkImportStudentsValidationDto {
@@ -153,4 +161,27 @@ export class BulkImportStudentsValidationDto {
   @ValidateNested({ each: true })
   @Type(() => ImportStudentRowValidationDto)
   rows!: ImportStudentRowValidationDto[];
+}
+
+// ── Duplicate Check ───────────────────────────────────────────────────────────
+
+export class CheckDuplicateRowValidationDto {
+  @IsString()
+  @MinLength(1)
+  firstName!: string;
+
+  @IsString()
+  @MinLength(1)
+  lastName!: string;
+
+  @IsOptional()
+  @IsString()
+  dateOfBirth?: string;
+}
+
+export class CheckDuplicatesValidationDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CheckDuplicateRowValidationDto)
+  rows!: CheckDuplicateRowValidationDto[];
 }
