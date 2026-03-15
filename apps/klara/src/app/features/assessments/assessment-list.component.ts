@@ -89,18 +89,24 @@ import { AssessmentEventType } from '@app/domain';
 
       <!-- Filter -->
       <div class="filter-bar">
-        <select [ngModel]="filterClassId()" (ngModelChange)="filterClassId.set($event)">
-          <option value="">Alle Klassen</option>
-          @for (cls of classes(); track cls.id) {
-            <option [value]="cls.id">{{ cls.name }}{{ cls.schoolYear ? ' · ' + cls.schoolYear : '' }}</option>
-          }
-        </select>
-        <select [ngModel]="filterSubjectId()" (ngModelChange)="filterSubjectId.set($event)">
-          <option value="">Alle Fächer</option>
-          @for (s of subjects(); track s.id) {
-            <option [value]="s.id">{{ s.name }}</option>
-          }
-        </select>
+        <div class="filter-field">
+          <label>Klasse</label>
+          <select [ngModel]="filterClassId()" (ngModelChange)="filterClassId.set($event)">
+            <option value="">Alle Klassen</option>
+            @for (cls of classes(); track cls.id) {
+              <option [value]="cls.id">{{ cls.name }}{{ cls.schoolYear ? ' · ' + cls.schoolYear : '' }}</option>
+            }
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>Fach</label>
+          <select [ngModel]="filterSubjectId()" (ngModelChange)="filterSubjectId.set($event)">
+            <option value="">Alle Fächer</option>
+            @for (s of subjects(); track s.id) {
+              <option [value]="s.id">{{ s.name }}</option>
+            }
+          </select>
+        </div>
       </div>
 
       <!-- Liste -->
@@ -173,6 +179,8 @@ import { AssessmentEventType } from '@app/domain';
       border-radius: var(--r-lg); padding: var(--sp-4) var(--sp-5);
       margin-bottom: var(--sp-5);
     }
+    .filter-field { display: flex; flex-direction: column; gap: var(--sp-1); }
+    .filter-field label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-faint); }
     .filter-bar select { min-width: 160px; }
 
     /* ── States ── */
@@ -232,6 +240,7 @@ import { AssessmentEventType } from '@app/domain';
       .page-header { flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
       h1 { font-size: 22px; }
       .filter-bar { flex-direction: column; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+      .filter-field { width: 100%; }
       .filter-bar select { min-width: 0; width: 100%; }
       .form-panel { padding: var(--sp-4); }
       .form-row { flex-direction: column; }
