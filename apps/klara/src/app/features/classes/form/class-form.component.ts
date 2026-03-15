@@ -6,6 +6,26 @@ import { ClassService } from '../class.service';
 import { StudentService } from '../../students/student.service';
 import { StudentDto, StudentRefDto } from '@app/domain';
 
+function buildSchoolYearOptions(): string[] {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const currentStart = month >= 9 ? now.getFullYear() : now.getFullYear() - 1;
+  const years: string[] = [];
+  for (let offset = 2; offset >= -3; offset--) {
+    const start = currentStart + offset;
+    const end = (start + 1).toString().slice(-2);
+    years.push(`${start}/${end}`);
+  }
+  return years;
+}
+
+function currentSchoolYear(): string {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const start = month >= 9 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${start}/${(start + 1).toString().slice(-2)}`;
+}
+
 @Component({
   selector: 'app-class-form',
   standalone: true,
@@ -35,8 +55,11 @@ import { StudentDto, StudentRefDto } from '@app/domain';
           </div>
           <div class="field">
             <label>Schuljahr</label>
-            <input type="text" formControlName="schoolYear" placeholder="z.B. 2024/25" />
-            <span class="field-hint">Format: 2024/25</span>
+            <select formControlName="schoolYear">
+              @for (y of schoolYearOptions; track y) {
+                <option [value]="y">{{ y }}</option>
+              }
+            </select>
           </div>
         </section>
 
@@ -185,9 +208,11 @@ export class ClassFormComponent implements OnInit {
 
   form = this.fb.group({
     name:        ['', [Validators.required, Validators.minLength(1)]],
-    schoolYear:  [''],
+    schoolYear:  [currentSchoolYear()],
     schoolLevel: [null as number | null],
   });
+
+  readonly schoolYearOptions = buildSchoolYearOptions();
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
