@@ -41,6 +41,10 @@ export class CreateStudentValidationDto {
   dateOfBirth?: string;
 
   @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateParentValidationDto)
@@ -61,6 +65,10 @@ export class UpdateStudentValidationDto {
   @IsOptional()
   @IsDateString()
   dateOfBirth?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 
   @IsOptional()
   @IsArray()
@@ -85,6 +93,18 @@ export class ImportStudentRowValidationDto {
   @IsOptional()
   @IsString()
   dateOfBirth?: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  className?: string;
+
+  @IsOptional()
+  @IsString()
+  schoolYear?: string;
 
   @IsOptional()
   @IsString()

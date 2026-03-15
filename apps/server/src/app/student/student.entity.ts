@@ -30,6 +30,9 @@ export class Student {
   dateOfBirth: Date;
 
   @Column({ nullable: true })
+  email: string;
+
+  @Column({ nullable: true })
   avatarUrl: string;
 
   @ManyToOne(() => Teacher, { onDelete: 'CASCADE' })
