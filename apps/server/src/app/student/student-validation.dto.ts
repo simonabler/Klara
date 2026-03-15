@@ -2,6 +2,7 @@ import {
   IsArray,
   IsDateString,
   IsEmail,
+  IsIn,
   IsOptional,
   IsString,
   MinLength,
@@ -45,6 +46,10 @@ export class CreateStudentValidationDto {
   email?: string;
 
   @IsOptional()
+  @IsIn(['m', 'w', 'd'])
+  gender?: string;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateParentValidationDto)
@@ -69,6 +74,10 @@ export class UpdateStudentValidationDto {
   @IsOptional()
   @IsEmail()
   email?: string;
+
+  @IsOptional()
+  @IsIn(['m', 'w', 'd'])
+  gender?: string;
 
   @IsOptional()
   @IsArray()
@@ -97,6 +106,10 @@ export class ImportStudentRowValidationDto {
   @IsOptional()
   @IsString()
   email?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
 
   @IsOptional()
   @IsString()

@@ -43,6 +43,7 @@ export class StudentService {
       lastName: dto.lastName,
       dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
       email: dto.email?.trim() || undefined,
+      gender: dto.gender || undefined,
       teacherId,
     });
     const saved = await this.studentRepo.save(student);
@@ -69,6 +70,7 @@ export class StudentService {
     if (dto.dateOfBirth !== undefined)
       student.dateOfBirth = new Date(dto.dateOfBirth);
     if (dto.email !== undefined) student.email = dto.email?.trim() || null;
+    if (dto.gender !== undefined) student.gender = dto.gender || null;
 
     await this.studentRepo.save(student);
 
@@ -130,6 +132,7 @@ export class StudentService {
             lastName,
             dateOfBirth: row.dateOfBirth ? new Date(row.dateOfBirth) : undefined,
             email: row.email?.trim() || undefined,
+            gender: row.gender?.trim() || undefined,
             teacherId,
           });
           student = await this.studentRepo.save(student);

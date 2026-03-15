@@ -32,6 +32,9 @@ export class Student {
   @Column({ nullable: true })
   email: string;
 
+  @Column({ type: 'char', length: 1, nullable: true })
+  gender: string;
+
   @Column({ nullable: true })
   avatarUrl: string;
 
