@@ -66,9 +66,21 @@ function autoDetect(header: string): string {
   return '';
 }
 
-type Step = 'upload' | 'map' | 'preview' | 'result';
+type Step = 'upload' | 'map' | 'conflicts' | 'preview' | 'result';
+type ImportAction = 'create' | 'update' | 'ignore';
 
-interface ImportResult { imported: number; skipped: number; classesCreated: number; errors: { row: number; reason: string }[] }
+interface DuplicateMatch {
+  rowIndex: number;
+  existingStudentId: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth?: string;
+  email?: string;
+  phone?: string;
+  classes: { id: string; name: string; schoolYear?: string }[];
+}
+
+interface ImportResult { imported: number; updated: number; skipped: number; classesCreated: number; errors: { row: number; reason: string }[] }
 
 @Component({
   selector: 'app-student-import',
@@ -162,7 +174,64 @@ interface ImportResult { imported: number; skipped: number; classesCreated: numb
 
           <div class="card-footer">
             <button class="btn-secondary" (click)="step.set('upload')">Zurück</button>
-            <button class="btn-primary" (click)="goToPreview()">Weiter zur Vorschau →</button>
+            <button class="btn-primary" [disabled]="checkingDups()" (click)="goToConflicts()">
+              {{ checkingDups() ? 'Prüfe Duplikate…' : 'Weiter →' }}
+            </button>
+          </div>
+        </section>
+      }
+
+      <!-- ── Schritt 3: Konflikte ── -->
+      @if (step() === 'conflicts') {
+        <section class="card">
+          @if (conflictCount() === 0) {
+            <h2>Keine Konflikte</h2>
+            <p class="hint">Alle Schüler sind neu – kein einziger existiert bereits.</p>
+          } @else {
+            <div class="conflict-header">
+              <div>
+                <h2>{{ conflictCount() }} {{ conflictCount() === 1 ? 'Konflikt' : 'Konflikte' }} gefunden</h2>
+                <p class="hint">Diese Schüler existieren bereits. Wähle für jeden eine Aktion.</p>
+              </div>
+              <div class="bulk-actions">
+                <button class="btn-sm btn-ghost" [class.active]="allIgnored()" (click)="setAllActions('ignore')">Alle ignorieren</button>
+                <button class="btn-sm btn-ghost" [class.active]="allUpdated()" (click)="setAllActions('update')">Alle updaten</button>
+              </div>
+            </div>
+
+            <div class="conflict-list">
+              @for (c of conflicts(); track c.rowIndex) {
+                <div class="conflict-row">
+                  <div class="conflict-info">
+                    <span class="conflict-name">{{ c.lastName }} {{ c.firstName }}</span>
+                    @if (c.dateOfBirth) {
+                      <span class="conflict-meta">{{ c.dateOfBirth | date:'dd.MM.yyyy' }}</span>
+                    }
+                    @if (c.classes.length > 0) {
+                      <span class="conflict-meta">
+                        {{ c.classes.map(cl => cl.name + (cl.schoolYear ? ' · ' + cl.schoolYear : '')).join(', ') }}
+                      </span>
+                    }
+                  </div>
+                  <div class="action-tabs">
+                    <button class="action-tab"
+                      [class.active-ignore]="getAction(c.rowIndex) === 'ignore'"
+                      (click)="setAction(c.rowIndex, 'ignore')">Ignorieren</button>
+                    <button class="action-tab"
+                      [class.active-update]="getAction(c.rowIndex) === 'update'"
+                      (click)="setAction(c.rowIndex, 'update')">Updaten</button>
+                    <button class="action-tab"
+                      [class.active-create]="getAction(c.rowIndex) === 'create'"
+                      (click)="setAction(c.rowIndex, 'create')">Neu anlegen</button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <div class="card-footer">
+            <button class="btn-secondary" (click)="step.set('map')">Zurück</button>
+            <button class="btn-primary" (click)="step.set('preview')">Weiter zur Vorschau →</button>
           </div>
         </section>
       }
@@ -213,7 +282,7 @@ interface ImportResult { imported: number; skipped: number; classesCreated: numb
           }
 
           <div class="card-footer">
-            <button class="btn-secondary" (click)="step.set('map')">Zurück</button>
+            <button class="btn-secondary" (click)="step.set('conflicts')">Zurück</button>
             <button class="btn-primary" [disabled]="importing()" (click)="runImport()">
               {{ importing() ? 'Importiert…' : validCount() + ' Schüler importieren' }}
             </button>
@@ -230,8 +299,14 @@ interface ImportResult { imported: number; skipped: number; classesCreated: numb
             <div class="result-stats">
               <div class="stat success">
                 <span class="stat-num">{{ r.imported }}</span>
-                <span class="stat-label">importiert</span>
+                <span class="stat-label">neu importiert</span>
               </div>
+              @if (r.updated > 0) {
+                <div class="stat info">
+                  <span class="stat-num">{{ r.updated }}</span>
+                  <span class="stat-label">{{ r.updated === 1 ? 'aktualisiert' : 'aktualisiert' }}</span>
+                </div>
+              }
               @if (r.classesCreated > 0) {
                 <div class="stat info">
                   <span class="stat-num">{{ r.classesCreated }}</span>
@@ -389,6 +464,43 @@ interface ImportResult { imported: number; skipped: number; classesCreated: numb
     .stat.success .stat-num { color: var(--success-fg); }
     .stat.warn .stat-num { color: var(--warn-fg); }
     .stat.info .stat-num { color: var(--teal); }
+
+    /* ── Konflikte ── */
+    .conflict-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-5);
+    }
+    .conflict-header h2 { margin-bottom: var(--sp-1); }
+    .conflict-header .hint { margin-bottom: 0; }
+    .bulk-actions { display: flex; gap: var(--sp-2); flex-shrink: 0; margin-top: 4px; }
+
+    .conflict-list { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+    .conflict-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--sp-4); flex-wrap: wrap;
+      padding: var(--sp-3) var(--sp-4);
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
+    }
+    .conflict-info { display: flex; flex-direction: column; gap: 2px; }
+    .conflict-name { font-size: 14px; font-weight: 500; color: var(--navy); }
+    .conflict-meta { font-size: 12px; color: var(--ink-faint); }
+
+    .action-tabs { display: flex; gap: 4px; }
+    .action-tab {
+      padding: 5px 12px; border-radius: var(--r-sm);
+      border: 1.5px solid var(--border); background: var(--white);
+      font-size: 12px; font-weight: 500; color: var(--ink-light);
+      cursor: pointer; transition: all .12s; font-family: var(--font-body);
+    }
+    .action-tab:hover { border-color: var(--ink-light); }
+    .action-tab.active-ignore { border-color: var(--ink-faint); background: var(--surface); color: var(--ink-light); }
+    .action-tab.active-update { border-color: var(--teal); background: #e8f4f8; color: #2E7D9A; }
+    .action-tab.active-create { border-color: var(--navy); background: var(--navy); color: var(--white); }
+
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: var(--r-sm); font-family: var(--font-body); font-weight: 500; cursor: pointer; transition: all .12s; }
+    .btn-ghost { background: transparent; color: var(--ink-light); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--navy); color: var(--navy); }
+    .btn-ghost.active { border-color: var(--teal); color: var(--teal); background: #e8f4f8; }
     .error-details { text-align: left; margin: var(--sp-4) 0; font-size: 13px; }
     .error-details summary { cursor: pointer; color: var(--ink-faint); }
     .error-list { margin: var(--sp-2) 0 0 var(--sp-4); padding: 0; color: var(--error-fg); }
@@ -421,10 +533,11 @@ export class StudentImportComponent {
   readonly targetFields    = TARGET_FIELDS;
   readonly schoolYearOptions = buildSchoolYearOptions();
   readonly stepLabels = [
-    { id: 'upload'  as Step, label: 'Datei'     },
-    { id: 'map'     as Step, label: 'Zuordnen'  },
-    { id: 'preview' as Step, label: 'Vorschau'  },
-    { id: 'result'  as Step, label: 'Ergebnis'  },
+    { id: 'upload'    as Step, label: 'Datei'     },
+    { id: 'map'       as Step, label: 'Zuordnen'  },
+    { id: 'conflicts' as Step, label: 'Konflikte' },
+    { id: 'preview'   as Step, label: 'Vorschau'  },
+    { id: 'result'    as Step, label: 'Ergebnis'  },
   ];
 
   step            = signal<Step>('upload');
@@ -437,6 +550,11 @@ export class StudentImportComponent {
   importing       = signal(false);
   importResult    = signal<ImportResult | null>(null);
   selectedSchoolYear = currentSchoolYear();
+
+  // Konflikt-Auflösung
+  conflicts       = signal<DuplicateMatch[]>([]);
+  checkingDups    = signal(false);
+  rowActions      = signal<Map<number, ImportAction>>(new Map());
 
   previewRows    = computed(() => this.buildRows(this.csvRows(), this.csvHeaders(), this.mappings()));
   validCount     = computed(() => this.previewRows().filter(r => r['firstName'] && r['lastName']).length);
@@ -504,15 +622,57 @@ export class StudentImportComponent {
     return this.csvRows()[0]?.[colIndex] ?? '';
   }
 
-  goToPreview(): void {
+  goToConflicts(): void {
     const m = this.mappings();
     if (!m.includes('firstName') || !m.includes('lastName')) {
       this.mappingError.set('Bitte „Vorname" und „Nachname" zuweisen.');
       return;
     }
     this.mappingError.set('');
-    this.step.set('preview');
+
+    // Duplikat-Check gegen API
+    const rows = this.previewRows()
+      .filter(r => r['firstName'] && r['lastName'])
+      .map(r => ({ firstName: r['firstName'], lastName: r['lastName'], dateOfBirth: r['dateOfBirth'] || undefined }));
+
+    this.checkingDups.set(true);
+    this.http.post<{ matches: DuplicateMatch[] }>('/api/students/check-duplicates', { rows }).subscribe({
+      next: (result) => {
+        this.conflicts.set(result.matches);
+        // Default-Aktion für alle Konflikte: ignorieren
+        const actions = new Map<number, ImportAction>();
+        result.matches.forEach(m => actions.set(m.rowIndex, 'ignore'));
+        this.rowActions.set(actions);
+        this.checkingDups.set(false);
+        this.step.set('conflicts');
+      },
+      error: () => {
+        // Bei Fehler direkt zur Vorschau (ohne Konflikt-Check)
+        this.checkingDups.set(false);
+        this.step.set('preview');
+      },
+    });
   }
+
+  setAllActions(action: ImportAction): void {
+    const actions = new Map<number, ImportAction>();
+    this.conflicts().forEach(c => actions.set(c.rowIndex, action));
+    this.rowActions.set(actions);
+  }
+
+  setAction(rowIndex: number, action: ImportAction): void {
+    const actions = new Map(this.rowActions());
+    actions.set(rowIndex, action);
+    this.rowActions.set(actions);
+  }
+
+  getAction(rowIndex: number): ImportAction {
+    return this.rowActions().get(rowIndex) ?? 'ignore';
+  }
+
+  conflictCount = computed(() => this.conflicts().length);
+  allIgnored    = computed(() => this.conflicts().every(c => this.rowActions().get(c.rowIndex) === 'ignore'));
+  allUpdated    = computed(() => this.conflicts().every(c => this.rowActions().get(c.rowIndex) === 'update'));
 
   // ── Row building ───────────────────────────────────────────────────────────
 
@@ -531,13 +691,24 @@ export class StudentImportComponent {
 
   runImport(): void {
     this.importing.set(true);
+
+    // Konflikte in die Rows einarbeiten
+    const conflictMap = new Map<number, DuplicateMatch>(
+      this.conflicts().map(c => [c.rowIndex, c]),
+    );
+
     const rows = this.previewRows()
       .filter(r => r['firstName'] && r['lastName'])
-      .map(r => ({
-        ...r,
-        // Schuljahr aus Dropdown einfügen wenn keine schoolYear-Spalte gemappt ist
-        schoolYear: r['schoolYear'] || this.selectedSchoolYear,
-      }));
+      .map((r, i) => {
+        const conflict = conflictMap.get(i);
+        const action   = conflict ? (this.rowActions().get(i) ?? 'ignore') : 'create';
+        return {
+          ...r,
+          schoolYear:        r['schoolYear'] || this.selectedSchoolYear,
+          action,
+          existingStudentId: conflict?.existingStudentId,
+        };
+      });
 
     this.http.post<ImportResult>('/api/students/import', { rows }).subscribe({
       next: (result) => {
@@ -556,5 +727,7 @@ export class StudentImportComponent {
     this.csvRows.set([]);
     this.mappings.set([]);
     this.importResult.set(null);
+    this.conflicts.set([]);
+    this.rowActions.set(new Map());
   }
 }
