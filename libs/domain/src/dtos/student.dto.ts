@@ -56,7 +56,7 @@ export class ImportStudentRowDto {
   parent1Email?: string;
   parent1Phone?: string;
   // Gesetzt vom Frontend nach der Konflikt-Auflösung
-  action?: ImportAction;
+  action?: string;
   existingStudentId?: string;
 }
 
