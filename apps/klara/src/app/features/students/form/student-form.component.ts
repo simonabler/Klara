@@ -58,6 +58,10 @@ import { StudentDto } from '@app/domain';
             <input type="email" formControlName="email" placeholder="z.B. max.mustermann@schule.at" />
           </div>
           <div class="field">
+            <label>Telefon</label>
+            <input type="tel" formControlName="phone" placeholder="z.B. 0650 1234567" />
+          </div>
+          <div class="field">
             <label>Geschlecht</label>
             <div class="radio-group">
               @for (opt of genderOptions; track opt.value) {
@@ -243,6 +247,7 @@ export class StudentFormComponent implements OnInit {
     lastName:    ['', [Validators.required, Validators.minLength(1)]],
     dateOfBirth: [''],
     email:       [''],
+    phone:       [''],
     gender:      [''],
     parents:     this.fb.array([]),
   });
@@ -268,6 +273,7 @@ export class StudentFormComponent implements OnInit {
           lastName:    student.lastName,
           dateOfBirth: student.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
           email:       student.email ?? '',
+          phone:       student.phone ?? '',
           gender:      student.gender ?? '',
         });
         if (student.avatarUrl) this.avatarPreview.set(student.avatarUrl);
@@ -324,6 +330,7 @@ export class StudentFormComponent implements OnInit {
       lastName: value.lastName!,
       dateOfBirth: value.dateOfBirth || undefined,
       email: (value as any).email?.trim() || undefined,
+      phone: (value as any).phone?.trim() || undefined,
       gender: (value as any).gender || undefined,
       parents: (value.parents as any[]).map((p: any) => ({
         firstName: p.firstName,
