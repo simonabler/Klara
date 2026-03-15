@@ -173,8 +173,8 @@ interface ImportResult { imported: number; updated: number; skipped: number; cla
           }
 
           <div class="card-footer">
-            <button class="btn-secondary" (click)="step.set('upload')">Zurück</button>
-            <button class="btn-primary" [disabled]="checkingDups()" (click)="goToConflicts()">
+            <button class="btn btn-secondary" (click)="step.set('upload')">Zurück</button>
+            <button class="btn btn-primary" [disabled]="checkingDups()" (click)="goToConflicts()">
               {{ checkingDups() ? 'Prüfe Duplikate…' : 'Weiter →' }}
             </button>
           </div>
@@ -194,8 +194,8 @@ interface ImportResult { imported: number; updated: number; skipped: number; cla
                 <p class="hint">Diese Schüler existieren bereits. Wähle für jeden eine Aktion.</p>
               </div>
               <div class="bulk-actions">
-                <button class="btn-sm btn-ghost" [class.active]="allIgnored()" (click)="setAllActions('ignore')">Alle ignorieren</button>
-                <button class="btn-sm btn-ghost" [class.active]="allUpdated()" (click)="setAllActions('update')">Alle updaten</button>
+                <button class="btn btn-sm btn-ghost" [class.active]="allIgnored()" (click)="setAllActions('ignore')">Alle ignorieren</button>
+                <button class="btn btn-sm btn-ghost" [class.active]="allUpdated()" (click)="setAllActions('update')">Alle updaten</button>
               </div>
             </div>
 
@@ -230,8 +230,8 @@ interface ImportResult { imported: number; updated: number; skipped: number; cla
           }
 
           <div class="card-footer">
-            <button class="btn-secondary" (click)="step.set('map')">Zurück</button>
-            <button class="btn-primary" (click)="step.set('preview')">Weiter zur Vorschau →</button>
+            <button class="btn btn-secondary" (click)="step.set('map')">Zurück</button>
+            <button class="btn btn-primary" (click)="step.set('preview')">Weiter zur Vorschau →</button>
           </div>
         </section>
       }
@@ -282,8 +282,8 @@ interface ImportResult { imported: number; updated: number; skipped: number; cla
           }
 
           <div class="card-footer">
-            <button class="btn-secondary" (click)="step.set('conflicts')">Zurück</button>
-            <button class="btn-primary" [disabled]="importing()" (click)="runImport()">
+            <button class="btn btn-secondary" (click)="step.set('conflicts')">Zurück</button>
+            <button class="btn btn-primary" [disabled]="importing()" (click)="runImport()">
               {{ importing() ? 'Importiert…' : effectiveCount() + ' Schüler verarbeiten' }}
             </button>
           </div>
@@ -333,8 +333,8 @@ interface ImportResult { imported: number; updated: number; skipped: number; cla
             }
 
             <div class="result-actions">
-              <button class="btn-secondary" (click)="reset()">Weiteren Import starten</button>
-              <a class="btn-primary" routerLink="/app/students">Zur Schülerliste →</a>
+              <button class="btn btn-secondary" (click)="reset()">Weiteren Import starten</button>
+              <a class="btn btn-primary" routerLink="/app/students">Zur Schülerliste →</a>
             </div>
           }
         </section>
