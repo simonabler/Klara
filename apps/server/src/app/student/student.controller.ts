@@ -23,7 +23,7 @@ import {
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { StudentService } from './student.service';
-import { BulkImportStudentsValidationDto, CreateStudentValidationDto, UpdateStudentValidationDto } from './student-validation.dto';
+import { BulkImportStudentsValidationDto, CheckDuplicatesValidationDto, CreateStudentValidationDto, UpdateStudentValidationDto } from './student-validation.dto';
 import { avatarUploadOptions } from './avatar-upload.config';
 
 @ApiTags('students')
@@ -65,6 +65,12 @@ export class StudentController {
   @ApiOperation({ summary: 'Schüler per CSV-Daten importieren (Bulk)' })
   bulkImport(@Body() dto: BulkImportStudentsValidationDto, @Req() req: Request) {
     return this.studentService.bulkImport(dto.rows, (req.user as any).id);
+  }
+
+  @Post('check-duplicates')
+  @ApiOperation({ summary: 'Prüft welche Import-Zeilen bereits als Schüler existieren' })
+  checkDuplicates(@Body() dto: CheckDuplicatesValidationDto, @Req() req: Request) {
+    return this.studentService.checkDuplicates(dto.rows, (req.user as any).id);
   }
 
   @Post(':id/avatar')

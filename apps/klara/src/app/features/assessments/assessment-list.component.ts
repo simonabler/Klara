@@ -68,6 +68,12 @@ import { AssessmentEventType } from '@app/domain';
                     <option [value]="s.id">{{ s.name }}</option>
                   }
                 </select>
+                @if (subjects().length === 0) {
+                  <span class="subject-hint">
+                    Noch keine Fächer angelegt.
+                    <a routerLink="/app/settings" class="link">Fächer anlegen →</a>
+                  </span>
+                }
               </div>
             </div>
             @if (serverError()) { <p class="server-error">{{ serverError() }}</p> }
@@ -83,18 +89,24 @@ import { AssessmentEventType } from '@app/domain';
 
       <!-- Filter -->
       <div class="filter-bar">
-        <select [ngModel]="filterClassId()" (ngModelChange)="filterClassId.set($event)">
-          <option value="">Alle Klassen</option>
-          @for (cls of classes(); track cls.id) {
-            <option [value]="cls.id">{{ cls.name }}{{ cls.schoolYear ? ' · ' + cls.schoolYear : '' }}</option>
-          }
-        </select>
-        <select [ngModel]="filterSubjectId()" (ngModelChange)="filterSubjectId.set($event)">
-          <option value="">Alle Fächer</option>
-          @for (s of subjects(); track s.id) {
-            <option [value]="s.id">{{ s.name }}</option>
-          }
-        </select>
+        <div class="filter-field">
+          <label>Klasse</label>
+          <select [ngModel]="filterClassId()" (ngModelChange)="filterClassId.set($event)">
+            <option value="">Alle Klassen</option>
+            @for (cls of classes(); track cls.id) {
+              <option [value]="cls.id">{{ cls.name }}{{ cls.schoolYear ? ' · ' + cls.schoolYear : '' }}</option>
+            }
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>Fach</label>
+          <select [ngModel]="filterSubjectId()" (ngModelChange)="filterSubjectId.set($event)">
+            <option value="">Alle Fächer</option>
+            @for (s of subjects(); track s.id) {
+              <option [value]="s.id">{{ s.name }}</option>
+            }
+          </select>
+        </div>
       </div>
 
       <!-- Liste -->
@@ -155,12 +167,20 @@ import { AssessmentEventType } from '@app/domain';
     input.invalid, select.invalid { border-color: var(--error-fg); }
     .field-error { font-size: 11px; color: var(--error-fg); }
     .server-error { font-size: 13px; color: var(--error-fg); margin-bottom: var(--sp-3); }
+    .subject-hint { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+    .link { color: var(--teal); text-decoration: none; font-weight: 500; }
+    .link:hover { text-decoration: underline; }
     .panel-actions { display: flex; justify-content: flex-end; gap: var(--sp-3); padding-top: var(--sp-4); border-top: 1px solid var(--border); }
 
     /* ── Filter ── */
     .filter-bar {
-      display: flex; gap: var(--sp-3); margin-bottom: var(--sp-4); flex-wrap: wrap;
+      display: flex; gap: var(--sp-4); align-items: flex-end; flex-wrap: wrap;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: var(--sp-4) var(--sp-5);
+      margin-bottom: var(--sp-5);
     }
+    .filter-field { display: flex; flex-direction: column; gap: var(--sp-1); }
+    .filter-field label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-faint); }
     .filter-bar select { min-width: 160px; }
 
     /* ── States ── */
@@ -219,7 +239,8 @@ import { AssessmentEventType } from '@app/domain';
       .page { padding: var(--sp-4) var(--sp-3); }
       .page-header { flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
       h1 { font-size: 22px; }
-      .filter-bar { gap: var(--sp-3); }
+      .filter-bar { flex-direction: column; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+      .filter-field { width: 100%; }
       .filter-bar select { min-width: 0; width: 100%; }
       .form-panel { padding: var(--sp-4); }
       .form-row { flex-direction: column; }

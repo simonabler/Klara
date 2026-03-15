@@ -35,15 +35,28 @@ import { AuthService } from '../auth/auth.service';
         </div>
 
         <div class="nav-section-label">Übersicht</div>
-
         <ul class="nav-list">
           <li>
-            <a routerLink="/app/students" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+            <a routerLink="/app" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item" (click)="closeSidebar()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
               </svg>
-              Schüler
+              Dashboard
+            </a>
+          </li>
+        </ul>
+
+        <div class="nav-section-label">Unterricht</div>
+        <ul class="nav-list">
+          <li>
+            <a routerLink="/app/notes" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              Notizen
             </a>
           </li>
           <li>
@@ -63,16 +76,10 @@ import { AuthService } from '../auth/auth.service';
               Beurteilung
             </a>
           </li>
-          <li>
-            <a routerLink="/app/notes" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-              </svg>
-              Notizen
-            </a>
-          </li>
+        </ul>
+
+        <div class="nav-section-label">Verwaltung</div>
+        <ul class="nav-list">
           <li>
             <a routerLink="/app/classes" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -80,6 +87,15 @@ import { AuthService } from '../auth/auth.service';
                 <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
               </svg>
               Klassen
+            </a>
+          </li>
+          <li>
+            <a routerLink="/app/students" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              Schüler
             </a>
           </li>
         </ul>
@@ -123,14 +139,14 @@ import { AuthService } from '../auth/auth.service';
               <line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
           </button>
-          <div class="topbar-brand">
+          <a routerLink="/app" class="topbar-brand" (click)="closeSidebar()">
             <svg width="20" height="20" viewBox="0 0 44 44" fill="none">
               <rect x="2" y="2" width="22" height="28" rx="5" fill="#2E3F5C"/>
               <rect x="16" y="8" width="18" height="18" rx="4" fill="#7BAABA"/>
               <rect x="22" y="24" width="12" height="12" rx="3" fill="#D4B896"/>
             </svg>
             <span>klara</span>
-          </div>
+          </a>
         </header>
 
         <main class="shell-content">
@@ -230,6 +246,7 @@ import { AuthService } from '../auth/auth.service';
       display: flex; align-items: center; gap: var(--sp-2);
       font-family: var(--font-body); font-weight: 300;
       font-size: 18px; color: var(--white); letter-spacing: -.3px;
+      text-decoration: none;
     }
 
     .shell-content { flex: 1; }

@@ -9,3 +9,9 @@ export enum AssessmentEventType {
   WRITTEN_CHECK = 'WRITTEN_CHECK',
   EXAM = 'EXAM',
 }
+
+export enum Gender {
+  MALE    = 'm',
+  FEMALE  = 'w',
+  DIVERSE = 'd',
+}

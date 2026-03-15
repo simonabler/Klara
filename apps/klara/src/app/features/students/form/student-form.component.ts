@@ -53,6 +53,25 @@ import { StudentDto } from '@app/domain';
             <label>Geburtsdatum</label>
             <input type="date" formControlName="dateOfBirth" />
           </div>
+          <div class="field">
+            <label>E-Mail</label>
+            <input type="email" formControlName="email" placeholder="z.B. max.mustermann@schule.at" />
+          </div>
+          <div class="field">
+            <label>Telefon</label>
+            <input type="tel" formControlName="phone" placeholder="z.B. 0650 1234567" />
+          </div>
+          <div class="field">
+            <label>Geschlecht</label>
+            <div class="radio-group">
+              @for (opt of genderOptions; track opt.value) {
+                <label class="radio-label">
+                  <input type="radio" formControlName="gender" [value]="opt.value" />
+                  {{ opt.label }}
+                </label>
+              }
+            </div>
+          </div>
         </section>
 
         <!-- Eltern -->
@@ -124,6 +143,9 @@ import { StudentDto } from '@app/domain';
     label { font-size: 13px; font-weight: 500; color: var(--ink-light); }
     input.invalid { border-color: var(--error-fg) !important; }
     .field-error { font-size: 12px; color: var(--error-fg); }
+    .radio-group { display: flex; gap: var(--sp-5); align-items: center; }
+    .radio-label { display: flex; align-items: center; gap: var(--sp-2); font-size: 14px; color: var(--ink); cursor: pointer; }
+    .radio-label input[type="radio"] { accent-color: var(--navy); width: 16px; height: 16px; cursor: pointer; }
 
     /* Avatar */
     .avatar-upload { display: flex; align-items: center; gap: var(--sp-4); }
@@ -214,11 +236,20 @@ export class StudentFormComponent implements OnInit {
   avatarPreview = signal<string | null>(null);
   private selectedFile: File | null = null;
 
+  readonly genderOptions = [
+    { value: 'm', label: 'männlich' },
+    { value: 'w', label: 'weiblich' },
+    { value: 'd', label: 'divers'   },
+  ];
+
   form = this.fb.group({
-    firstName: ['', [Validators.required, Validators.minLength(1)]],
-    lastName: ['', [Validators.required, Validators.minLength(1)]],
+    firstName:   ['', [Validators.required, Validators.minLength(1)]],
+    lastName:    ['', [Validators.required, Validators.minLength(1)]],
     dateOfBirth: [''],
-    parents: this.fb.array([]),
+    email:       [''],
+    phone:       [''],
+    gender:      [''],
+    parents:     this.fb.array([]),
   });
 
   get parentsArray(): FormArray {
@@ -238,9 +269,12 @@ export class StudentFormComponent implements OnInit {
     this.studentService.getOne(id).subscribe({
       next: (student: StudentDto) => {
         this.form.patchValue({
-          firstName: student.firstName,
-          lastName: student.lastName,
+          firstName:   student.firstName,
+          lastName:    student.lastName,
           dateOfBirth: student.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
+          email:       student.email ?? '',
+          phone:       student.phone ?? '',
+          gender:      student.gender ?? '',
         });
         if (student.avatarUrl) this.avatarPreview.set(student.avatarUrl);
         student.parents?.forEach((p) => this.parentsArray.push(this.createParentGroup(p)));
@@ -295,6 +329,9 @@ export class StudentFormComponent implements OnInit {
       firstName: value.firstName!,
       lastName: value.lastName!,
       dateOfBirth: value.dateOfBirth || undefined,
+      email: (value as any).email?.trim() || undefined,
+      phone: (value as any).phone?.trim() || undefined,
+      gender: (value as any).gender || undefined,
       parents: (value.parents as any[]).map((p: any) => ({
         firstName: p.firstName,
         lastName: p.lastName,

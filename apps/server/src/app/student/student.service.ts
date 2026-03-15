@@ -6,7 +6,66 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Student } from './student.entity';
 import { Parent } from '../parent/parent.entity';
+import { Class } from '../class/class.entity';
 import { CreateStudentDto, ImportStudentRowDto, ImportResultDto, UpdateStudentDto } from '@app/domain';
+
+/**
+ * Parst Datumsstrings in verschiedenen Formaten zu einem Date-Objekt.
+ * Unterstützt: YYYY-MM-DD, DD.MM.YYYY, DD.MM.YY
+ * Gibt undefined zurück wenn das Datum nicht geparst werden kann.
+ */
+export function parseDateOfBirth(raw: string | undefined): Date | undefined {
+  if (!raw?.trim()) return undefined;
+  const s = raw.trim();
+
+  // Format: DD.MM.YYYY oder DD.MM.YY
+  const dotMatch = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if (dotMatch) {
+    const day   = parseInt(dotMatch[1], 10);
+    const month = parseInt(dotMatch[2], 10) - 1;
+    let year    = parseInt(dotMatch[3], 10);
+    if (year < 100) year += year < 30 ? 2000 : 1900;
+    const d = new Date(year, month, day);
+    return isNaN(d.getTime()) ? undefined : d;
+  }
+
+  // Format: YYYY-MM-DD (ISO)
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? undefined : d;
+  }
+
+  return undefined;
+}
+
+/**
+ * Übersetzt einen DB- oder JS-Fehler in eine lesbare Fehlermeldung für den Import.
+ * Gibt keine internen Stack-Traces oder SQL nach außen weiter.
+ */
+export function buildImportErrorReason(e: any, row: ImportStudentRowDto): string {
+  const code    = e?.code as string | undefined;
+  const message = (e?.message ?? '') as string;
+
+  // PostgreSQL-Fehlercodes
+  if (code === '23505') return `Doppelter Eintrag – ${row.firstName} ${row.lastName} existiert bereits`;
+  if (code === '23503') return 'Ungültige Referenz (Fremdschlüssel)';
+  if (code === '23502') return 'Pflichtfeld fehlt in der Datenbank';
+  if (code === '22007') {
+    const fieldHint = message.includes('timestamp') ? 'Geburtsdatum' : 'Datum';
+    return `Ungültiges ${fieldHint}-Format – erwartet: TT.MM.JJJJ`;
+  }
+  if (code === '22001') return 'Wert zu lang für das Datenbankfeld';
+
+  // Ungültiges Datum vor dem DB-Call (JavaScript-Seite)
+  if (message.includes('Invalid Date') || message.includes('NaN')) {
+    return `Ungültiges Geburtsdatum – erwartet: TT.MM.JJJJ`;
+  }
+
+  // Fallback: Fehlerkategorie ohne interne Details
+  if (code) return `Datenbankfehler (${code})`;
+  return 'Unbekannter Fehler beim Speichern';
+}
 
 @Injectable()
 export class StudentService {
@@ -15,6 +74,8 @@ export class StudentService {
     private readonly studentRepo: Repository<Student>,
     @InjectRepository(Parent)
     private readonly parentRepo: Repository<Parent>,
+    @InjectRepository(Class)
+    private readonly classRepo: Repository<Class>,
   ) {}
 
   async findAll(teacherId: string): Promise<Student[]> {
@@ -38,7 +99,10 @@ export class StudentService {
     const student = this.studentRepo.create({
       firstName: dto.firstName,
       lastName: dto.lastName,
-      dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
+      dateOfBirth: parseDateOfBirth(dto.dateOfBirth),
+      email: dto.email?.trim() || undefined,
+      phone: dto.phone?.trim() || undefined,
+      gender: dto.gender || undefined,
       teacherId,
     });
     const saved = await this.studentRepo.save(student);
@@ -63,7 +127,10 @@ export class StudentService {
     if (dto.firstName !== undefined) student.firstName = dto.firstName;
     if (dto.lastName !== undefined) student.lastName = dto.lastName;
     if (dto.dateOfBirth !== undefined)
-      student.dateOfBirth = new Date(dto.dateOfBirth);
+      student.dateOfBirth = parseDateOfBirth(dto.dateOfBirth);
+    if (dto.email !== undefined) student.email = dto.email?.trim() || null;
+    if (dto.phone !== undefined) student.phone = dto.phone?.trim() || null;
+    if (dto.gender !== undefined) student.gender = dto.gender || null;
 
     await this.studentRepo.save(student);
 
@@ -91,15 +158,70 @@ export class StudentService {
     return student;
   }
 
+  async checkDuplicates(
+    rows: { firstName: string; lastName: string; dateOfBirth?: string }[],
+    teacherId: string,
+  ): Promise<import('@app/domain').CheckDuplicatesResultDto> {
+    const allStudents = await this.studentRepo.find({
+      where: { teacherId },
+      relations: ['classes'],
+    });
+
+    const matches: import('@app/domain').DuplicateMatchDto[] = [];
+
+    rows.forEach((row, index) => {
+      const firstName = row.firstName?.trim().toLowerCase();
+      const lastName  = row.lastName?.trim().toLowerCase();
+      const dob       = parseDateOfBirth(row.dateOfBirth);
+
+      const existing = allStudents.find(s => {
+        const nameMatch =
+          s.firstName.toLowerCase() === firstName &&
+          s.lastName.toLowerCase()  === lastName;
+        if (!nameMatch) return false;
+        if (dob && s.dateOfBirth) {
+          return (
+            dob.getFullYear() === s.dateOfBirth.getFullYear() &&
+            dob.getMonth()    === s.dateOfBirth.getMonth()    &&
+            dob.getDate()     === s.dateOfBirth.getDate()
+          );
+        }
+        return true;
+      });
+
+      if (existing) {
+        matches.push({
+          rowIndex:          index,
+          existingStudentId: existing.id,
+          firstName:         existing.firstName,
+          lastName:          existing.lastName,
+          dateOfBirth:       existing.dateOfBirth?.toISOString().split('T')[0],
+          email:             existing.email  ?? undefined,
+          phone:             existing.phone  ?? undefined,
+          classes:           (existing.classes ?? []).map(c => ({
+            id:         c.id,
+            name:       c.name,
+            schoolYear: c.schoolYear ?? undefined,
+          })),
+        });
+      }
+    });
+
+    return { matches };
+  }
+
   async bulkImport(rows: ImportStudentRowDto[], teacherId: string): Promise<ImportResultDto> {
-    const result: ImportResultDto = { imported: 0, skipped: 0, errors: [] };
+    const result: ImportResultDto = { imported: 0, updated: 0, skipped: 0, classesCreated: 0, errors: [] };
+
+    const classCache       = new Map<string, string>();
+    const importedStudents = new Map<string, Student>();
 
     for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
+      const row    = rows[i];
       const rowNum = i + 1;
 
       const firstName = row.firstName?.trim();
-      const lastName = row.lastName?.trim();
+      const lastName  = row.lastName?.trim();
 
       if (!firstName || !lastName) {
         result.skipped++;
@@ -107,40 +229,112 @@ export class StudentService {
         continue;
       }
 
-      try {
-        const student = this.studentRepo.create({
-          firstName,
-          lastName,
-          dateOfBirth: row.dateOfBirth ? new Date(row.dateOfBirth) : undefined,
-          teacherId,
-        });
-        const saved = await this.studentRepo.save(student);
+      if (row.action === 'ignore') {
+        result.skipped++;
+        continue;
+      }
 
-        const p1First = row.parent1FirstName?.trim();
-        const p1Last = row.parent1LastName?.trim();
-        if (p1First && p1Last) {
-          const parent = this.parentRepo.create({
-            firstName: p1First,
-            lastName: p1Last,
-            email: row.parent1Email?.trim() || undefined,
-            phone: row.parent1Phone?.trim() || undefined,
-            studentId: saved.id,
+      try {
+        let student: Student;
+
+        if (row.action === 'update' && row.existingStudentId) {
+          // ── Update ──────────────────────────────────────────────────────────
+          student = await this.studentRepo.findOne({
+            where: { id: row.existingStudentId, teacherId },
+            relations: ['classes'],
           });
-          await this.parentRepo.save(parent);
+          if (!student) {
+            result.skipped++;
+            result.errors.push({ row: rowNum, reason: 'Schüler für Update nicht gefunden' });
+            continue;
+          }
+          if (row.email?.trim())  student.email  = row.email.trim();
+          if (row.phone?.trim())  student.phone  = row.phone.trim();
+          if (row.gender?.trim()) student.gender = row.gender.trim();
+          await this.studentRepo.save(student);
+          result.updated++;
+
+        } else {
+          // ── Neu anlegen ──────────────────────────────────────────────────────
+          const dedupKey = `${firstName.toLowerCase()}|${lastName.toLowerCase()}|${row.dateOfBirth ?? ''}`;
+          student = importedStudents.get(dedupKey);
+
+          if (!student) {
+            student = this.studentRepo.create({
+              firstName,
+              lastName,
+              dateOfBirth: parseDateOfBirth(row.dateOfBirth),
+              email:  row.email?.trim()  || undefined,
+              phone:  row.phone?.trim()  || undefined,
+              gender: row.gender?.trim() || undefined,
+              teacherId,
+            });
+            student = await this.studentRepo.save(student);
+            importedStudents.set(dedupKey, student);
+            result.imported++;
+          }
         }
 
-        result.imported++;
-      } catch (e) {
+        // ── Parent ergänzen (nie ersetzen) ───────────────────────────────────
+        const p1First = row.parent1FirstName?.trim();
+        const p1Last  = row.parent1LastName?.trim();
+        if (p1First && p1Last) {
+          const existingParents = await this.parentRepo.find({ where: { studentId: student.id } });
+          const alreadyExists   = existingParents.some(p => p.firstName === p1First && p.lastName === p1Last);
+          if (!alreadyExists) {
+            await this.parentRepo.save(this.parentRepo.create({
+              firstName: p1First,
+              lastName:  p1Last,
+              email:     row.parent1Email?.trim() || undefined,
+              phone:     row.parent1Phone?.trim() || undefined,
+              studentId: student.id,
+            }));
+          }
+        }
+
+        // ── Klasse suchen oder anlegen ───────────────────────────────────────
+        const className  = row.className?.trim();
+        const schoolYear = row.schoolYear?.trim();
+
+        if (className) {
+          const cacheKey = `${className}|${schoolYear ?? ''}`;
+          let classId    = classCache.get(cacheKey);
+
+          if (!classId) {
+            const existing = await this.classRepo.findOne({
+              where: { name: className, teacherId, ...(schoolYear ? { schoolYear } : {}) },
+            });
+            if (existing) {
+              classId = existing.id;
+            } else {
+              const saved = await this.classRepo.save(
+                this.classRepo.create({ name: className, schoolYear: schoolYear ?? null, teacherId, students: [] }),
+              );
+              classId = saved.id;
+              result.classesCreated++;
+            }
+            classCache.set(cacheKey, classId);
+          }
+
+          await this.classRepo.query(
+            `INSERT INTO class_students ("classId", "studentId") VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+            [classId, student.id],
+          );
+        }
+
+      } catch (e: any) {
         result.skipped++;
-        result.errors.push({ row: rowNum, reason: 'Datenbankfehler beim Speichern' });
+        result.errors.push({ row: rowNum, reason: buildImportErrorReason(e, row) });
       }
     }
 
     return result;
   }
 
-  async remove(id: string, teacherId: string): Promise<void> {
+    async remove(id: string, teacherId: string): Promise<void> {
     const student = await this.findOne(id, teacherId);
     await this.studentRepo.remove(student);
   }
+
 }
+
