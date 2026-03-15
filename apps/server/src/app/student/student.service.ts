@@ -67,7 +67,8 @@ function buildImportErrorReason(e: any, row: ImportStudentRowDto): string {
   return 'Unbekannter Fehler beim Speichern';
 }
 
-
+@Injectable()
+export class StudentService {
   constructor(
     @InjectRepository(Student)
     private readonly studentRepo: Repository<Student>,
