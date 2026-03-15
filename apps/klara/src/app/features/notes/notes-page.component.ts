@@ -41,12 +41,18 @@ interface StudentNoteEntry {
 
         <div class="context-field">
           <label>Fach</label>
-          <select [(ngModel)]="selectedSubjectId" [disabled]="!selectedClassId">
+          <select [(ngModel)]="selectedSubjectId" [disabled]="!selectedClassId || subjects().length === 0">
             <option value="">— Fach wählen —</option>
             @for (s of subjects(); track s.id) {
               <option [value]="s.id">{{ s.name }}</option>
             }
           </select>
+          @if (subjects().length === 0) {
+            <span class="subject-hint">
+              Noch keine Fächer angelegt.
+              <a routerLink="/app/settings" class="link">Fächer anlegen →</a>
+            </span>
+          }
         </div>
 
         <div class="context-field context-field--type">
@@ -164,6 +170,7 @@ interface StudentNoteEntry {
     .empty-hint { font-size: 13px !important; }
     .link { color: var(--teal); text-decoration: none; font-weight: 500; }
     .link:hover { text-decoration: underline; }
+    .subject-hint { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
     .state-msg { color: var(--ink-faint); font-size: 14px; }
 
     /* ── Schülerliste ── */
