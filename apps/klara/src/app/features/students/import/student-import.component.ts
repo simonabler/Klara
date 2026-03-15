@@ -209,7 +209,7 @@ interface ImportResult { imported: number; updated: number; skipped: number; cla
                     }
                     @if (c.classes.length > 0) {
                       <span class="conflict-meta">
-                        {{ c.classes.map(cl => cl.name + (cl.schoolYear ? ' · ' + cl.schoolYear : '')).join(', ') }}
+                        {{ formatClasses(c.classes) }}
                       </span>
                     }
                   </div>
@@ -677,6 +677,10 @@ export class StudentImportComponent {
     const actions = new Map(this.rowActions());
     actions.set(rowIndex, action);
     this.rowActions.set(actions);
+  }
+
+  formatClasses(classes: { id: string; name: string; schoolYear?: string }[]): string {
+    return classes.map(c => c.schoolYear ? `${c.name} · ${c.schoolYear}` : c.name).join(', ');
   }
 
   getAction(rowIndex: number): ImportAction {
