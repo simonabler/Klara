@@ -210,46 +210,6 @@ export class StudentService {
     const student = await this.findOne(id, teacherId);
     await this.studentRepo.remove(student);
   }
+
 }
 
-        result.errors.push({ row: rowNum, reason: 'Vor- und Nachname sind Pflichtfelder' });
-        continue;
-      }
-
-      try {
-        const student = this.studentRepo.create({
-          firstName,
-          lastName,
-          dateOfBirth: row.dateOfBirth ? new Date(row.dateOfBirth) : undefined,
-          teacherId,
-        });
-        const saved = await this.studentRepo.save(student);
-
-        const p1First = row.parent1FirstName?.trim();
-        const p1Last = row.parent1LastName?.trim();
-        if (p1First && p1Last) {
-          const parent = this.parentRepo.create({
-            firstName: p1First,
-            lastName: p1Last,
-            email: row.parent1Email?.trim() || undefined,
-            phone: row.parent1Phone?.trim() || undefined,
-            studentId: saved.id,
-          });
-          await this.parentRepo.save(parent);
-        }
-
-        result.imported++;
-      } catch (e) {
-        result.skipped++;
-        result.errors.push({ row: rowNum, reason: 'Datenbankfehler beim Speichern' });
-      }
-    }
-
-    return result;
-  }
-
-  async remove(id: string, teacherId: string): Promise<void> {
-    const student = await this.findOne(id, teacherId);
-    await this.studentRepo.remove(student);
-  }
-}
