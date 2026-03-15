@@ -8,6 +8,7 @@ export class StudentDto {
   lastName!: string;
   dateOfBirth?: string;
   email?: string;
+  phone?: string;
   gender?: Gender;
   avatarUrl?: string;
   teacherId!: string;
@@ -22,6 +23,7 @@ export class CreateStudentDto {
   lastName!: string;
   dateOfBirth?: string;
   email?: string;
+  phone?: string;
   gender?: Gender;
   parents?: CreateParentDto[];
 }
@@ -31,6 +33,7 @@ export class UpdateStudentDto {
   lastName?: string;
   dateOfBirth?: string;
   email?: string;
+  phone?: string;
   gender?: Gender;
   parents?: CreateParentDto[];
 }
@@ -42,6 +45,7 @@ export class ImportStudentRowDto {
   lastName?: string;
   dateOfBirth?: string;
   email?: string;
+  phone?: string;
   gender?: string;
   className?: string;
   schoolYear?: string;

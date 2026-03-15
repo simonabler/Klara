@@ -46,6 +46,10 @@ export class CreateStudentValidationDto {
   email?: string;
 
   @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
   @IsIn(['m', 'w', 'd'])
   gender?: string;
 
@@ -74,6 +78,10 @@ export class UpdateStudentValidationDto {
   @IsOptional()
   @IsEmail()
   email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 
   @IsOptional()
   @IsIn(['m', 'w', 'd'])
@@ -106,6 +114,10 @@ export class ImportStudentRowValidationDto {
   @IsOptional()
   @IsString()
   email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 
   @IsOptional()
   @IsString()

@@ -43,6 +43,7 @@ export class StudentService {
       lastName: dto.lastName,
       dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
       email: dto.email?.trim() || undefined,
+      phone: dto.phone?.trim() || undefined,
       gender: dto.gender || undefined,
       teacherId,
     });
@@ -70,6 +71,7 @@ export class StudentService {
     if (dto.dateOfBirth !== undefined)
       student.dateOfBirth = new Date(dto.dateOfBirth);
     if (dto.email !== undefined) student.email = dto.email?.trim() || null;
+    if (dto.phone !== undefined) student.phone = dto.phone?.trim() || null;
     if (dto.gender !== undefined) student.gender = dto.gender || null;
 
     await this.studentRepo.save(student);
@@ -101,8 +103,8 @@ export class StudentService {
   async bulkImport(rows: ImportStudentRowDto[], teacherId: string): Promise<ImportResultDto> {
     const result: ImportResultDto = { imported: 0, skipped: 0, classesCreated: 0, errors: [] };
 
-    // Cache für Klassen (name+schoolYear → Class) um mehrfache DB-Abfragen zu vermeiden
-    const classCache = new Map<string, Class>();
+    // Cache für Klassen (name+schoolYear → classId) um mehrfache DB-Abfragen zu vermeiden
+    const classCache = new Map<string, string>();
 
     // Duplikat-Erkennung innerhalb des Imports: firstName+lastName+dateOfBirth → Student
     const importedStudents = new Map<string, Student>();
@@ -132,6 +134,7 @@ export class StudentService {
             lastName,
             dateOfBirth: row.dateOfBirth ? new Date(row.dateOfBirth) : undefined,
             email: row.email?.trim() || undefined,
+            phone: row.phone?.trim() || undefined,
             gender: row.gender?.trim() || undefined,
             teacherId,
           });
@@ -167,37 +170,38 @@ export class StudentService {
 
         if (className) {
           const cacheKey = `${className}|${schoolYear ?? ''}`;
-          let cls = classCache.get(cacheKey);
+          let classId = classCache.get(cacheKey);
 
-          if (!cls) {
+          if (!classId) {
             // In DB suchen
             const existing = await this.classRepo.findOne({
               where: { name: className, teacherId, ...(schoolYear ? { schoolYear } : {}) },
-              relations: ['students'],
             });
 
             if (existing) {
-              cls = existing;
+              classId = existing.id;
             } else {
               // Neu anlegen
-              cls = this.classRepo.create({
+              const newCls = this.classRepo.create({
                 name:       className,
                 schoolYear: schoolYear ?? null,
                 teacherId,
                 students:   [],
               });
-              cls = await this.classRepo.save(cls);
+              const saved = await this.classRepo.save(newCls);
+              classId = saved.id;
               result.classesCreated++;
             }
-            classCache.set(cacheKey, cls);
+            classCache.set(cacheKey, classId);
           }
 
-          // Schüler der Klasse zuweisen (falls noch nicht drin)
-          const alreadyInClass = cls.students?.some(s => s.id === student.id);
-          if (!alreadyInClass) {
-            cls.students = [...(cls.students ?? []), student];
-            await this.classRepo.save(cls);
-          }
+          // Schüler direkt in Join-Tabelle eintragen (kein Cascade-Save)
+          await this.classRepo.query(
+            `INSERT INTO class_students ("classId", "studentId")
+             VALUES ($1, $2)
+             ON CONFLICT DO NOTHING`,
+            [classId, student.id],
+          );
         }
 
       } catch (e) {
