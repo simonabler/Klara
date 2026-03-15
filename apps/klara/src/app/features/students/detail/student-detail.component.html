@@ -117,6 +117,10 @@
           <dt>E-Mail</dt>
           <dd><a [href]="'mailto:' + student()!.email" class="email-link">{{ student()!.email }}</a></dd>
         }
+        @if (student()!.phone) {
+          <dt>Telefon</dt>
+          <dd><a [href]="'tel:' + student()!.phone" class="email-link">{{ student()!.phone }}</a></dd>
+        }
         @if (student()!.gender) {
           <dt>Geschlecht</dt>
           <dd>{{ student()!.gender === 'm' ? 'männlich' : student()!.gender === 'w' ? 'weiblich' : 'divers' }}</dd>
