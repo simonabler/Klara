@@ -118,53 +118,77 @@ function currentSchoolYear(): string {
       <!-- ── Empty State ── -->
       @else {
         <div class="empty-state">
-          <p class="empty-text">
-            @if (hasAnyClass()) {
-              Keine Klassen für {{ selectedYear() }}.
-            } @else {
-              Noch keine Klassen angelegt.
-            }
-          </p>
+          @if (hasAnyClass()) {
+            <p class="empty-text">Keine Klassen für {{ selectedYear() }}.</p>
+            <div class="grid-actions">
+              <a routerLink="/app/classes/new" class="btn-new-class">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Neue Klasse für {{ selectedYear() }} anlegen
+              </a>
+            </div>
+          } @else {
+            <!-- Onboarding guide – shown only on first use -->
+            <div class="onboarding">
+              <p class="onboarding-intro">Willkommen bei klara. Folge diesen drei Schritten um loszulegen:</p>
+              <div class="onboarding-steps">
 
-          <div class="quick-grid">
-            <a routerLink="/app/students/new" class="quick-card">
-              <div class="quick-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
+                <a routerLink="/app/students/new" class="onboarding-step">
+                  <div class="step-number">1</div>
+                  <div class="step-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  </div>
+                  <div class="step-body">
+                    <div class="step-title">Schülerinnen und Schüler anlegen</div>
+                    <div class="step-desc">Lege zuerst die Profile deiner Schülerinnen und Schüler mit Name, Geburtsdatum und Elterninformationen an.</div>
+                  </div>
+                  <div class="step-arrow">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </a>
+
+                <a routerLink="/app/settings" class="onboarding-step">
+                  <div class="step-number">2</div>
+                  <div class="step-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/>
+                    </svg>
+                  </div>
+                  <div class="step-body">
+                    <div class="step-title">Unterrichtsfächer anlegen</div>
+                    <div class="step-desc">Lege in den Einstellungen deine Fächer an (z.B. Mathematik, Deutsch). Diese stehen dann überall zur Auswahl.</div>
+                  </div>
+                  <div class="step-arrow">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </a>
+
+                <a routerLink="/app/classes/new" class="onboarding-step onboarding-step--primary">
+                  <div class="step-number step-number--primary">3</div>
+                  <div class="step-icon step-icon--primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                      <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                  </div>
+                  <div class="step-body">
+                    <div class="step-title">Klasse anlegen und Schüler zuweisen</div>
+                    <div class="step-desc">Erstelle eine Klasse für {{ selectedYear() }} und weise ihr die angelegten Schülerinnen und Schüler zu.</div>
+                  </div>
+                  <div class="step-arrow">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </a>
+
               </div>
-              <div>
-                <div class="quick-title">Schüler anlegen</div>
-                <div class="quick-desc">Profile und Stammdaten</div>
-              </div>
-            </a>
-            <a routerLink="/app/settings" class="quick-card">
-              <div class="quick-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                </svg>
-              </div>
-              <div>
-                <div class="quick-title">Fächer anlegen</div>
-                <div class="quick-desc">Unterrichtsfächer verwalten</div>
-              </div>
-            </a>
-            <a routerLink="/app/classes/new" class="quick-card">
-              <div class="quick-icon quick-icon--primary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-                </svg>
-              </div>
-              <div>
-                <div class="quick-title">Klasse anlegen</div>
-                <div class="quick-desc">Klasse für {{ selectedYear() }}</div>
-              </div>
-            </a>
-          </div>
+            </div>
+          }
         </div>
       }
 
@@ -365,30 +389,72 @@ function currentSchoolYear(): string {
     .empty-text {
       font-size: 14px;
       color: var(--ink-faint);
+      margin: 0 0 var(--sp-4);
+    }
+
+    /* ── Onboarding Steps ── */
+    .onboarding { max-width: 600px; }
+
+    .onboarding-intro {
+      font-size: 14px;
+      color: var(--ink-faint);
       margin: 0 0 var(--sp-5);
     }
 
-    .quick-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: var(--sp-4);
+    .onboarding-steps {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
     }
 
-    .quick-card {
+    .onboarding-step {
       display: flex;
       align-items: center;
       gap: var(--sp-4);
       padding: var(--sp-4) var(--sp-5);
       background: var(--white);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: var(--r-lg);
       box-shadow: var(--sh-sm);
       text-decoration: none;
-      transition: box-shadow .15s, transform .15s;
+      transition: box-shadow .15s, transform .15s, border-color .15s;
+      cursor: pointer;
     }
-    .quick-card:hover { box-shadow: var(--sh-md); transform: translateY(-1px); }
+    .onboarding-step:hover {
+      box-shadow: var(--sh-md);
+      transform: translateY(-1px);
+      border-color: var(--teal);
+    }
+    .onboarding-step--primary {
+      border-color: var(--navy);
+      background: var(--navy);
+    }
+    .onboarding-step--primary:hover {
+      border-color: var(--teal);
+      background: #253450;
+    }
 
-    .quick-icon {
+    .step-number {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-faint);
+      flex-shrink: 0;
+    }
+    .step-number--primary {
+      background: rgba(255,255,255,0.15);
+      border-color: rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.8);
+    }
+
+    .step-icon {
       width: 40px;
       height: 40px;
       border-radius: var(--r-sm);
@@ -399,10 +465,34 @@ function currentSchoolYear(): string {
       flex-shrink: 0;
       color: var(--navy);
     }
-    .quick-icon--primary { background: var(--navy); color: var(--white); }
+    .step-icon--primary {
+      background: rgba(255,255,255,0.15);
+      color: var(--white);
+    }
 
-    .quick-title { font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 2px; }
-    .quick-desc  { font-size: 12px; color: var(--ink-faint); }
+    .step-body { flex: 1; min-width: 0; }
+    .step-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--navy);
+      margin-bottom: 3px;
+    }
+    .onboarding-step--primary .step-title { color: var(--white); }
+
+    .step-desc {
+      font-size: 12px;
+      color: var(--ink-faint);
+      line-height: 1.5;
+    }
+    .onboarding-step--primary .step-desc { color: rgba(255,255,255,0.6); }
+
+    .step-arrow {
+      color: var(--ink-faint);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+    .onboarding-step--primary .step-arrow { color: rgba(255,255,255,0.5); }
 
     /* ── Responsive ── */
     @media (max-width: 768px) {
