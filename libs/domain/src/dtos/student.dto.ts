@@ -1,5 +1,6 @@
 import { CreateParentDto, ParentDto } from './parent.dto';
 import { ClassRefDto } from './class.dto';
+import { Gender } from '../enums';
 
 export class StudentDto {
   id!: string;
@@ -7,6 +8,7 @@ export class StudentDto {
   lastName!: string;
   dateOfBirth?: string;
   email?: string;
+  gender?: Gender;
   avatarUrl?: string;
   teacherId!: string;
   parents!: ParentDto[];
@@ -20,6 +22,7 @@ export class CreateStudentDto {
   lastName!: string;
   dateOfBirth?: string;
   email?: string;
+  gender?: Gender;
   parents?: CreateParentDto[];
 }
 
@@ -28,6 +31,7 @@ export class UpdateStudentDto {
   lastName?: string;
   dateOfBirth?: string;
   email?: string;
+  gender?: Gender;
   parents?: CreateParentDto[];
 }
 
@@ -38,6 +42,7 @@ export class ImportStudentRowDto {
   lastName?: string;
   dateOfBirth?: string;
   email?: string;
+  gender?: string;
   className?: string;
   schoolYear?: string;
   parent1FirstName?: string;
