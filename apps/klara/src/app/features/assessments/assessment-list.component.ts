@@ -68,6 +68,12 @@ import { AssessmentEventType } from '@app/domain';
                     <option [value]="s.id">{{ s.name }}</option>
                   }
                 </select>
+                @if (subjects().length === 0) {
+                  <span class="subject-hint">
+                    Noch keine Fächer angelegt.
+                    <a routerLink="/app/settings" class="link">Fächer anlegen →</a>
+                  </span>
+                }
               </div>
             </div>
             @if (serverError()) { <p class="server-error">{{ serverError() }}</p> }
@@ -155,6 +161,9 @@ import { AssessmentEventType } from '@app/domain';
     input.invalid, select.invalid { border-color: var(--error-fg); }
     .field-error { font-size: 11px; color: var(--error-fg); }
     .server-error { font-size: 13px; color: var(--error-fg); margin-bottom: var(--sp-3); }
+    .subject-hint { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+    .link { color: var(--teal); text-decoration: none; font-weight: 500; }
+    .link:hover { text-decoration: underline; }
     .panel-actions { display: flex; justify-content: flex-end; gap: var(--sp-3); padding-top: var(--sp-4); border-top: 1px solid var(--border); }
 
     /* ── Filter ── */
