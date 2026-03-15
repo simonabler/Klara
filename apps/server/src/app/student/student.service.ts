@@ -9,6 +9,36 @@ import { Parent } from '../parent/parent.entity';
 import { Class } from '../class/class.entity';
 import { CreateStudentDto, ImportStudentRowDto, ImportResultDto, UpdateStudentDto } from '@app/domain';
 
+/**
+ * Parst Datumsstrings in verschiedenen Formaten zu einem Date-Objekt.
+ * Unterstützt: YYYY-MM-DD, DD.MM.YYYY, DD.MM.YY
+ * Gibt undefined zurück wenn das Datum nicht geparst werden kann.
+ */
+function parseDateOfBirth(raw: string | undefined): Date | undefined {
+  if (!raw?.trim()) return undefined;
+  const s = raw.trim();
+
+  // Format: DD.MM.YYYY oder DD.MM.YY
+  const dotMatch = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if (dotMatch) {
+    const day   = parseInt(dotMatch[1], 10);
+    const month = parseInt(dotMatch[2], 10) - 1;
+    let year    = parseInt(dotMatch[3], 10);
+    if (year < 100) year += year < 30 ? 2000 : 1900;
+    const d = new Date(year, month, day);
+    return isNaN(d.getTime()) ? undefined : d;
+  }
+
+  // Format: YYYY-MM-DD (ISO)
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? undefined : d;
+  }
+
+  return undefined;
+}
+
 @Injectable()
 export class StudentService {
   constructor(
@@ -41,7 +71,7 @@ export class StudentService {
     const student = this.studentRepo.create({
       firstName: dto.firstName,
       lastName: dto.lastName,
-      dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
+      dateOfBirth: parseDateOfBirth(dto.dateOfBirth),
       email: dto.email?.trim() || undefined,
       phone: dto.phone?.trim() || undefined,
       gender: dto.gender || undefined,
@@ -69,7 +99,7 @@ export class StudentService {
     if (dto.firstName !== undefined) student.firstName = dto.firstName;
     if (dto.lastName !== undefined) student.lastName = dto.lastName;
     if (dto.dateOfBirth !== undefined)
-      student.dateOfBirth = new Date(dto.dateOfBirth);
+      student.dateOfBirth = parseDateOfBirth(dto.dateOfBirth);
     if (dto.email !== undefined) student.email = dto.email?.trim() || null;
     if (dto.phone !== undefined) student.phone = dto.phone?.trim() || null;
     if (dto.gender !== undefined) student.gender = dto.gender || null;
@@ -132,7 +162,7 @@ export class StudentService {
           student = this.studentRepo.create({
             firstName,
             lastName,
-            dateOfBirth: row.dateOfBirth ? new Date(row.dateOfBirth) : undefined,
+            dateOfBirth: parseDateOfBirth(row.dateOfBirth),
             email: row.email?.trim() || undefined,
             phone: row.phone?.trim() || undefined,
             gender: row.gender?.trim() || undefined,
