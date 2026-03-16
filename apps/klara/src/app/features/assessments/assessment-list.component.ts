@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AssessmentService } from './assessment.service';
 import { ClassService } from '../classes/class.service';
 import { SubjectService } from '../classes/reference-data.service';
@@ -261,6 +261,7 @@ export class AssessmentListComponent implements OnInit {
   private readonly assessmentService = inject(AssessmentService);
   private readonly classService      = inject(ClassService);
   private readonly subjectService    = inject(SubjectService);
+  private readonly router            = inject(Router);
   private readonly fb                = inject(FormBuilder);
 
   events   = signal<AssessmentEventDto[]>([]);
@@ -338,6 +339,7 @@ export class AssessmentListComponent implements OnInit {
     }).subscribe({
       next: (event) => {
         const classId = v.classId;
+        const navigateToEvent = () => this.router.navigate(['/app/assessments', event.id]);
         if (classId) {
           // Klasse gewählt → alle Schüler der Klasse automatisch zuweisen
           this.classService.getOne(classId).subscribe({
@@ -345,22 +347,17 @@ export class AssessmentListComponent implements OnInit {
               const studentIds = (cls.students ?? []).map((s: any) => s.id).filter(Boolean);
               if (studentIds.length) {
                 this.assessmentService.assignStudents(event.id, studentIds).subscribe({
-                  next: (updated) => {
-                    this.events.update(list => [updated, ...list]);
-                  },
-                  error: () => {
-                    // Zuweisung fehlgeschlagen – Event trotzdem in Liste aufnehmen
-                    this.events.update(list => [event, ...list]);
-                  },
+                  next: () => navigateToEvent(),
+                  error: () => navigateToEvent(),
                 });
               } else {
-                this.events.update(list => [event, ...list]);
+                navigateToEvent();
               }
             },
-            error: () => this.events.update(list => [event, ...list]),
+            error: () => navigateToEvent(),
           });
         } else {
-          this.events.update(list => [event, ...list]);
+          navigateToEvent();
         }
         this.showForm.set(false);
         this.form.reset({ type: AssessmentEventType.ORAL_CHECK, date: new Date().toISOString().split('T')[0] });
