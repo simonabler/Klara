@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AssessmentService } from './assessment.service';
 import { ClassService } from '../classes/class.service';
 import { SubjectService } from '../classes/reference-data.service';
@@ -59,6 +59,12 @@ import { AssessmentEventType } from '@app/domain';
                     <option [value]="cls.id">{{ cls.name }}{{ cls.schoolYear ? ' · ' + cls.schoolYear : '' }}</option>
                   }
                 </select>
+                @if (form.get('classId')?.value) {
+                  <span class="field-hint">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Alle Schüler der Klasse werden automatisch zugewiesen
+                  </span>
+                }
               </div>
               <div class="field">
                 <label>Fach</label>
@@ -168,6 +174,7 @@ import { AssessmentEventType } from '@app/domain';
     .field-error { font-size: 11px; color: var(--error-fg); }
     .server-error { font-size: 13px; color: var(--error-fg); margin-bottom: var(--sp-3); }
     .subject-hint { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+    .field-hint { font-size: 11px; color: var(--teal); margin-top: 4px; display: flex; align-items: center; gap: 4px; font-weight: 500; }
     .link { color: var(--teal); text-decoration: none; font-weight: 500; }
     .link:hover { text-decoration: underline; }
     .panel-actions { display: flex; justify-content: flex-end; gap: var(--sp-3); padding-top: var(--sp-4); border-top: 1px solid var(--border); }
@@ -254,6 +261,7 @@ export class AssessmentListComponent implements OnInit {
   private readonly assessmentService = inject(AssessmentService);
   private readonly classService      = inject(ClassService);
   private readonly subjectService    = inject(SubjectService);
+  private readonly router            = inject(Router);
   private readonly fb                = inject(FormBuilder);
 
   events   = signal<AssessmentEventDto[]>([]);
@@ -330,7 +338,27 @@ export class AssessmentListComponent implements OnInit {
       subjectId: v.subjectId || undefined,
     }).subscribe({
       next: (event) => {
-        this.events.update(list => [event, ...list]);
+        const classId = v.classId;
+        const navigateToEvent = () => this.router.navigate(['/app/assessments', event.id]);
+        if (classId) {
+          // Klasse gewählt → alle Schüler der Klasse automatisch zuweisen
+          this.classService.getOne(classId).subscribe({
+            next: (cls) => {
+              const studentIds = (cls.students ?? []).map((s: any) => s.id).filter(Boolean);
+              if (studentIds.length) {
+                this.assessmentService.assignStudents(event.id, studentIds).subscribe({
+                  next: () => navigateToEvent(),
+                  error: () => navigateToEvent(),
+                });
+              } else {
+                navigateToEvent();
+              }
+            },
+            error: () => navigateToEvent(),
+          });
+        } else {
+          navigateToEvent();
+        }
         this.showForm.set(false);
         this.form.reset({ type: AssessmentEventType.ORAL_CHECK, date: new Date().toISOString().split('T')[0] });
         this.saving.set(false);
