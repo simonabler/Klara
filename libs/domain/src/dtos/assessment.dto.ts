@@ -67,3 +67,33 @@ export class UpdateAssessmentEventDto {
 export class AssignStudentsDto {
   studentIds!: string[];
 }
+
+// ── AssessmentType ────────────────────────────────────────────────────────────
+import { AssessmentSchema } from '../enums';
+
+export class AssessmentTypeDto {
+  id!: string;
+  name!: string;
+  schema!: AssessmentSchema;
+  maxPoints?: number;
+  weight?: number;
+  color?: string;
+  isDefault!: boolean;
+  defaultForEventType?: string;
+}
+
+export class CreateAssessmentTypeDto {
+  name!: string;
+  schema!: AssessmentSchema;
+  maxPoints?: number;
+  weight?: number;
+  color?: string;
+}
+
+export class UpdateAssessmentTypeDto {
+  name?: string;
+  schema?: AssessmentSchema;
+  maxPoints?: number;
+  weight?: number;
+  color?: string;
+}
