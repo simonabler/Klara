@@ -111,6 +111,26 @@ import { firstValueFrom } from 'rxjs';
         </form>
       </section>
 
+      <!-- Notenberechnung -->
+      <section class="settings-section">
+        <div class="section-label">Notenberechnung</div>
+        <div class="toggle-card">
+          <div class="toggle-info">
+            <div class="toggle-title">Gewichtete Notenberechnung aktivieren</div>
+            <div class="toggle-desc">
+              Ermöglicht die Vergabe von Gewichtungen pro Leistungstyp und zeigt einen
+              berechneten Ø-Vorschlag in der Tabellenansicht. Empfohlen für Sekundarstufe.
+            </div>
+          </div>
+          <button class="toggle-btn" [class.active]="gradingEnabled()" (click)="toggleGrading()">
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
+            <span class="toggle-label">{{ gradingEnabled() ? 'Ein' : 'Aus' }}</span>
+          </button>
+        </div>
+      </section>
+
       <!-- Datenschutz & Konto -->
       <section class="settings-section">
         <div class="section-label">Datenschutz &amp; Konto</div>
@@ -268,6 +288,33 @@ import { firstValueFrom } from 'rxjs';
       letter-spacing: 0.3px; text-transform: uppercase;
     }
 
+    /* ── Toggle-Karte ── */
+    .toggle-card {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--sp-5);
+      background: var(--white); border: 1px solid var(--border); border-radius: var(--r-md);
+      padding: var(--sp-4) var(--sp-5);
+    }
+    .toggle-info { flex: 1; }
+    .toggle-title { font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 4px; }
+    .toggle-desc  { font-size: 13px; color: var(--ink-faint); line-height: 1.5; }
+    .toggle-btn {
+      display: flex; align-items: center; gap: var(--sp-2);
+      background: none; border: none; cursor: pointer; flex-shrink: 0;
+    }
+    .toggle-track {
+      width: 40px; height: 22px; border-radius: 11px; background: var(--border);
+      position: relative; display: block; transition: background .2s;
+    }
+    .toggle-btn.active .toggle-track { background: var(--teal); }
+    .toggle-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--white); transition: transform .2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle-btn.active .toggle-thumb { transform: translateX(18px); }
+    .toggle-label { font-size: 13px; font-weight: 500; color: var(--ink-light); min-width: 24px; }
+
     .privacy-card {
       background: var(--white); border: 1px solid var(--border);
       border-radius: var(--r-md); padding: var(--sp-4); margin-bottom: var(--sp-4);
@@ -366,6 +413,9 @@ export class SettingsComponent implements OnInit {
   assessmentTypes  = signal<AssessmentTypeDto[]>([]);
   editingTypeId    = signal<string | null>(null);
 
+  // ── Notenberechnung ─────────────────────────────────────────────────────────
+  gradingEnabled = signal(false);
+
   readonly schemaOptions = [
     { value: AssessmentSchema.GRADES_1_5,        label: '1–5' },
     { value: AssessmentSchema.GRADES_1_10,       label: '1–10' },
@@ -391,6 +441,7 @@ export class SettingsComponent implements OnInit {
   ngOnInit(): void {
     this.loadSubjects();
     this.loadAssessmentTypes();
+    this.loadGradingEnabled();
   }
 
   // ── Subjects ────────────────────────────────────────────────────────────────
@@ -447,6 +498,16 @@ export class SettingsComponent implements OnInit {
   deleteType(id: string): void {
     if (!confirm('Leistungstyp löschen?')) return;
     this.assessmentTypeService.delete(id).subscribe({ next: () => this.loadAssessmentTypes() });
+  }
+
+  // ── Notenberechnung ─────────────────────────────────────────────────────────
+  loadGradingEnabled(): void {
+    this.authService.getGradingEnabled().subscribe({ next: v => this.gradingEnabled.set(v) });
+  }
+
+  toggleGrading(): void {
+    const next = !this.gradingEnabled();
+    this.authService.setGradingEnabled(next).subscribe({ next: v => this.gradingEnabled.set(v) });
   }
 
   async exportAllData(): Promise<void> {

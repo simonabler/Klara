@@ -23,6 +23,10 @@ export class Teacher {
   @Column({ nullable: true })
   avatarUrl: string;
 
+  /** Notenberechnung mit Gewichtung aktiviert (default: false) */
+  @Column({ default: false })
+  gradingEnabled: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
