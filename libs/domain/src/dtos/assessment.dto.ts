@@ -97,3 +97,41 @@ export class UpdateAssessmentTypeDto {
   weight?: number;
   color?: string;
 }
+
+// ── Beurteilung Tabellenansicht ───────────────────────────────────────────────
+
+export class TableCellDto {
+  /** Rohwert: Note (1-5), Punkte, '+', '~', '-', 'bestanden', etc. */
+  value?: string | number;
+  resultId?: string;
+  comment?: string;
+}
+
+export class TableStudentRowDto {
+  studentId!: string;
+  firstName!: string;
+  lastName!: string;
+  avatarUrl?: string;
+  noteCount!: number;
+  /** Map von assessmentEventId → Zellinhalt */
+  cells!: Record<string, TableCellDto>;
+  /** Berechneter Ø-Wert (nur wenn gradingEnabled) */
+  gradeAverage?: number;
+}
+
+export class TableEventColumnDto {
+  id!: string;
+  title!: string;
+  date!: string;
+  schema!: string;
+  weight?: number;
+  color?: string;
+}
+
+export class BeurteilungTableDto {
+  columns!: TableEventColumnDto[];
+  rows!: TableStudentRowDto[];
+  /** Klassendurchschnitt (nur wenn gradingEnabled) */
+  classAverage?: number;
+  gradingEnabled!: boolean;
+}

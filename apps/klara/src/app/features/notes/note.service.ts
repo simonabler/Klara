@@ -31,6 +31,10 @@ export class NoteService {
     return this.http.patch<NoteDto>(`${this.base}/${id}`, dto);
   }
 
+  getByStudent(studentId: string, classId?: string, subjectId?: string): Observable<NoteDto[]> {
+    return this.getAll({ studentId, classId, subjectId });
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }

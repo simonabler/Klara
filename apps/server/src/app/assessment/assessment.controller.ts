@@ -6,6 +6,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AssessmentService } from './assessment.service';
+import { TeacherService } from '../teacher/teacher.service';
 import {
   CreateAssessmentEventValidationDto,
   UpdateAssessmentEventValidationDto,
@@ -19,7 +20,25 @@ import {
 @UseGuards(JwtAuthGuard)
 @Controller('assessments')
 export class AssessmentController {
-  constructor(private readonly service: AssessmentService) {}
+  constructor(
+    private readonly service: AssessmentService,
+    private readonly teacherService: TeacherService,
+  ) {}
+
+  // ── Tabellenansicht ──────────────────────────────────────────────────────────
+
+  @Get('table')
+  @ApiOperation({ summary: 'Tabellenansicht: Schüler × Leistungen für eine Klasse' })
+  async getTable(
+    @Req() req: Request,
+    @Query('classId') classId: string,
+    @Query('subjectId') subjectId?: string,
+    @Query('schoolYear') schoolYear?: string,
+  ) {
+    const teacherId      = (req.user as any).id;
+    const gradingEnabled = await this.teacherService.getGradingEnabled(teacherId);
+    return this.service.getTable(teacherId, classId, subjectId, schoolYear, gradingEnabled);
+  }
 
   // ── Events ──────────────────────────────────────────────────────────────
 

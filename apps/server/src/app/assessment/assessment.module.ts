@@ -8,9 +8,13 @@ import { AssessmentService } from './assessment.service';
 import { AssessmentController } from './assessment.controller';
 import { AssessmentTypeService } from './assessment-type.service';
 import { AssessmentTypeController } from './assessment-type.controller';
+import { TeacherModule } from '../teacher/teacher.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AssessmentEvent, StudentResult, AssessmentType, Student])],
+  imports: [
+    TypeOrmModule.forFeature([AssessmentEvent, StudentResult, AssessmentType, Student]),
+    TeacherModule,
+  ],
   providers: [AssessmentService, AssessmentTypeService],
   controllers: [AssessmentController, AssessmentTypeController],
   exports: [AssessmentService, AssessmentTypeService],
