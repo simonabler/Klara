@@ -95,7 +95,9 @@ const NOTE_TYPE_LABEL: Record<NoteType, string> = {
         <app-beurteilung-table
           [classId]="selectedClassId()"
           [subjectId]="selectedSubjectId()"
-          [schoolYear]="">
+          [schoolYear]=""
+          [className]="selectedClassName()"
+          [subjectName]="selectedSubjectName()">
         </app-beurteilung-table>
       }
 

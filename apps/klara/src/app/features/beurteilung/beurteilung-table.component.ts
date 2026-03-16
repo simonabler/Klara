@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed, Input, OnChanges, SimpleCh
 import { CommonModule } from '@angular/common';
 import { AssessmentService } from '../assessments/assessment.service';
 import { NoteService } from '../notes/note.service';
+import { BeurteilungExportService } from './beurteilung-export.service';
 import {
   BeurteilungTableDto,
   TableStudentRowDto,
@@ -14,6 +15,20 @@ import {
   imports: [CommonModule],
   template: `
     <div class="table-wrap">
+
+      @if (table() && !loading()) {
+        <div class="export-bar">
+          <span class="export-label">Export:</span>
+          <button class="export-btn" (click)="doExportExcel()" [disabled]="exporting()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Excel
+          </button>
+          <button class="export-btn" (click)="doExportPDF()" [disabled]="exporting()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            PDF
+          </button>
+        </div>
+      }
 
       @if (loading()) {
         <div class="table-state">
@@ -139,6 +154,21 @@ import {
   styles: [`
     /* ── Wrapper ── */
     .table-wrap { position: relative; overflow-x: auto; width: 100%; }
+
+    .export-bar {
+      display: flex; align-items: center; gap: var(--sp-2);
+      margin-bottom: var(--sp-3);
+    }
+    .export-label { font-size: 12px; color: var(--ink-faint); font-weight: 500; }
+    .export-btn {
+      display: inline-flex; align-items: center; gap: var(--sp-1);
+      padding: 5px 12px; border-radius: var(--r-sm);
+      border: 1.5px solid var(--border); background: var(--white);
+      font-family: var(--font-body); font-size: 12px; font-weight: 500;
+      color: var(--ink-light); cursor: pointer; transition: all .12s;
+    }
+    .export-btn:hover:not(:disabled) { border-color: var(--navy); color: var(--navy); }
+    .export-btn:disabled { opacity: .45; cursor: not-allowed; }
 
     .table-empty {
       padding: var(--sp-7) var(--sp-5); text-align: center;
@@ -288,12 +318,16 @@ import {
 export class BeurteilungTableComponent implements OnChanges {
   private readonly assessmentService = inject(AssessmentService);
   private readonly noteService       = inject(NoteService);
+  private readonly exportService     = inject(BeurteilungExportService);
 
-  @Input() classId    = '';
-  @Input() subjectId  = '';
-  @Input() schoolYear = '';
+  @Input() classId     = '';
+  @Input() subjectId   = '';
+  @Input() schoolYear  = '';
+  @Input() className   = '';
+  @Input() subjectName = '';
 
   loading       = signal(false);
+  exporting     = signal(false);
   table         = signal<BeurteilungTableDto | null>(null);
   drawerOpen    = signal(false);
   drawerStudent = signal<TableStudentRowDto | null>(null);
@@ -356,6 +390,26 @@ export class BeurteilungTableComponent implements OnChanges {
         next: notes => { this.drawerNotes.set(notes); this.drawerLoading.set(false); },
         error: ()   => this.drawerLoading.set(false),
       });
+  }
+
+  async doExportExcel(): Promise<void> {
+    if (!this.table() || this.exporting()) return;
+    this.exporting.set(true);
+    try {
+      await this.exportService.exportExcel(this.table()!, this.className, this.subjectName, this.schoolYear);
+    } finally {
+      this.exporting.set(false);
+    }
+  }
+
+  async doExportPDF(): Promise<void> {
+    if (!this.table() || this.exporting()) return;
+    this.exporting.set(true);
+    try {
+      await this.exportService.exportPDF(this.table()!, this.className, this.subjectName, this.schoolYear);
+    } finally {
+      this.exporting.set(false);
+    }
   }
 
   closeDrawer(): void {
