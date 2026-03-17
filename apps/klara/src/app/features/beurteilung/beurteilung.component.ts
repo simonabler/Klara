@@ -28,7 +28,7 @@ interface StudentBeurteilung {
 
 // ── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-const TYPE_LABEL: Record<AssessmentEventType, string> = {
+const TYPE_LABEL: Record<string, string> = {
   [AssessmentEventType.ORAL_CHECK]:    'Mündlich',
   [AssessmentEventType.WRITTEN_CHECK]: 'Schriftlich',
   [AssessmentEventType.EXAM]:          'Schularbeit',
@@ -561,7 +561,7 @@ export class BeurteilungComponent implements OnInit {
     });
   }
 
-  eventTypeLabel(type?: AssessmentEventType): string {
+  eventTypeLabel(type?: string): string {
     return type ? (TYPE_LABEL[type] ?? type) : '';
   }
 }
