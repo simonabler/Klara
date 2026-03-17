@@ -75,6 +75,10 @@ interface ResultRow {
             }
           </div>
           <div class="picker-footer">
+            <div class="picker-footer-actions">
+              <button class="btn btn-ghost btn-xs" (click)="selectAll()">Alle</button>
+              <button class="btn btn-ghost btn-xs" (click)="selectNone()">Keine</button>
+            </div>
             <span class="picker-count">{{ assignedIds().size }} ausgewählt</span>
             <button class="btn btn-primary btn-sm" [disabled]="savingAssignment()" (click)="saveAssignment()">
               {{ savingAssignment() ? 'Wird gespeichert…' : 'Speichern' }}
@@ -224,8 +228,9 @@ interface ResultRow {
     .picker-row.selected { background: var(--surface); }
     .picker-name { flex: 1; font-size: 13px; color: var(--ink); }
     .check { color: var(--navy); font-weight: 700; }
-    .picker-footer { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-4) var(--sp-5); border-top: 1px solid var(--border); background: var(--surface); }
-    .picker-count { font-size: 12px; color: var(--ink-faint); }
+    .picker-footer { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-4) var(--sp-5); border-top: 1px solid var(--border); background: var(--surface); gap: var(--sp-3); }
+    .picker-footer-actions { display: flex; gap: var(--sp-2); }
+    .picker-count { font-size: 12px; color: var(--ink-faint); flex: 1; text-align: center; }
 
     /* ── Results ── */
     .results-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--sp-4); }
@@ -301,6 +306,7 @@ interface ResultRow {
       cursor: pointer; border: none; transition: all .15s; text-decoration: none;
     }
     .btn-sm { padding: 6px 14px; font-size: 12px; }
+    .btn-xs { padding: 4px 10px; font-size: 11px; }
     .btn-primary { background: var(--navy); color: var(--white); }
     .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
     .btn-primary:hover:not(:disabled) { background: #243350; }
@@ -481,6 +487,15 @@ export class AssessmentDetailComponent implements OnInit {
     const set = new Set(this.assignedIds());
     set.has(studentId) ? set.delete(studentId) : set.add(studentId);
     this.assignedIds.set(set);
+  }
+
+  selectAll(): void {
+    const all = this.filteredPickerStudents().map(s => s.id);
+    this.assignedIds.set(new Set(all));
+  }
+
+  selectNone(): void {
+    this.assignedIds.set(new Set());
   }
 
   saveAssignment(): void {
