@@ -7,7 +7,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { AssessmentEventType } from '@app/domain';
 import { Teacher } from '../teacher/teacher.entity';
 import { Class } from '../class/class.entity';
 import { Subject } from '../subject/subject.entity';
@@ -21,8 +20,8 @@ export class AssessmentEvent {
   @Column()
   title: string;
 
-  @Column({ type: 'varchar', default: AssessmentEventType.ORAL_CHECK })
-  type: AssessmentEventType;
+  @Column({ type: 'varchar', default: 'ORAL_CHECK' })
+  type: string;
 
   @Column({ type: 'date' })
   date: Date;

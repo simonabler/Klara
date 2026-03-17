@@ -5,7 +5,7 @@ import { AssessmentEventType, AssessmentSchema } from '../enums';
 export class AssessmentEventRefDto {
   id!: string;
   title!: string;
-  type!: AssessmentEventType;
+  type!: string;
   date!: string;
   subjectId?: string;
   subjectName?: string;
@@ -35,7 +35,7 @@ export class UpsertStudentResultDto {
 export class AssessmentEventDto {
   id!: string;
   title!: string;
-  type!: AssessmentEventType;
+  type!: string;
   date!: string;
   teacherId!: string;
   classId?: string;
@@ -48,7 +48,7 @@ export class AssessmentEventDto {
 
 export class CreateAssessmentEventDto {
   title!: string;
-  type!: AssessmentEventType;
+  type!: string;
   date!: string;
   classId?: string;
   subjectId?: string;
@@ -58,7 +58,7 @@ export class CreateAssessmentEventDto {
 
 export class UpdateAssessmentEventDto {
   title?: string;
-  type?: AssessmentEventType;
+  type?: string;
   date?: string;
   classId?: string;
   subjectId?: string;
