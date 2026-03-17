@@ -1,4 +1,4 @@
-import { AssessmentEventType } from '../enums';
+import { AssessmentEventType, AssessmentSchema } from '../enums';
 
 // ── StudentResult ────────────────────────────────────────────────────────────
 
@@ -69,7 +69,6 @@ export class AssignStudentsDto {
 }
 
 // ── AssessmentType ────────────────────────────────────────────────────────────
-import { AssessmentSchema } from '../enums';
 
 export class AssessmentTypeDto {
   id!: string;

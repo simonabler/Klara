@@ -95,7 +95,7 @@ const NOTE_TYPE_LABEL: Record<NoteType, string> = {
         <app-beurteilung-table
           [classId]="selectedClassId()"
           [subjectId]="selectedSubjectId()"
-          [schoolYear]=""
+          [schoolYear]="selectedSchoolYear()"
           [className]="selectedClassName()"
           [subjectName]="selectedSubjectName()">
         </app-beurteilung-table>
@@ -461,6 +461,9 @@ export class BeurteilungComponent implements OnInit {
   );
   selectedSubjectName = computed(() =>
     this.subjects().find(s => s.id === this.selectedSubjectId())?.name ?? ''
+  );
+  selectedSchoolYear = computed(() =>
+    this.classes().find(c => c.id === this.selectedClassId())?.schoolYear ?? ''
   );
 
   ngOnInit(): void {
