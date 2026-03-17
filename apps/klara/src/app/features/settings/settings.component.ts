@@ -265,8 +265,8 @@ import { firstValueFrom } from 'rxjs';
       outline: none; box-shadow: 0 0 0 3px rgba(123,170,186,.15);
     }
     .add-row { display: flex; gap: var(--sp-2); align-items: center; }
-    .add-row input { flex: 1; margin: 0; }
-    .add-row select { min-width: 160px; }
+    .add-row input { flex: 1; min-width: 0; margin: 0; }
+    .add-row select { width: 180px; flex-shrink: 0; }
 
     .type-list { margin-bottom: var(--sp-3); }
     .type-info { display: flex; align-items: center; gap: var(--sp-3); flex: 1; min-width: 0; }
