@@ -9,10 +9,11 @@ import { ClassService } from '../classes/class.service';
 import { SubjectService } from '../classes/reference-data.service';
 import { NoteService } from '../notes/note.service';
 import { AssessmentService } from '../assessments/assessment.service';
+import { AssessmentTypeService } from '../assessments/assessment-type.service';
 import { BeurteilungTableComponent } from './beurteilung-table.component';
 
 import {
-  ClassDto, SubjectDto, StudentRefDto,
+  AssessmentTypeDto, ClassDto, SubjectDto, StudentRefDto,
   NoteDto, StudentResultDto,
 } from '@app/domain';
 import { NoteType, AssessmentEventType } from '@app/domain';
@@ -441,13 +442,16 @@ const NOTE_TYPE_LABEL: Record<NoteType, string> = {
   `],
 })
 export class BeurteilungComponent implements OnInit {
-  private readonly classService   = inject(ClassService);
-  private readonly subjectService = inject(SubjectService);
-  private readonly noteService    = inject(NoteService);
-  private readonly assessmentService = inject(AssessmentService);
-  private readonly router         = inject(Router);
+  private readonly classService          = inject(ClassService);
+  private readonly subjectService        = inject(SubjectService);
+  private readonly noteService           = inject(NoteService);
+  private readonly assessmentService     = inject(AssessmentService);
+  private readonly assessmentTypeService = inject(AssessmentTypeService);
+  private readonly router                = inject(Router);
 
-  classes  = signal<ClassDto[]>([]);
+  classes          = signal<ClassDto[]>([]);
+  subjects         = signal<SubjectDto[]>([]);
+  assessmentTypes  = signal<AssessmentTypeDto[]>([]);
   subjects = signal<SubjectDto[]>([]);
   loading  = signal(false);
   tableView = signal(false);
@@ -478,6 +482,7 @@ export class BeurteilungComponent implements OnInit {
       }
     });
     this.subjectService.getAll().subscribe(s => this.subjects.set(s));
+    this.assessmentTypeService.getAll().subscribe(t => this.assessmentTypes.set(t));
   }
 
   onClassChange(classId: string): void {
@@ -562,6 +567,11 @@ export class BeurteilungComponent implements OnInit {
   }
 
   eventTypeLabel(type?: string): string {
-    return type ? (TYPE_LABEL[type] ?? type) : '';
+    if (!type) return '';
+    // Zuerst in konfigurierten AssessmentTypes per ID suchen
+    const byId = this.assessmentTypes().find(t => t.id === type);
+    if (byId) return byId.name;
+    // Fallback für alte Enum-Werte
+    return TYPE_LABEL[type] ?? type;
   }
 }
