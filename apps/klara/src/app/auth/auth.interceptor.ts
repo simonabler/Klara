@@ -16,12 +16,15 @@ export const authInterceptor: HttpInterceptorFn = (
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : req;
 
+  // Auth-Endpunkte selbst niemals in den 401-Handler einschließen –
+  // sonst entsteht ein Loop: logout → 401 → logout → 401 → …
+  const isAuthEndpoint = req.url.includes('/api/auth/');
+
   return next(authReq).pipe(
     catchError((err: HttpErrorResponse) => {
-      if (err.status === 401) {
+      if (err.status === 401 && !isAuthEndpoint) {
         // JWT abgelaufen oder ungültig → logout + zurück zur Login-Seite
         authService.logout();
-        router.navigate(['/login']);
       }
       return throwError(() => err);
     }),
