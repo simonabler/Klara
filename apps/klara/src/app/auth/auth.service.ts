@@ -72,14 +72,25 @@ export class AuthService {
     return t === 'cookie' ? null : t;
   }
 
+  private _loggingOut = false;
+
   loginWithGoogle(): void {
     window.location.href = '/api/auth/google';
   }
 
   logout(): void {
+    // Guard: verhindert dass ein 401 auf /api/auth/logout erneut logout() auslöst
+    if (this._loggingOut) return;
+    this._loggingOut = true;
+
     this._clearToken();
-    this.http.get('/api/auth/logout', { withCredentials: true }).subscribe();
-    this.router.navigate(['/login']);
+    // Feuern-und-vergessen – Fehler (z.B. 401 weil Cookie schon weg) ignorieren
+    this.http.get('/api/auth/logout', { withCredentials: true }).subscribe({
+      error: () => { /* absichtlich ignoriert */ },
+    });
+    this.router.navigate(['/login']).then(() => {
+      this._loggingOut = false;
+    });
   }
 
   /** DSGVO Art. 17 – Konto und alle Daten unwiderruflich löschen */
