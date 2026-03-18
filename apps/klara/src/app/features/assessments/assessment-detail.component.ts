@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AssessmentService } from './assessment.service';
+import { AssessmentTypeService } from './assessment-type.service';
 import { ClassService } from '../classes/class.service';
 import { StudentService } from '../students/student.service';
-import { AssessmentEventDto, StudentResultDto, StudentDto } from '@app/domain';
+import { AssessmentEventDto, AssessmentSchema, AssessmentTypeDto, StudentResultDto, StudentDto } from '@app/domain';
 import { AssessmentEventType } from '@app/domain';
 
 interface ResultRow {
@@ -104,8 +105,7 @@ interface ResultRow {
           <!-- Kopfzeile -->
           <div class="results-header">
             <span class="col-student">Schüler</span>
-            <span class="col-grade">Note</span>
-            <span class="col-points">Punkte</span>
+            <span class="col-value">{{ valueColLabel() }}</span>
             <span class="col-comment">Kommentar</span>
             <span class="col-action"></span>
           </div>
@@ -122,23 +122,70 @@ interface ResultRow {
                   {{ row.studentName }}
                 </a>
               </div>
-              <div class="col-grade">
-                <select [(ngModel)]="row.grade" (ngModelChange)="markDirty(row)" class="grade-select">
-                  <option [ngValue]="null">—</option>
-                  <option [ngValue]="1">1 – Sehr gut</option>
-                  <option [ngValue]="2">2 – Gut</option>
-                  <option [ngValue]="3">3 – Befriedigend</option>
-                  <option [ngValue]="4">4 – Genügend</option>
-                  <option [ngValue]="5">5 – Nicht genügend</option>
-                </select>
+
+              <!-- Schema-adaptive Eingabe -->
+              <div class="col-value">
+                @switch (activeSchema()) {
+                  @case ('GRADES_1_5') {
+                    <select [(ngModel)]="row.grade" (ngModelChange)="markDirty(row)" class="grade-select">
+                      <option [ngValue]="null">—</option>
+                      <option [ngValue]="1">1 – Sehr gut</option>
+                      <option [ngValue]="2">2 – Gut</option>
+                      <option [ngValue]="3">3 – Befriedigend</option>
+                      <option [ngValue]="4">4 – Genügend</option>
+                      <option [ngValue]="5">5 – Nicht genügend</option>
+                    </select>
+                  }
+                  @case ('GRADES_1_10') {
+                    <select [(ngModel)]="row.grade" (ngModelChange)="markDirty(row)" class="grade-select">
+                      <option [ngValue]="null">—</option>
+                      @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                        <option [ngValue]="n">{{ n }}</option>
+                      }
+                    </select>
+                  }
+                  @case ('PLUS_TILDE_MINUS') {
+                    <div class="ptm-group">
+                      @for (opt of ptmOptions; track opt.value) {
+                        <button class="ptm-btn"
+                          [class.active]="row.comment === opt.value"
+                          (click)="setPTM(row, opt.value)">{{ opt.label }}</button>
+                      }
+                    </div>
+                  }
+                  @case ('POINTS') {
+                    <input type="number" [(ngModel)]="row.points" (ngModelChange)="markDirty(row)"
+                           placeholder="—" min="0"
+                           [max]="activeType()?.maxPoints ?? null"
+                           class="points-input" />
+                  }
+                  @case ('PASS_FAIL') {
+                    <div class="ptm-group">
+                      <button class="ptm-btn" [class.active]="row.comment === 'bestanden'"
+                        (click)="setPTM(row, 'bestanden')">✓</button>
+                      <button class="ptm-btn ptm-fail" [class.active]="row.comment === 'nicht bestanden'"
+                        (click)="setPTM(row, 'nicht bestanden')">✗</button>
+                    </div>
+                  }
+                  @default {
+                    <!-- Fallback: Note 1–5 für alte Events -->
+                    <select [(ngModel)]="row.grade" (ngModelChange)="markDirty(row)" class="grade-select">
+                      <option [ngValue]="null">—</option>
+                      <option [ngValue]="1">1 – Sehr gut</option>
+                      <option [ngValue]="2">2 – Gut</option>
+                      <option [ngValue]="3">3 – Befriedigend</option>
+                      <option [ngValue]="4">4 – Genügend</option>
+                      <option [ngValue]="5">5 – Nicht genügend</option>
+                    </select>
+                  }
+                }
               </div>
-              <div class="col-points">
-                <input type="number" [(ngModel)]="row.points" (ngModelChange)="markDirty(row)"
-                       placeholder="—" min="0" class="points-input" />
-              </div>
+
               <div class="col-comment">
-                <input type="text" [(ngModel)]="row.comment" (ngModelChange)="markDirty(row)"
-                       placeholder="Kommentar…" class="comment-input" />
+                @if (activeSchema() !== 'PLUS_TILDE_MINUS' && activeSchema() !== 'PASS_FAIL') {
+                  <input type="text" [(ngModel)]="row.comment" (ngModelChange)="markDirty(row)"
+                         placeholder="Kommentar…" class="comment-input" />
+                }
               </div>
               <div class="col-action">
                 @if (row.dirty) {
@@ -235,14 +282,14 @@ interface ResultRow {
     /* ── Results ── */
     .results-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--sp-4); }
     .results-header {
-      display: grid; grid-template-columns: 1fr 130px 100px 1fr 90px;
+      display: grid; grid-template-columns: 1fr 160px 1fr 90px;
       gap: var(--sp-3); padding: 10px var(--sp-5);
       background: var(--surface); border-bottom: 1px solid var(--border);
       font-size: 11px; font-weight: 600; text-transform: uppercase;
       letter-spacing: .8px; color: var(--ink-faint);
     }
     .result-row {
-      display: grid; grid-template-columns: 1fr 130px 100px 1fr 90px;
+      display: grid; grid-template-columns: 1fr 160px 1fr 90px;
       gap: var(--sp-3); padding: 10px var(--sp-5);
       border-bottom: 1px solid var(--border); align-items: center;
       transition: background .1s;
@@ -264,6 +311,17 @@ interface ResultRow {
 
     .grade-select { width: 100%; font-size: 13px; }
     .points-input { width: 100%; font-size: 13px; }
+
+    .ptm-group { display: flex; gap: 4px; }
+    .ptm-btn {
+      flex: 1; padding: 5px 0; border-radius: var(--r-sm);
+      border: 1.5px solid var(--border); background: var(--white);
+      font-size: 14px; font-weight: 600; color: var(--ink-light);
+      cursor: pointer; transition: all .12s; font-family: var(--font-body);
+    }
+    .ptm-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .ptm-btn.active { border-color: var(--navy); background: var(--navy); color: var(--white); }
+    .ptm-btn.ptm-fail.active { border-color: var(--error-fg, #C62828); background: var(--error-fg, #C62828); }
     .comment-input { width: 100%; font-size: 13px; }
 
     .save-row-btn {
@@ -329,18 +387,20 @@ interface ResultRow {
   `],
 })
 export class AssessmentDetailComponent implements OnInit {
-  private readonly route             = inject(ActivatedRoute);
-  private readonly router            = inject(Router);
-  private readonly assessmentService = inject(AssessmentService);
-  private readonly studentService    = inject(StudentService);
-  private readonly classService      = inject(ClassService);
+  private readonly route                 = inject(ActivatedRoute);
+  private readonly router                = inject(Router);
+  private readonly assessmentService     = inject(AssessmentService);
+  private readonly assessmentTypeService = inject(AssessmentTypeService);
+  private readonly studentService        = inject(StudentService);
+  private readonly classService          = inject(ClassService);
 
   event          = signal<AssessmentEventDto | null>(null);
   loading        = signal(true);
   loadError      = signal(false);
   showStudentPicker = signal(false);
   allStudents    = signal<StudentDto[]>([]);
-  classStudents  = signal<StudentDto[]>([]);   // Schüler der gesetzten Klasse
+  classStudents  = signal<StudentDto[]>([]);
+  assessmentTypes = signal<AssessmentTypeDto[]>([]);
   pickerSearch   = '';
   assignedIds    = signal<Set<string>>(new Set());
   savingAssignment = signal(false);
@@ -380,9 +440,44 @@ export class AssessmentDetailComponent implements OnInit {
     { value: AssessmentEventType.EXAM,          label: 'Schularbeit' },
   ];
 
+  readonly ptmOptions = [
+    { value: '+', label: '+' },
+    { value: '~', label: '~' },
+    { value: '-', label: '−' },
+  ];
+
+  // Aktiver AssessmentType basierend auf dem Event-Typ-Feld
+  activeType = computed<AssessmentTypeDto | undefined>(() => {
+    const typeId = this.event()?.type;
+    if (!typeId) return undefined;
+    return this.assessmentTypes().find(t => t.id === typeId);
+  });
+
+  // Schema des aktiven Typs (Fallback für alte Enum-Events)
+  activeSchema = computed<string>(() => {
+    const t = this.activeType();
+    if (t) return t.schema;
+    // Legacy-Mapping für alte Enum-Werte
+    const type = this.event()?.type;
+    if (type === 'ORAL_CHECK' || type === 'WRITTEN_CHECK') return AssessmentSchema.PLUS_TILDE_MINUS;
+    if (type === 'EXAM') return AssessmentSchema.GRADES_1_5;
+    return AssessmentSchema.GRADES_1_5;
+  });
+
+  valueColLabel = computed<string>(() => {
+    switch (this.activeSchema()) {
+      case AssessmentSchema.PLUS_TILDE_MINUS:  return '+/~/−';
+      case AssessmentSchema.PASS_FAIL:         return 'Bestanden?';
+      case AssessmentSchema.POINTS:            return 'Punkte';
+      case AssessmentSchema.GRADES_1_10:       return 'Note (1–10)';
+      default:                                 return 'Note';
+    }
+  });
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.studentService.getAll().subscribe(s => this.allStudents.set(s));
+    this.assessmentTypeService.getAll().subscribe(t => this.assessmentTypes.set(t));
     this.loadEvent(id);
   }
 
@@ -511,8 +606,18 @@ export class AssessmentDetailComponent implements OnInit {
     });
   }
 
-  typeLabel(type: AssessmentEventType): string {
-    return this.eventTypes.find(t => t.value === type)?.label ?? type;
+  typeLabel(typeId: string): string {
+    const byId = this.assessmentTypes().find(t => t.id === typeId);
+    if (byId) return byId.name;
+    const legacy: Record<string, string> = {
+      ORAL_CHECK: 'Mündliche MÜ', WRITTEN_CHECK: 'Schriftliche MÜ', EXAM: 'Schularbeit',
+    };
+    return legacy[typeId] ?? typeId;
+  }
+
+  setPTM(row: ResultRow, value: string): void {
+    row.comment = row.comment === value ? '' : value;
+    this.markDirty(row);
   }
 
   deleteEvent(): void {

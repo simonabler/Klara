@@ -1,12 +1,15 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
+  Patch,
   Req,
   Res,
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
+import { IsBoolean } from 'class-validator';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
@@ -129,6 +132,30 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   exportAll(@CurrentTeacher() teacher: { id: string }) {
     return this.exportService.exportAll(teacher.id);
+  }
+
+  /**
+   * Notenberechnung-Status abrufen.
+   */
+  @Get('grading-enabled')
+  @ApiOperation({ summary: 'Notenberechnungs-Toggle abrufen' })
+  @UseGuards(JwtAuthGuard)
+  getGradingEnabled(@CurrentTeacher() teacher: { id: string }) {
+    return this.teacherService.getGradingEnabled(teacher.id).then(v => ({ gradingEnabled: v }));
+  }
+
+  /**
+   * Notenberechnung ein-/ausschalten.
+   */
+  @Patch('grading-enabled')
+  @ApiOperation({ summary: 'Notenberechnungs-Toggle setzen' })
+  @UseGuards(JwtAuthGuard)
+  setGradingEnabled(
+    @CurrentTeacher() teacher: { id: string },
+    @Body() body: { gradingEnabled: boolean },
+  ) {
+    return this.teacherService.setGradingEnabled(teacher.id, body.gradingEnabled)
+      .then(v => ({ gradingEnabled: v }));
   }
 
   /**

@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AssessmentService } from './assessment.service';
+import { AssessmentTypeService } from './assessment-type.service';
 import { ClassService } from '../classes/class.service';
 import { SubjectService } from '../classes/reference-data.service';
-import { AssessmentEventDto, ClassDto, SubjectDto } from '@app/domain';
+import { AssessmentEventDto, AssessmentTypeDto, ClassDto, SubjectDto } from '@app/domain';
 import { AssessmentEventType } from '@app/domain';
 
 @Component({
@@ -40,10 +41,17 @@ import { AssessmentEventType } from '@app/domain';
               <div class="field">
                 <label>Typ *</label>
                 <select formControlName="type">
-                  @for (t of eventTypes; track t.value) {
-                    <option [value]="t.value">{{ t.label }}</option>
+                  <option value="">— Typ wählen —</option>
+                  @for (t of assessmentTypes(); track t.id) {
+                    <option [value]="t.id">{{ t.name }}</option>
                   }
                 </select>
+                @if (assessmentTypes().length === 0) {
+                  <span class="subject-hint">
+                    Noch keine Leistungstypen.
+                    <a routerLink="/app/settings" class="link">In Einstellungen anlegen →</a>
+                  </span>
+                }
               </div>
               <div class="field">
                 <label>Datum *</label>
@@ -258,19 +266,21 @@ import { AssessmentEventType } from '@app/domain';
   `],
 })
 export class AssessmentListComponent implements OnInit {
-  private readonly assessmentService = inject(AssessmentService);
-  private readonly classService      = inject(ClassService);
-  private readonly subjectService    = inject(SubjectService);
-  private readonly router            = inject(Router);
-  private readonly fb                = inject(FormBuilder);
+  private readonly assessmentService     = inject(AssessmentService);
+  private readonly assessmentTypeService = inject(AssessmentTypeService);
+  private readonly classService          = inject(ClassService);
+  private readonly subjectService        = inject(SubjectService);
+  private readonly router                = inject(Router);
+  private readonly fb                    = inject(FormBuilder);
 
-  events   = signal<AssessmentEventDto[]>([]);
-  classes  = signal<ClassDto[]>([]);
-  subjects = signal<SubjectDto[]>([]);
-  loading  = signal(true);
-  showForm = signal(false);
-  saving   = signal(false);
-  serverError = signal<string | null>(null);
+  events       = signal<AssessmentEventDto[]>([]);
+  classes      = signal<ClassDto[]>([]);
+  subjects     = signal<SubjectDto[]>([]);
+  assessmentTypes = signal<AssessmentTypeDto[]>([]);
+  loading      = signal(true);
+  showForm     = signal(false);
+  saving       = signal(false);
+  serverError  = signal<string | null>(null);
 
   filterClassId   = signal('');
   filterSubjectId = signal('');
@@ -282,15 +292,9 @@ export class AssessmentListComponent implements OnInit {
     return list;
   });
 
-  readonly eventTypes = [
-    { value: AssessmentEventType.ORAL_CHECK,    label: 'Mündliche MÜ' },
-    { value: AssessmentEventType.WRITTEN_CHECK, label: 'Schriftliche MÜ' },
-    { value: AssessmentEventType.EXAM,          label: 'Schularbeit' },
-  ];
-
   form = this.fb.group({
     title:     ['', [Validators.required, Validators.minLength(1)]],
-    type:      [AssessmentEventType.ORAL_CHECK, Validators.required],
+    type:      ['', Validators.required],
     date:      [new Date().toISOString().split('T')[0], Validators.required],
     classId:   [''],
     subjectId: [''],
@@ -299,6 +303,13 @@ export class AssessmentListComponent implements OnInit {
   ngOnInit(): void {
     this.classService.getAll().subscribe(c => this.classes.set(c));
     this.subjectService.getAll().subscribe(s => this.subjects.set(s));
+    this.assessmentTypeService.getAll().subscribe(types => {
+      this.assessmentTypes.set(types);
+      // Default auf ersten Typ setzen sobald geladen
+      if (types.length > 0 && !this.form.get('type')?.value) {
+        this.form.patchValue({ type: types[0].id });
+      }
+    });
     this.loadEvents();
   }
 
@@ -360,15 +371,24 @@ export class AssessmentListComponent implements OnInit {
           navigateToEvent();
         }
         this.showForm.set(false);
-        this.form.reset({ type: AssessmentEventType.ORAL_CHECK, date: new Date().toISOString().split('T')[0] });
+        this.form.reset({ type: this.assessmentTypes()[0]?.id ?? '', date: new Date().toISOString().split('T')[0] });
         this.saving.set(false);
       },
       error: () => { this.serverError.set('Anlegen fehlgeschlagen.'); this.saving.set(false); },
     });
   }
 
-  typeLabel(type: AssessmentEventType): string {
-    return this.eventTypes.find(t => t.value === type)?.label ?? type;
+  typeLabel(typeId: string): string {
+    // Versuche zuerst nach AssessmentType-ID zu suchen (neue Typen)
+    const byId = this.assessmentTypes().find(t => t.id === typeId);
+    if (byId) return byId.name;
+    // Fallback für alte Events die noch den Enum-Wert haben
+    const legacy: Record<string, string> = {
+      ORAL_CHECK:    'Mündliche MÜ',
+      WRITTEN_CHECK: 'Schriftliche MÜ',
+      EXAM:          'Schularbeit',
+    };
+    return legacy[typeId] ?? typeId;
   }
 
   gradedCount(event: AssessmentEventDto): number {

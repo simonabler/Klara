@@ -1,11 +1,11 @@
-import { AssessmentEventType } from '../enums';
+import { AssessmentEventType, AssessmentSchema } from '../enums';
 
 // ── StudentResult ────────────────────────────────────────────────────────────
 
 export class AssessmentEventRefDto {
   id!: string;
   title!: string;
-  type!: AssessmentEventType;
+  type!: string;
   date!: string;
   subjectId?: string;
   subjectName?: string;
@@ -35,7 +35,7 @@ export class UpsertStudentResultDto {
 export class AssessmentEventDto {
   id!: string;
   title!: string;
-  type!: AssessmentEventType;
+  type!: string;
   date!: string;
   teacherId!: string;
   classId?: string;
@@ -48,7 +48,7 @@ export class AssessmentEventDto {
 
 export class CreateAssessmentEventDto {
   title!: string;
-  type!: AssessmentEventType;
+  type!: string;
   date!: string;
   classId?: string;
   subjectId?: string;
@@ -58,7 +58,7 @@ export class CreateAssessmentEventDto {
 
 export class UpdateAssessmentEventDto {
   title?: string;
-  type?: AssessmentEventType;
+  type?: string;
   date?: string;
   classId?: string;
   subjectId?: string;
@@ -66,4 +66,71 @@ export class UpdateAssessmentEventDto {
 
 export class AssignStudentsDto {
   studentIds!: string[];
+}
+
+// ── AssessmentType ────────────────────────────────────────────────────────────
+
+export class AssessmentTypeDto {
+  id!: string;
+  name!: string;
+  schema!: AssessmentSchema;
+  maxPoints?: number;
+  weight?: number;
+  color?: string;
+  isDefault!: boolean;
+  defaultForEventType?: string;
+}
+
+export class CreateAssessmentTypeDto {
+  name!: string;
+  schema!: AssessmentSchema;
+  maxPoints?: number;
+  weight?: number;
+  color?: string;
+}
+
+export class UpdateAssessmentTypeDto {
+  name?: string;
+  schema?: AssessmentSchema;
+  maxPoints?: number;
+  weight?: number;
+  color?: string;
+}
+
+// ── Beurteilung Tabellenansicht ───────────────────────────────────────────────
+
+export class TableCellDto {
+  /** Rohwert: Note (1-5), Punkte, '+', '~', '-', 'bestanden', etc. */
+  value?: string | number;
+  resultId?: string;
+  comment?: string;
+}
+
+export class TableStudentRowDto {
+  studentId!: string;
+  firstName!: string;
+  lastName!: string;
+  avatarUrl?: string;
+  noteCount!: number;
+  /** Map von assessmentEventId → Zellinhalt */
+  cells!: Record<string, TableCellDto>;
+  /** Berechneter Ø-Wert (nur wenn gradingEnabled) */
+  gradeAverage?: number;
+}
+
+export class TableEventColumnDto {
+  id!: string;
+  title!: string;
+  date!: string;
+  schema!: string;
+  weight?: number;
+  color?: string;
+}
+
+export class BeurteilungTableDto {
+  columns!: TableEventColumnDto[];
+  rows!: TableStudentRowDto[];
+  /** Klassendurchschnitt (nur wenn gradingEnabled) */
+  classAverage?: number;
+  gradingEnabled!: boolean;
 }

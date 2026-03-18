@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   AssessmentEventDto,
+  BeurteilungTableDto,
   CreateAssessmentEventDto,
   UpdateAssessmentEventDto,
   UpsertStudentResultDto,
@@ -23,6 +24,13 @@ export class AssessmentService {
 
   getOne(id: string): Observable<AssessmentEventDto> {
     return this.http.get<AssessmentEventDto>(`${this.base}/${id}`);
+  }
+
+  getTable(classId: string, subjectId?: string, schoolYear?: string): Observable<BeurteilungTableDto> {
+    let params = new HttpParams().set('classId', classId);
+    if (subjectId)  params = params.set('subjectId',  subjectId);
+    if (schoolYear) params = params.set('schoolYear', schoolYear);
+    return this.http.get<BeurteilungTableDto>(`${this.base}/table`, { params });
   }
 
   create(dto: CreateAssessmentEventDto): Observable<AssessmentEventDto> {

@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, firstValueFrom, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { AuthUserDto } from '@app/domain';
 
 const TOKEN_KEY = 'klara_token';
@@ -100,6 +100,16 @@ export class AuthService {
     );
     this._clearToken();
     this.router.navigate(['/login']);
+  }
+
+  getGradingEnabled(): Observable<boolean> {
+    return this.http.get<{ gradingEnabled: boolean }>('/api/auth/grading-enabled')
+      .pipe(map(r => r.gradingEnabled));
+  }
+
+  setGradingEnabled(enabled: boolean): Observable<boolean> {
+    return this.http.patch<{ gradingEnabled: boolean }>('/api/auth/grading-enabled', { gradingEnabled: enabled })
+      .pipe(map(r => r.gradingEnabled));
   }
 
   private _clearToken(): void {

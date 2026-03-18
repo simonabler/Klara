@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { SubjectService } from '../classes/reference-data.service';
-import { SubjectDto } from '@app/domain';
+import { AssessmentTypeService } from '../assessments/assessment-type.service';
+import { SubjectDto, AssessmentTypeDto, AssessmentSchema } from '@app/domain';
 import { AuthService } from '../../auth/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -51,6 +52,83 @@ import { firstValueFrom } from 'rxjs';
           <input type="text" formControlName="name" placeholder="Neues Fach hinzufügen…" />
           <button type="submit" class="btn btn-primary" [disabled]="subjectForm.invalid">Hinzufügen</button>
         </form>
+      </section>
+
+      <!-- Leistungstypen -->
+      <section class="settings-section">
+        <div class="section-label">Leistungstypen</div>
+
+        <div class="type-list">
+          @for (t of assessmentTypes(); track t.id) {
+            <div class="item-row">
+              @if (editingTypeId() === t.id) {
+                <div class="type-edit-row">
+                  <input class="inline-input" [value]="t.name" #typeNameInput
+                         (keydown.enter)="saveType(t.id, typeNameInput.value, typeSchemaSelect.value)"
+                         (keydown.escape)="editingTypeId.set(null)" />
+                  <select class="inline-select" #typeSchemaSelect [value]="t.schema">
+                    @for (s of schemaOptions; track s.value) {
+                      <option [value]="s.value">{{ s.label }}</option>
+                    }
+                  </select>
+                  <button class="btn btn-sm btn-primary" (click)="saveType(t.id, typeNameInput.value, typeSchemaSelect.value)">Speichern</button>
+                  <button class="btn btn-sm btn-secondary" (click)="editingTypeId.set(null)">Abbrechen</button>
+                </div>
+              } @else {
+                <div class="type-info">
+                  <span class="item-name">{{ t.name }}</span>
+                  <span class="type-schema-badge">{{ schemaLabel(t.schema) }}</span>
+                  @if (t.isDefault) {
+                    <span class="type-default-badge">Standard</span>
+                  }
+                </div>
+                <div class="item-actions">
+                  <button class="icon-btn" (click)="editingTypeId.set(t.id)" title="Bearbeiten">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  @if (!t.isDefault) {
+                    <button class="icon-btn icon-btn-danger" (click)="deleteType(t.id)" title="Löschen">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
+          @if (assessmentTypes().length === 0) {
+            <div class="item-row"><span class="item-empty">Wird geladen…</span></div>
+          }
+        </div>
+
+        <form [formGroup]="typeForm" (ngSubmit)="addType()" class="add-row">
+          <input type="text" formControlName="name" placeholder="Neuer Leistungstyp…" />
+          <select formControlName="schema">
+            @for (s of schemaOptions; track s.value) {
+              <option [value]="s.value">{{ s.label }}</option>
+            }
+          </select>
+          <button type="submit" class="btn btn-primary" [disabled]="typeForm.invalid">Hinzufügen</button>
+        </form>
+      </section>
+
+      <!-- Notenberechnung -->
+      <section class="settings-section">
+        <div class="section-label">Notenberechnung</div>
+        <div class="toggle-card">
+          <div class="toggle-info">
+            <div class="toggle-title">Gewichtete Notenberechnung aktivieren</div>
+            <div class="toggle-desc">
+              Ermöglicht die Vergabe von Gewichtungen pro Leistungstyp und zeigt einen
+              berechneten Ø-Vorschlag in der Tabellenansicht. Empfohlen für Sekundarstufe.
+            </div>
+          </div>
+          <button class="toggle-btn" [class.active]="gradingEnabled()" (click)="toggleGrading()">
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
+            <span class="toggle-label">{{ gradingEnabled() ? 'Ein' : 'Aus' }}</span>
+          </button>
+        </div>
       </section>
 
       <!-- Datenschutz & Konto -->
@@ -187,7 +265,55 @@ import { firstValueFrom } from 'rxjs';
       outline: none; box-shadow: 0 0 0 3px rgba(123,170,186,.15);
     }
     .add-row { display: flex; gap: var(--sp-2); align-items: center; }
-    .add-row input { flex: 1; margin: 0; }
+    .add-row input { flex: 1; min-width: 0; margin: 0; }
+    .add-row select { width: 180px; flex-shrink: 0; }
+
+    .type-list { margin-bottom: var(--sp-3); }
+    .type-info { display: flex; align-items: center; gap: var(--sp-3); flex: 1; min-width: 0; }
+    .type-edit-row { display: flex; align-items: center; gap: var(--sp-2); flex: 1; flex-wrap: wrap; }
+    .type-edit-row .inline-input { flex: 1; min-width: 120px; }
+    .inline-select {
+      padding: 7px 10px; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+      font-size: 13px; font-family: var(--font-body); background: var(--white); outline: none;
+      min-width: 140px;
+    }
+    .inline-select:focus { border-color: var(--teal); }
+    .type-schema-badge {
+      font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+      background: var(--light-teal); color: var(--navy);
+    }
+    .type-default-badge {
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+      background: var(--surface); color: var(--ink-faint); border: 1px solid var(--border);
+      letter-spacing: 0.3px; text-transform: uppercase;
+    }
+
+    /* ── Toggle-Karte ── */
+    .toggle-card {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--sp-5);
+      background: var(--white); border: 1px solid var(--border); border-radius: var(--r-md);
+      padding: var(--sp-4) var(--sp-5);
+    }
+    .toggle-info { flex: 1; }
+    .toggle-title { font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 4px; }
+    .toggle-desc  { font-size: 13px; color: var(--ink-faint); line-height: 1.5; }
+    .toggle-btn {
+      display: flex; align-items: center; gap: var(--sp-2);
+      background: none; border: none; cursor: pointer; flex-shrink: 0;
+    }
+    .toggle-track {
+      width: 40px; height: 22px; border-radius: 11px; background: var(--border);
+      position: relative; display: block; transition: background .2s;
+    }
+    .toggle-btn.active .toggle-track { background: var(--teal); }
+    .toggle-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--white); transition: transform .2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle-btn.active .toggle-thumb { transform: translateX(18px); }
+    .toggle-label { font-size: 13px; font-weight: 500; color: var(--ink-light); min-width: 24px; }
 
     .privacy-card {
       background: var(--white); border: 1px solid var(--border);
@@ -270,10 +396,11 @@ import { firstValueFrom } from 'rxjs';
   `],
 })
 export class SettingsComponent implements OnInit {
-  private readonly subjectService = inject(SubjectService);
-  private readonly authService    = inject(AuthService);
-  private readonly http           = inject(HttpClient);
-  private readonly fb             = inject(FormBuilder);
+  private readonly subjectService        = inject(SubjectService);
+  private readonly assessmentTypeService = inject(AssessmentTypeService);
+  private readonly authService           = inject(AuthService);
+  private readonly http                  = inject(HttpClient);
+  private readonly fb                    = inject(FormBuilder);
 
   subjects          = signal<SubjectDto[]>([]);
   editingSubject    = signal<string | null>(null);
@@ -282,14 +409,42 @@ export class SettingsComponent implements OnInit {
   exporting         = signal(false);
   deleteConfirmText = '';
 
+  // ── Leistungstypen ──────────────────────────────────────────────────────────
+  assessmentTypes  = signal<AssessmentTypeDto[]>([]);
+  editingTypeId    = signal<string | null>(null);
+
+  // ── Notenberechnung ─────────────────────────────────────────────────────────
+  gradingEnabled = signal(false);
+
+  readonly schemaOptions = [
+    { value: AssessmentSchema.GRADES_1_5,        label: '1–5' },
+    { value: AssessmentSchema.GRADES_1_10,       label: '1–10' },
+    { value: AssessmentSchema.PLUS_TILDE_MINUS,  label: '+/~/−' },
+    { value: AssessmentSchema.POINTS,            label: 'Punkte' },
+    { value: AssessmentSchema.PASS_FAIL,         label: 'Bestanden / Nicht bestanden' },
+  ];
+
+  schemaLabel(schema: string): string {
+    return this.schemaOptions.find(o => o.value === schema)?.label ?? schema;
+  }
+
+  typeForm = this.fb.group({
+    name:   ['', [Validators.required, Validators.minLength(1)]],
+    schema: [AssessmentSchema.GRADES_1_5, Validators.required],
+  });
+
+  // ── Subject form ────────────────────────────────────────────────────────────
   subjectForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(1)]],
   });
 
   ngOnInit(): void {
     this.loadSubjects();
+    this.loadAssessmentTypes();
+    this.loadGradingEnabled();
   }
 
+  // ── Subjects ────────────────────────────────────────────────────────────────
   loadSubjects(): void {
     this.subjectService.getAll().subscribe({ next: d => this.subjects.set(d) });
   }
@@ -312,6 +467,47 @@ export class SettingsComponent implements OnInit {
   deleteSubject(id: string): void {
     if (!confirm('Fach löschen?')) return;
     this.subjectService.delete(id).subscribe({ next: () => this.loadSubjects() });
+  }
+
+  // ── Leistungstypen ──────────────────────────────────────────────────────────
+  loadAssessmentTypes(): void {
+    this.assessmentTypeService.getAll().subscribe({ next: d => this.assessmentTypes.set(d) });
+  }
+
+  addType(): void {
+    if (this.typeForm.invalid) return;
+    const v = this.typeForm.value;
+    this.assessmentTypeService.create({
+      name:   v.name!,
+      schema: v.schema as AssessmentSchema,
+    }).subscribe({
+      next: () => { this.typeForm.reset({ schema: AssessmentSchema.GRADES_1_5 }); this.loadAssessmentTypes(); },
+    });
+  }
+
+  saveType(id: string, name: string, schema: string): void {
+    if (!name.trim()) return;
+    this.assessmentTypeService.update(id, {
+      name:   name.trim(),
+      schema: schema as AssessmentSchema,
+    }).subscribe({
+      next: () => { this.editingTypeId.set(null); this.loadAssessmentTypes(); },
+    });
+  }
+
+  deleteType(id: string): void {
+    if (!confirm('Leistungstyp löschen?')) return;
+    this.assessmentTypeService.delete(id).subscribe({ next: () => this.loadAssessmentTypes() });
+  }
+
+  // ── Notenberechnung ─────────────────────────────────────────────────────────
+  loadGradingEnabled(): void {
+    this.authService.getGradingEnabled().subscribe({ next: v => this.gradingEnabled.set(v) });
+  }
+
+  toggleGrading(): void {
+    const next = !this.gradingEnabled();
+    this.authService.setGradingEnabled(next).subscribe({ next: v => this.gradingEnabled.set(v) });
   }
 
   async exportAllData(): Promise<void> {

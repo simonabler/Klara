@@ -1,5 +1,4 @@
-import { IsArray, Max, Min, IsDateString, IsEnum, IsInt, IsNumber, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
-import { AssessmentEventType } from '@app/domain';
+import { IsArray, Max, Min, IsDateString, IsInt, IsNumber, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
 
 export class CreateAssessmentEventValidationDto {
   @IsString()
@@ -7,8 +6,9 @@ export class CreateAssessmentEventValidationDto {
   @MaxLength(200)
   title!: string;
 
-  @IsEnum(AssessmentEventType)
-  type!: AssessmentEventType;
+  @IsString()
+  @MinLength(1)
+  type!: string;
 
   @IsDateString()
   date!: string;
@@ -35,8 +35,9 @@ export class UpdateAssessmentEventValidationDto {
   title?: string;
 
   @IsOptional()
-  @IsEnum(AssessmentEventType)
-  type?: AssessmentEventType;
+  @IsString()
+  @MinLength(1)
+  type?: string;
 
   @IsOptional()
   @IsDateString()

@@ -29,6 +29,16 @@ export class TeacherService {
     return this.teacherRepo.findOne({ where: { id } });
   }
 
+  async getGradingEnabled(id: string): Promise<boolean> {
+    const teacher = await this.teacherRepo.findOne({ where: { id } });
+    return teacher?.gradingEnabled ?? false;
+  }
+
+  async setGradingEnabled(id: string, enabled: boolean): Promise<boolean> {
+    await this.teacherRepo.update(id, { gradingEnabled: enabled });
+    return enabled;
+  }
+
   /**
    * Löscht die Lehrkraft und – via CASCADE – alle verknüpften Schüler,
    * Notizen, Leistungsereignisse und Ergebnisse.

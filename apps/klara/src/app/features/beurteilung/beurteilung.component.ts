@@ -9,6 +9,7 @@ import { ClassService } from '../classes/class.service';
 import { SubjectService } from '../classes/reference-data.service';
 import { NoteService } from '../notes/note.service';
 import { AssessmentService } from '../assessments/assessment.service';
+import { BeurteilungTableComponent } from './beurteilung-table.component';
 
 import {
   ClassDto, SubjectDto, StudentRefDto,
@@ -27,7 +28,7 @@ interface StudentBeurteilung {
 
 // ── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-const TYPE_LABEL: Record<AssessmentEventType, string> = {
+const TYPE_LABEL: Record<string, string> = {
   [AssessmentEventType.ORAL_CHECK]:    'Mündlich',
   [AssessmentEventType.WRITTEN_CHECK]: 'Schriftlich',
   [AssessmentEventType.EXAM]:          'Schularbeit',
@@ -42,13 +43,25 @@ const NOTE_TYPE_LABEL: Record<NoteType, string> = {
 @Component({
   selector: 'app-beurteilung',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, BeurteilungTableComponent],
   template: `
-    <div class="page">
+    <div class="page" [class.table-mode]="tableView()">
 
       <header class="page-header">
-        <h1>Beurteilung</h1>
-        <p class="page-subtitle">Übersicht aller Notizen und Leistungen nach Klasse und Fach</p>
+        <div class="header-row">
+          <div>
+            <h1>Beurteilung</h1>
+            <p class="page-subtitle">Übersicht aller Notizen und Leistungen nach Klasse und Fach</p>
+          </div>
+          <button class="view-toggle" [class.active]="tableView()" (click)="tableView.set(!tableView())">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            Tabellenansicht
+            @if (!tableView()) { <span class="beta-badge">Beta</span> }
+          </button>
+        </div>
       </header>
 
       <!-- ── Filter ── -->
@@ -77,7 +90,19 @@ const NOTE_TYPE_LABEL: Record<NoteType, string> = {
         </div>
       </div>
 
+      <!-- ── Tabellenansicht (Beta) ── -->
+      @if (tableView()) {
+        <app-beurteilung-table
+          [classId]="selectedClassId()"
+          [subjectId]="selectedSubjectId()"
+          [schoolYear]="selectedSchoolYear()"
+          [className]="selectedClassName()"
+          [subjectName]="selectedSubjectName()">
+        </app-beurteilung-table>
+      }
+
       <!-- ── Zustände ── -->
+      @if (!tableView()) {
       @if (!selectedClassId()) {
         <div class="empty-state">
           <div class="empty-icon">
@@ -238,15 +263,31 @@ const NOTE_TYPE_LABEL: Record<NoteType, string> = {
           }
         </div>
       }
+      } <!-- end @if (!tableView()) -->
     </div>
   `,
   styles: [`
     .page { max-width: 860px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); }
+    .page.table-mode { max-width: none; }
 
     /* ── Header ── */
     .page-header { margin-bottom: var(--sp-5); }
+    .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); flex-wrap: wrap; }
     h1 { font-family: var(--font-display); font-size: 28px; font-weight: 400; color: var(--navy); margin: 0 0 4px; }
     .page-subtitle { font-size: 13px; color: var(--ink-faint); margin: 0; }
+    .view-toggle {
+      display: inline-flex; align-items: center; gap: var(--sp-2);
+      padding: 8px 14px; border-radius: var(--r-sm);
+      border: 1.5px solid var(--border); background: var(--white);
+      font-family: var(--font-body); font-size: 13px; font-weight: 500;
+      color: var(--ink-light); cursor: pointer; transition: all .15s; flex-shrink: 0;
+    }
+    .view-toggle:hover { border-color: var(--navy); color: var(--navy); }
+    .view-toggle.active { border-color: var(--navy); background: var(--navy); color: var(--white); }
+    .beta-badge {
+      font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px;
+      background: var(--sand); color: #7A5A3A; letter-spacing: 0.5px; text-transform: uppercase;
+    }
 
     /* ── Filter ── */
     .filter-bar {
@@ -409,6 +450,7 @@ export class BeurteilungComponent implements OnInit {
   classes  = signal<ClassDto[]>([]);
   subjects = signal<SubjectDto[]>([]);
   loading  = signal(false);
+  tableView = signal(false);
   entries  = signal<StudentBeurteilung[]>([]);
 
   selectedClassId   = signal('');
@@ -419,6 +461,9 @@ export class BeurteilungComponent implements OnInit {
   );
   selectedSubjectName = computed(() =>
     this.subjects().find(s => s.id === this.selectedSubjectId())?.name ?? ''
+  );
+  selectedSchoolYear = computed(() =>
+    this.classes().find(c => c.id === this.selectedClassId())?.schoolYear ?? ''
   );
 
   ngOnInit(): void {
@@ -516,7 +561,7 @@ export class BeurteilungComponent implements OnInit {
     });
   }
 
-  eventTypeLabel(type?: AssessmentEventType): string {
+  eventTypeLabel(type?: string): string {
     return type ? (TYPE_LABEL[type] ?? type) : '';
   }
 }
