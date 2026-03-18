@@ -452,7 +452,6 @@ export class BeurteilungComponent implements OnInit {
   classes          = signal<ClassDto[]>([]);
   subjects         = signal<SubjectDto[]>([]);
   assessmentTypes  = signal<AssessmentTypeDto[]>([]);
-  subjects = signal<SubjectDto[]>([]);
   loading  = signal(false);
   tableView = signal(false);
   entries  = signal<StudentBeurteilung[]>([]);
