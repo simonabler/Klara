@@ -105,6 +105,7 @@ interface ResultRow {
         </div>
       } @else {
         <div class="results-wrap">
+          <div class="results-inner">
           <!-- Kopfzeile -->
           <div class="results-header">
             <span class="col-student">Schüler</span>
@@ -211,6 +212,7 @@ interface ResultRow {
               </button>
             </div>
           }
+          </div><!-- /results-inner -->
         </div>
 
         <!-- Zusammenfassung -->
@@ -240,7 +242,8 @@ interface ResultRow {
     </div>
   `,
   styles: [`
-    .page { max-width: 900px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); }
+    .page { max-width: 900px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); overflow-x: hidden; }
+    .results-inner { min-width: 420px; }
     .back-link { font-size: 13px; color: var(--ink-faint); text-decoration: none; }
     .back-link:hover { color: var(--ink); }
     .page-header { margin-bottom: var(--sp-5); }
@@ -285,37 +288,45 @@ interface ResultRow {
     /* ── Results ── */
     .results-wrap {
       background: var(--white); border: 1px solid var(--border);
-      border-radius: var(--r-lg); overflow-x: auto; margin-bottom: var(--sp-4);
-      -webkit-overflow-scrolling: touch;
+      border-radius: var(--r-lg); margin-bottom: var(--sp-4);
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      /* Verhindert dass die Seite mitwächst */
+      max-width: 100%;
+    }
+    .results-inner {
+      min-width: 480px;
     }
     .results-header {
-      display: grid; grid-template-columns: 180px 160px 1fr 90px;
-      min-width: 520px;
+      display: grid; grid-template-columns: minmax(120px,1.5fr) 150px minmax(100px,1fr) 80px;
       gap: var(--sp-3); padding: 10px var(--sp-5);
       background: var(--surface); border-bottom: 1px solid var(--border);
       font-size: 11px; font-weight: 600; text-transform: uppercase;
       letter-spacing: .8px; color: var(--ink-faint);
     }
     .result-row {
-      display: grid; grid-template-columns: 180px 160px 1fr 90px;
-      min-width: 520px;
+      display: grid; grid-template-columns: minmax(120px,1.5fr) 150px minmax(100px,1fr) 80px;
       gap: var(--sp-3); padding: 10px var(--sp-5);
       border-bottom: 1px solid var(--border); align-items: center;
       transition: background .1s;
     }
     .result-row:last-of-type { border-bottom: none; }
     .result-row.dirty { background: #FFFDF5; }
-    .result-row.dirty .col-student { background: #FFFDF5; }
     .result-row:hover { background: var(--surface); }
-    .result-row > div { overflow: hidden; }
 
     .col-student {
       display: flex; align-items: center; gap: var(--sp-3);
-      position: sticky; left: 0; background: var(--white); z-index: 1;
+      position: sticky; left: 0; z-index: 1;
+      background: inherit;
       min-width: 0;
     }
-    .result-row:nth-child(even) .col-student { background: var(--surface); }
-    .student-link { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .student-link {
+      font-size: 13px; color: var(--navy); text-decoration: none;
+      font-weight: 500; word-break: break-word;
+    }
+    .student-link:hover { text-decoration: underline; }
+
+    .grade-select { width: 100%; font-size: 13px; }
+    .points-input { width: 100%; font-size: 13px; }
     .mini-avatar {
       width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
       background: var(--light-teal); color: var(--navy);
@@ -323,11 +334,6 @@ interface ResultRow {
       font-size: 11px; font-weight: 600; overflow: hidden;
     }
     .mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .student-link { font-size: 13px; color: var(--navy); text-decoration: none; font-weight: 500; }
-    .student-link:hover { text-decoration: underline; }
-
-    .grade-select { width: 100%; font-size: 13px; }
-    .points-input { width: 100%; font-size: 13px; }
 
     .ptm-group { display: flex; gap: 4px; }
     .ptm-btn {
