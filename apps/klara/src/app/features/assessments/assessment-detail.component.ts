@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { AssessmentService } from './assessment.service';
 import { AssessmentTypeService } from './assessment-type.service';
 import { ClassService } from '../classes/class.service';
@@ -481,9 +482,23 @@ export class AssessmentDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.studentService.getAll().subscribe(s => this.allStudents.set(s));
-    this.assessmentTypeService.getAll().subscribe(t => this.assessmentTypes.set(t));
-    this.loadEvent(id);
+    this.loading.set(true);
+
+    forkJoin({
+      students: this.studentService.getAll(),
+      types:    this.assessmentTypeService.getAll(),
+      event:    this.assessmentService.getOne(id),
+    }).subscribe({
+      next: ({ students, types, event }) => {
+        this.allStudents.set(students);
+        this.assessmentTypes.set(types);
+        this.event.set(event);
+        this.assignedIds.set(new Set(event.results.map(r => r.studentId)));
+        this.buildRows(event);
+        this.loading.set(false);
+      },
+      error: () => { this.loading.set(false); this.loadError.set(true); },
+    });
   }
 
   loadEvent(id: string): void {
