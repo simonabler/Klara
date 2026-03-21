@@ -283,25 +283,39 @@ interface ResultRow {
     .picker-count { font-size: 12px; color: var(--ink-faint); flex: 1; text-align: center; }
 
     /* ── Results ── */
-    .results-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--sp-4); }
+    .results-wrap {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r-lg); overflow-x: auto; margin-bottom: var(--sp-4);
+      -webkit-overflow-scrolling: touch;
+    }
     .results-header {
-      display: grid; grid-template-columns: 1fr 160px 1fr 90px;
+      display: grid; grid-template-columns: 180px 160px 1fr 90px;
+      min-width: 520px;
       gap: var(--sp-3); padding: 10px var(--sp-5);
       background: var(--surface); border-bottom: 1px solid var(--border);
       font-size: 11px; font-weight: 600; text-transform: uppercase;
       letter-spacing: .8px; color: var(--ink-faint);
     }
     .result-row {
-      display: grid; grid-template-columns: 1fr 160px 1fr 90px;
+      display: grid; grid-template-columns: 180px 160px 1fr 90px;
+      min-width: 520px;
       gap: var(--sp-3); padding: 10px var(--sp-5);
       border-bottom: 1px solid var(--border); align-items: center;
       transition: background .1s;
     }
     .result-row:last-of-type { border-bottom: none; }
     .result-row.dirty { background: #FFFDF5; }
+    .result-row.dirty .col-student { background: #FFFDF5; }
     .result-row:hover { background: var(--surface); }
+    .result-row > div { overflow: hidden; }
 
-    .col-student { display: flex; align-items: center; gap: var(--sp-3); }
+    .col-student {
+      display: flex; align-items: center; gap: var(--sp-3);
+      position: sticky; left: 0; background: var(--white); z-index: 1;
+      min-width: 0;
+    }
+    .result-row:nth-child(even) .col-student { background: var(--surface); }
+    .student-link { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .mini-avatar {
       width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
       background: var(--light-teal); color: var(--navy);
@@ -317,7 +331,7 @@ interface ResultRow {
 
     .ptm-group { display: flex; gap: 4px; }
     .ptm-btn {
-      flex: 1; padding: 5px 0; border-radius: var(--r-sm);
+      width: 44px; flex-shrink: 0; padding: 5px 0; border-radius: var(--r-sm);
       border: 1.5px solid var(--border); background: var(--white);
       font-size: 14px; font-weight: 600; color: var(--ink-light);
       cursor: pointer; transition: all .12s; font-family: var(--font-body);
