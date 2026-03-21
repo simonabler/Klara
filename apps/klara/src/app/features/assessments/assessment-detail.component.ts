@@ -16,6 +16,8 @@ interface ResultRow {
   grade: number | null;
   points: number | null;
   comment: string;
+  /** Für PLUS_TILDE_MINUS / PASS_FAIL: der Wert (+/~/- / bestanden/nicht bestanden) */
+  ptmValue: string;
   dirty: boolean;
   saving: boolean;
 }
@@ -148,7 +150,7 @@ interface ResultRow {
                     <div class="ptm-group">
                       @for (opt of ptmOptions; track opt.value) {
                         <button class="ptm-btn"
-                          [class.active]="row.comment === opt.value"
+                          [class.active]="row.ptmValue === opt.value"
                           (click)="setPTM(row, opt.value)">{{ opt.label }}</button>
                       }
                     </div>
@@ -161,9 +163,9 @@ interface ResultRow {
                   }
                   @case ('PASS_FAIL') {
                     <div class="ptm-group">
-                      <button class="ptm-btn" [class.active]="row.comment === 'bestanden'"
+                      <button class="ptm-btn" [class.active]="row.ptmValue === 'bestanden'"
                         (click)="setPTM(row, 'bestanden')">✓</button>
-                      <button class="ptm-btn ptm-fail" [class.active]="row.comment === 'nicht bestanden'"
+                      <button class="ptm-btn ptm-fail" [class.active]="row.ptmValue === 'nicht bestanden'"
                         (click)="setPTM(row, 'nicht bestanden')">✗</button>
                     </div>
                   }
@@ -182,10 +184,10 @@ interface ResultRow {
               </div>
 
               <div class="col-comment">
-                @if (activeSchema() !== 'PLUS_TILDE_MINUS' && activeSchema() !== 'PASS_FAIL') {
-                  <input type="text" [(ngModel)]="row.comment" (ngModelChange)="markDirty(row)"
-                         placeholder="Kommentar…" class="comment-input" />
-                }
+                <input type="text" [(ngModel)]="row.comment"
+                       (ngModelChange)="markDirty(row)"
+                       [placeholder]="activeSchema() === 'PLUS_TILDE_MINUS' || activeSchema() === 'PASS_FAIL' ? 'Zusatzkommentar…' : 'Kommentar…'"
+                       class="comment-input" />
               </div>
               <div class="col-action">
                 @if (row.dirty) {
@@ -447,17 +449,20 @@ export class AssessmentDetailComponent implements OnInit {
   ];
 
   // Aktiver AssessmentType basierend auf dem Event-Typ-Feld
+  // Sucht zuerst per UUID, dann per defaultForEventType (für alte Enum-Events)
   activeType = computed<AssessmentTypeDto | undefined>(() => {
     const typeId = this.event()?.type;
     if (!typeId) return undefined;
-    return this.assessmentTypes().find(t => t.id === typeId);
+    const types = this.assessmentTypes();
+    return types.find(t => t.id === typeId)
+        ?? types.find(t => t.defaultForEventType === typeId);
   });
 
-  // Schema des aktiven Typs (Fallback für alte Enum-Events)
+  // Schema des aktiven Typs — fällt auf Enum-Defaults zurück nur wenn kein Type gefunden
   activeSchema = computed<string>(() => {
     const t = this.activeType();
     if (t) return t.schema;
-    // Legacy-Mapping für alte Enum-Werte
+    // Letzter Fallback für Events ohne konfigurierten Typ
     const type = this.event()?.type;
     if (type === 'ORAL_CHECK' || type === 'WRITTEN_CHECK') return AssessmentSchema.PLUS_TILDE_MINUS;
     if (type === 'EXAM') return AssessmentSchema.GRADES_1_5;
@@ -498,13 +503,16 @@ export class AssessmentDetailComponent implements OnInit {
     const students = this.allStudents();
     const rows: ResultRow[] = event.results.map(result => {
       const student = students.find(s => s.id === result.studentId);
+      const isPTM = ['PLUS_TILDE_MINUS', 'PASS_FAIL'].includes(this.activeSchema());
+      const storedComment = result.comment ?? '';
       return {
         studentId:   result.studentId,
         studentName: student ? `${student.lastName} ${student.firstName}` : result.studentId,
         avatarUrl:   student?.avatarUrl,
         grade:       result.grade ?? null,
         points:      result.points ?? null,
-        comment:     result.comment ?? '',
+        ptmValue:    isPTM ? storedComment : '',
+        comment:     isPTM ? '' : storedComment,
         dirty:       false,
         saving:      false,
       };
@@ -519,11 +527,12 @@ export class AssessmentDetailComponent implements OnInit {
 
   saveRow(row: ResultRow): void {
     this._rows.update(list => list.map(r => r.studentId === row.studentId ? { ...r, saving: true } : r));
+    const isPTM = ['PLUS_TILDE_MINUS', 'PASS_FAIL'].includes(this.activeSchema());
     this.assessmentService.upsertResult(this.event()!.id, {
       studentId: row.studentId,
       grade:     row.grade   ?? undefined,
       points:    row.points  ?? undefined,
-      comment:   row.comment || undefined,
+      comment:   isPTM ? (row.ptmValue || undefined) : (row.comment || undefined),
     }).subscribe({
       next: () => {
         this._rows.update(list => list.map(r =>
@@ -541,11 +550,12 @@ export class AssessmentDetailComponent implements OnInit {
   saveAll(): void {
     this.bulkSaving.set(true);
     const dirty = this._rows().filter(r => r.dirty);
+    const isPTM = ['PLUS_TILDE_MINUS', 'PASS_FAIL'].includes(this.activeSchema());
     const results = dirty.map(r => ({
       studentId: r.studentId,
       grade:     r.grade   ?? undefined,
       points:    r.points  ?? undefined,
-      comment:   r.comment || undefined,
+      comment:   isPTM ? (r.ptmValue || undefined) : (r.comment || undefined),
     }));
     this.assessmentService.bulkUpsertResults(this.event()!.id, results).subscribe({
       next: (updated) => {
@@ -607,8 +617,10 @@ export class AssessmentDetailComponent implements OnInit {
   }
 
   typeLabel(typeId: string): string {
-    const byId = this.assessmentTypes().find(t => t.id === typeId);
-    if (byId) return byId.name;
+    const types = this.assessmentTypes();
+    const found = types.find(t => t.id === typeId)
+               ?? types.find(t => t.defaultForEventType === typeId);
+    if (found) return found.name;
     const legacy: Record<string, string> = {
       ORAL_CHECK: 'Mündliche MÜ', WRITTEN_CHECK: 'Schriftliche MÜ', EXAM: 'Schularbeit',
     };
@@ -616,7 +628,7 @@ export class AssessmentDetailComponent implements OnInit {
   }
 
   setPTM(row: ResultRow, value: string): void {
-    row.comment = row.comment === value ? '' : value;
+    row.ptmValue = row.ptmValue === value ? '' : value;
     this.markDirty(row);
   }
 

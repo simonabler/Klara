@@ -379,14 +379,12 @@ export class AssessmentListComponent implements OnInit {
   }
 
   typeLabel(typeId: string): string {
-    // Versuche zuerst nach AssessmentType-ID zu suchen (neue Typen)
-    const byId = this.assessmentTypes().find(t => t.id === typeId);
-    if (byId) return byId.name;
-    // Fallback für alte Events die noch den Enum-Wert haben
+    const types = this.assessmentTypes();
+    const found = types.find(t => t.id === typeId)
+               ?? types.find(t => t.defaultForEventType === typeId);
+    if (found) return found.name;
     const legacy: Record<string, string> = {
-      ORAL_CHECK:    'Mündliche MÜ',
-      WRITTEN_CHECK: 'Schriftliche MÜ',
-      EXAM:          'Schularbeit',
+      ORAL_CHECK: 'Mündliche MÜ', WRITTEN_CHECK: 'Schriftliche MÜ', EXAM: 'Schularbeit',
     };
     return legacy[typeId] ?? typeId;
   }
