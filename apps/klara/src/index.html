@@ -3,18 +3,32 @@
   <head>
     <meta charset="utf-8" />
     <title>Klara – Dokumentationstool für Lehrkräfte</title>
-    <meta name="description" content="Klara hilft Lehrkräften, Schüler, Beobachtungen und Leistungen einfach und übersichtlich zu dokumentieren." />
+    <meta name="description" content="Klara hilft Lehrkräften, Schüler, Beobachtungen und Leistungen einfach und übersichtlich zu dokumentieren. Kostenlos, Open Source, DSGVO-konform und self-hosted." />
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="index, follow" />
     <meta name="author" content="Simon Abler" />
+    <meta name="keywords" content="Lehrkraft Dokumentation, Schüler verwalten, Notizen Lehrkraft, Leistungsdokumentation Schule, DSGVO Schulsoftware, Self-Hosted Schulsoftware, Schülerprofile, pädagogisches Werkzeug, Open Source Schule" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://klara.abler.tirol/" />
 
     <!-- Open Graph -->
     <meta property="og:type"        content="website" />
     <meta property="og:site_name"   content="Klara" />
     <meta property="og:title"       content="Klara – Dokumentationstool für Lehrkräfte" />
-    <meta property="og:description" content="Klara hilft Lehrkräften, Schüler, Beobachtungen und Leistungen einfach und übersichtlich zu dokumentieren." />
+    <meta property="og:description" content="Klara hilft Lehrkräften, Schüler, Beobachtungen und Leistungen einfach und übersichtlich zu dokumentieren. Kostenlos, Open Source, DSGVO-konform." />
     <meta property="og:url"         content="https://klara.abler.tirol/" />
+    <meta property="og:image"       content="https://klara.abler.tirol/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale"      content="de_AT" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="Klara - Dokumentationstool für Lehrkräfte" />
+    <meta name="twitter:description" content="Schülerprofile, Beobachtungen, Leistungen – alles an einem Ort. Kostenlos, Open Source, DSGVO-konform." />
+    <meta name="twitter:image"       content="https://klara.abler.tirol/og-image.png" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
@@ -22,6 +36,40 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 
     <!-- Fonts werden self-hosted via @fontsource (styles.scss) -->
+
+    <!-- Structured Data: SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Klara",
+      "description": "Klara ist ein schlankes, DSGVO-konformes Dokumentationstool für Lehrkräfte. Schülerprofile, pädagogische Notizen und Leistungsdokumentation – einfach, klar und self-hosted.",
+      "url": "https://klara.abler.tirol",
+      "applicationCategory": "EducationApplication",
+      "operatingSystem": "Web",
+      "inLanguage": "de",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Simon Abler",
+        "url": "https://abler.tirol"
+      },
+      "license": "https://github.com/simonabler/Klara/blob/main/LICENSE.md",
+      "codeRepository": "https://github.com/simonabler/Klara",
+      "featureList": [
+        "Schülerprofile mit Bild und Elterninformationen",
+        "Pädagogische Notizen zu Mitarbeit und Verhalten",
+        "Leistungsdokumentation für Schularbeiten und Überprüfungen",
+        "Klassen- und Fächerverwaltung",
+        "Self-hosted, DSGVO-konform",
+        "CSV-Import für Schülerdaten"
+      ]
+    }
+    </script>
   </head>
   <body>
     <app-root></app-root>
