@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { AssessmentService } from './assessment.service';
 import { AssessmentTypeService } from './assessment-type.service';
 import { ClassService } from '../classes/class.service';
@@ -16,6 +17,8 @@ interface ResultRow {
   grade: number | null;
   points: number | null;
   comment: string;
+  /** Für PLUS_TILDE_MINUS / PASS_FAIL: der Wert (+/~/- / bestanden/nicht bestanden) */
+  ptmValue: string;
   dirty: boolean;
   saving: boolean;
 }
@@ -102,6 +105,7 @@ interface ResultRow {
         </div>
       } @else {
         <div class="results-wrap">
+          <div class="results-inner">
           <!-- Kopfzeile -->
           <div class="results-header">
             <span class="col-student">Schüler</span>
@@ -148,7 +152,7 @@ interface ResultRow {
                     <div class="ptm-group">
                       @for (opt of ptmOptions; track opt.value) {
                         <button class="ptm-btn"
-                          [class.active]="row.comment === opt.value"
+                          [class.active]="row.ptmValue === opt.value"
                           (click)="setPTM(row, opt.value)">{{ opt.label }}</button>
                       }
                     </div>
@@ -161,9 +165,9 @@ interface ResultRow {
                   }
                   @case ('PASS_FAIL') {
                     <div class="ptm-group">
-                      <button class="ptm-btn" [class.active]="row.comment === 'bestanden'"
+                      <button class="ptm-btn" [class.active]="row.ptmValue === 'bestanden'"
                         (click)="setPTM(row, 'bestanden')">✓</button>
-                      <button class="ptm-btn ptm-fail" [class.active]="row.comment === 'nicht bestanden'"
+                      <button class="ptm-btn ptm-fail" [class.active]="row.ptmValue === 'nicht bestanden'"
                         (click)="setPTM(row, 'nicht bestanden')">✗</button>
                     </div>
                   }
@@ -182,10 +186,10 @@ interface ResultRow {
               </div>
 
               <div class="col-comment">
-                @if (activeSchema() !== 'PLUS_TILDE_MINUS' && activeSchema() !== 'PASS_FAIL') {
-                  <input type="text" [(ngModel)]="row.comment" (ngModelChange)="markDirty(row)"
-                         placeholder="Kommentar…" class="comment-input" />
-                }
+                <input type="text" [(ngModel)]="row.comment"
+                       (ngModelChange)="markDirty(row)"
+                       [placeholder]="activeSchema() === 'PLUS_TILDE_MINUS' || activeSchema() === 'PASS_FAIL' ? 'Zusatzkommentar…' : 'Kommentar…'"
+                       class="comment-input" />
               </div>
               <div class="col-action">
                 @if (row.dirty) {
@@ -208,6 +212,7 @@ interface ResultRow {
               </button>
             </div>
           }
+          </div><!-- /results-inner -->
         </div>
 
         <!-- Zusammenfassung -->
@@ -237,7 +242,8 @@ interface ResultRow {
     </div>
   `,
   styles: [`
-    .page { max-width: 900px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); }
+    .page { max-width: 900px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); overflow-x: hidden; }
+    .results-inner { min-width: 420px; }
     .back-link { font-size: 13px; color: var(--ink-faint); text-decoration: none; }
     .back-link:hover { color: var(--ink); }
     .page-header { margin-bottom: var(--sp-5); }
@@ -280,16 +286,25 @@ interface ResultRow {
     .picker-count { font-size: 12px; color: var(--ink-faint); flex: 1; text-align: center; }
 
     /* ── Results ── */
-    .results-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--sp-4); }
+    .results-wrap {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r-lg); margin-bottom: var(--sp-4);
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      /* Verhindert dass die Seite mitwächst */
+      max-width: 100%;
+    }
+    .results-inner {
+      min-width: 480px;
+    }
     .results-header {
-      display: grid; grid-template-columns: 1fr 160px 1fr 90px;
+      display: grid; grid-template-columns: minmax(120px,1.5fr) 150px minmax(100px,1fr) 80px;
       gap: var(--sp-3); padding: 10px var(--sp-5);
       background: var(--surface); border-bottom: 1px solid var(--border);
       font-size: 11px; font-weight: 600; text-transform: uppercase;
       letter-spacing: .8px; color: var(--ink-faint);
     }
     .result-row {
-      display: grid; grid-template-columns: 1fr 160px 1fr 90px;
+      display: grid; grid-template-columns: minmax(120px,1.5fr) 150px minmax(100px,1fr) 80px;
       gap: var(--sp-3); padding: 10px var(--sp-5);
       border-bottom: 1px solid var(--border); align-items: center;
       transition: background .1s;
@@ -298,7 +313,20 @@ interface ResultRow {
     .result-row.dirty { background: #FFFDF5; }
     .result-row:hover { background: var(--surface); }
 
-    .col-student { display: flex; align-items: center; gap: var(--sp-3); }
+    .col-student {
+      display: flex; align-items: center; gap: var(--sp-3);
+      position: sticky; left: 0; z-index: 1;
+      background: inherit;
+      min-width: 0;
+    }
+    .student-link {
+      font-size: 13px; color: var(--navy); text-decoration: none;
+      font-weight: 500; word-break: break-word;
+    }
+    .student-link:hover { text-decoration: underline; }
+
+    .grade-select { width: 100%; font-size: 13px; }
+    .points-input { width: 100%; font-size: 13px; }
     .mini-avatar {
       width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
       background: var(--light-teal); color: var(--navy);
@@ -306,15 +334,10 @@ interface ResultRow {
       font-size: 11px; font-weight: 600; overflow: hidden;
     }
     .mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .student-link { font-size: 13px; color: var(--navy); text-decoration: none; font-weight: 500; }
-    .student-link:hover { text-decoration: underline; }
-
-    .grade-select { width: 100%; font-size: 13px; }
-    .points-input { width: 100%; font-size: 13px; }
 
     .ptm-group { display: flex; gap: 4px; }
     .ptm-btn {
-      flex: 1; padding: 5px 0; border-radius: var(--r-sm);
+      width: 44px; flex-shrink: 0; padding: 5px 0; border-radius: var(--r-sm);
       border: 1.5px solid var(--border); background: var(--white);
       font-size: 14px; font-weight: 600; color: var(--ink-light);
       cursor: pointer; transition: all .12s; font-family: var(--font-body);
@@ -447,17 +470,20 @@ export class AssessmentDetailComponent implements OnInit {
   ];
 
   // Aktiver AssessmentType basierend auf dem Event-Typ-Feld
+  // Sucht zuerst per UUID, dann per defaultForEventType (für alte Enum-Events)
   activeType = computed<AssessmentTypeDto | undefined>(() => {
     const typeId = this.event()?.type;
     if (!typeId) return undefined;
-    return this.assessmentTypes().find(t => t.id === typeId);
+    const types = this.assessmentTypes();
+    return types.find(t => t.id === typeId)
+        ?? types.find(t => t.defaultForEventType === typeId);
   });
 
-  // Schema des aktiven Typs (Fallback für alte Enum-Events)
+  // Schema des aktiven Typs — fällt auf Enum-Defaults zurück nur wenn kein Type gefunden
   activeSchema = computed<string>(() => {
     const t = this.activeType();
     if (t) return t.schema;
-    // Legacy-Mapping für alte Enum-Werte
+    // Letzter Fallback für Events ohne konfigurierten Typ
     const type = this.event()?.type;
     if (type === 'ORAL_CHECK' || type === 'WRITTEN_CHECK') return AssessmentSchema.PLUS_TILDE_MINUS;
     if (type === 'EXAM') return AssessmentSchema.GRADES_1_5;
@@ -476,9 +502,23 @@ export class AssessmentDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.studentService.getAll().subscribe(s => this.allStudents.set(s));
-    this.assessmentTypeService.getAll().subscribe(t => this.assessmentTypes.set(t));
-    this.loadEvent(id);
+    this.loading.set(true);
+
+    forkJoin({
+      students: this.studentService.getAll(),
+      types:    this.assessmentTypeService.getAll(),
+      event:    this.assessmentService.getOne(id),
+    }).subscribe({
+      next: ({ students, types, event }) => {
+        this.allStudents.set(students);
+        this.assessmentTypes.set(types);
+        this.event.set(event);
+        this.assignedIds.set(new Set(event.results.map(r => r.studentId)));
+        this.buildRows(event);
+        this.loading.set(false);
+      },
+      error: () => { this.loading.set(false); this.loadError.set(true); },
+    });
   }
 
   loadEvent(id: string): void {
@@ -498,13 +538,16 @@ export class AssessmentDetailComponent implements OnInit {
     const students = this.allStudents();
     const rows: ResultRow[] = event.results.map(result => {
       const student = students.find(s => s.id === result.studentId);
+      const isPTM = ['PLUS_TILDE_MINUS', 'PASS_FAIL'].includes(this.activeSchema());
+      const storedComment = result.comment ?? '';
       return {
         studentId:   result.studentId,
         studentName: student ? `${student.lastName} ${student.firstName}` : result.studentId,
         avatarUrl:   student?.avatarUrl,
         grade:       result.grade ?? null,
         points:      result.points ?? null,
-        comment:     result.comment ?? '',
+        ptmValue:    isPTM ? storedComment : '',
+        comment:     isPTM ? '' : storedComment,
         dirty:       false,
         saving:      false,
       };
@@ -519,11 +562,12 @@ export class AssessmentDetailComponent implements OnInit {
 
   saveRow(row: ResultRow): void {
     this._rows.update(list => list.map(r => r.studentId === row.studentId ? { ...r, saving: true } : r));
+    const isPTM = ['PLUS_TILDE_MINUS', 'PASS_FAIL'].includes(this.activeSchema());
     this.assessmentService.upsertResult(this.event()!.id, {
       studentId: row.studentId,
       grade:     row.grade   ?? undefined,
       points:    row.points  ?? undefined,
-      comment:   row.comment || undefined,
+      comment:   isPTM ? (row.ptmValue || undefined) : (row.comment || undefined),
     }).subscribe({
       next: () => {
         this._rows.update(list => list.map(r =>
@@ -541,11 +585,12 @@ export class AssessmentDetailComponent implements OnInit {
   saveAll(): void {
     this.bulkSaving.set(true);
     const dirty = this._rows().filter(r => r.dirty);
+    const isPTM = ['PLUS_TILDE_MINUS', 'PASS_FAIL'].includes(this.activeSchema());
     const results = dirty.map(r => ({
       studentId: r.studentId,
       grade:     r.grade   ?? undefined,
       points:    r.points  ?? undefined,
-      comment:   r.comment || undefined,
+      comment:   isPTM ? (r.ptmValue || undefined) : (r.comment || undefined),
     }));
     this.assessmentService.bulkUpsertResults(this.event()!.id, results).subscribe({
       next: (updated) => {
@@ -607,8 +652,10 @@ export class AssessmentDetailComponent implements OnInit {
   }
 
   typeLabel(typeId: string): string {
-    const byId = this.assessmentTypes().find(t => t.id === typeId);
-    if (byId) return byId.name;
+    const types = this.assessmentTypes();
+    const found = types.find(t => t.id === typeId)
+               ?? types.find(t => t.defaultForEventType === typeId);
+    if (found) return found.name;
     const legacy: Record<string, string> = {
       ORAL_CHECK: 'Mündliche MÜ', WRITTEN_CHECK: 'Schriftliche MÜ', EXAM: 'Schularbeit',
     };
@@ -616,7 +663,7 @@ export class AssessmentDetailComponent implements OnInit {
   }
 
   setPTM(row: ResultRow, value: string): void {
-    row.comment = row.comment === value ? '' : value;
+    row.ptmValue = row.ptmValue === value ? '' : value;
     this.markDirty(row);
   }
 

@@ -567,10 +567,10 @@ export class BeurteilungComponent implements OnInit {
 
   eventTypeLabel(type?: string): string {
     if (!type) return '';
-    // Zuerst in konfigurierten AssessmentTypes per ID suchen
-    const byId = this.assessmentTypes().find(t => t.id === type);
-    if (byId) return byId.name;
-    // Fallback für alte Enum-Werte
+    const types = this.assessmentTypes();
+    const found = types.find(t => t.id === type)
+               ?? types.find(t => t.defaultForEventType === type);
+    if (found) return found.name;
     return TYPE_LABEL[type] ?? type;
   }
 }

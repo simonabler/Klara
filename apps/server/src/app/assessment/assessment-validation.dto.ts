@@ -59,7 +59,6 @@ export class UpsertStudentResultValidationDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(5)
   grade?: number;
 
   @IsOptional()
