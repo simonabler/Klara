@@ -16,7 +16,10 @@ import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TimetableService } from './timetable.service';
-import { CreateTimetableEntryDto, UpdateTimetableEntryDto } from '@app/domain';
+import {
+  CreateTimetableEntryValidationDto,
+  UpdateTimetableEntryValidationDto,
+} from './timetable-validation.dto';
 
 function currentSchoolYear(): string {
   const now   = new Date();
@@ -46,7 +49,7 @@ export class TimetableController {
   /** POST /timetable */
   @Post()
   @ApiOperation({ summary: 'Neuen Stundeneintrag anlegen' })
-  create(@Body() dto: CreateTimetableEntryDto, @Req() req: Request) {
+  create(@Body() dto: CreateTimetableEntryValidationDto, @Req() req: Request) {
     return this.svc.create((req.user as any).id, dto);
   }
 
@@ -55,7 +58,7 @@ export class TimetableController {
   @ApiOperation({ summary: 'Stundeneintrag aktualisieren' })
   update(
     @Param('id') id: string,
-    @Body() dto: UpdateTimetableEntryDto,
+    @Body() dto: UpdateTimetableEntryValidationDto,
     @Req() req: Request,
   ) {
     return this.svc.update((req.user as any).id, id, dto);
