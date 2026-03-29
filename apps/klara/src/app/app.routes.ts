@@ -1,7 +1,6 @@
 import { Route } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { AppShellComponent } from './shell/app-shell.component';
-import { HomeComponent } from './features/home/home.component';
 import { LoginComponent } from './features/login/login.component';
 import { AuthCallbackComponent } from './features/auth-callback/auth-callback.component';
 
@@ -31,7 +30,18 @@ export const appRoutes: Route[] = [
     component: AppShellComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', component: HomeComponent, title: 'Klara' },
+      // Stundenplan ist das neue Dashboard
+      {
+        path: '',
+        loadComponent: () => import('./features/timetable/timetable.component').then(m => m.TimetableComponent),
+        title: 'Stundenplan – Klara',
+      },
+      // Klassenübersicht (ehemaliges Dashboard) bleibt erhalten
+      {
+        path: 'klassen-uebersicht',
+        loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent),
+        title: 'Klassenübersicht – Klara',
+      },
       { path: 'assessments',       loadComponent: () => import('./features/assessments/assessment-list.component').then(m => m.AssessmentListComponent),   title: 'Leistungen – Klara' },
       { path: 'assessments/:id',    loadComponent: () => import('./features/assessments/assessment-detail.component').then(m => m.AssessmentDetailComponent), title: 'Leistung – Klara' },
       { path: 'beurteilung',        loadComponent: () => import('./features/beurteilung/beurteilung.component').then(m => m.BeurteilungComponent),            title: 'Beurteilung – Klara' },

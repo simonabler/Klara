@@ -5,3 +5,4 @@ export * from './class.dto';
 export * from './note.dto';
 // Import DTOs are part of student.dto.ts — already exported via student.dto.ts
 export * from './assessment.dto';
+export * from './timetable.dto';

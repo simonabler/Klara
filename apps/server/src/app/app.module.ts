@@ -15,6 +15,7 @@ import { SubjectModule } from './subject/subject.module';
 import { NoteModule } from './note/note.module';
 import { AssessmentModule } from './assessment/assessment.module';
 import { SeedModule } from './seed/seed.module';
+import { TimetableModule } from './timetable/timetable.module';
 
 // Migrations liegen nach dem Build als separate JS-Dateien in dist/apps/server/migrations/.
 // __dirname zeigt zur Laufzeit auf dist/apps/server/app/ → eine Ebene hoch.
@@ -89,6 +90,7 @@ const migrationsPath = join(__dirname, '..', 'migrations', '*.js');
     NoteModule,
     AssessmentModule,
     SeedModule,
+    TimetableModule,
   ],
   controllers: [AppController],
   providers: [AppService],
