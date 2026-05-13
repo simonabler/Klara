@@ -8,9 +8,20 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "webpack-cli build",
+        "commands": [
+          {
+            "command": "npx tsc -p tsconfig.typeorm.json --noEmit false",
+            "description": "Compile the TypeORM datasource and migrations before webpack copies them as runtime assets.",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "webpack-cli build",
+            "forwardAllArgs": true
+          }
+        ],
         "args": ["--node-env=production"],
-        "cwd": "apps/server"
+        "cwd": "apps/server",
+        "parallel": false
       },
       "configurations": {
         "development": {

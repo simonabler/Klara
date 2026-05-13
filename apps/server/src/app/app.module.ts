@@ -74,7 +74,7 @@ const migrationsPath = join(__dirname, '..', 'migrations', '*.js');
           type: 'sqlite' as const,
           database: db?.sqlitePath ?? process.env.TYPEORM_DB ?? './klara.sqlite',
           autoLoadEntities: true,
-          synchronize: db?.synchronize,
+          synchronize: true,
           migrationsRun: db?.migrationsRun,
           migrations: [migrationsPath],
         };
