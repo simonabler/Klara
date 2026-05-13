@@ -236,8 +236,6 @@ import {
   styles: [`
     .tt-page {
       padding: var(--sp-5) var(--sp-6);
-      min-height: calc(100vh - 0px);
-      display: flex; flex-direction: column;
     }
 
     /* ══════════════════════════════════════
@@ -365,7 +363,7 @@ import {
       background: var(--white);
       border-radius: var(--r-lg);
       box-shadow: var(--sh-sm);
-      overflow: hidden; flex: 1;
+      overflow: hidden; 
     }
 
     .tt-grid {

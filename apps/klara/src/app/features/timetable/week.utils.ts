@@ -92,6 +92,14 @@ export function isToday(date: Date): boolean {
     && date.getFullYear() === now.getFullYear();
 }
 
+export function schoolYearBounds(schoolYear: string): { from: Date; to: Date } {
+  const startYear = parseInt(schoolYear.split('/')[0], 10);
+  return {
+    from: new Date(startYear,     8, 1),   // 1. September
+    to:   new Date(startYear + 1, 7, 31),  // 31. August
+  };
+}
+
 /**
  * Filtert Stundenplan-Einträge für eine konkrete Woche.
  * Berücksichtigt: repeatType, weekVariant, semester, onceDate, validFrom, validTo.
@@ -105,8 +113,12 @@ export function filterEntriesForWeek(
 
   return entries.filter(e => {
     // Gültigkeitszeitraum
-    if (e.validFrom && new Date(e.validFrom) > friday)      return false;
-    if (e.validTo   && new Date(e.validTo)   < week.mondayDate) return false;
+    const bounds = schoolYearBounds(e.schoolYear);
+    const from   = e.validFrom ? new Date(e.validFrom) : bounds.from;
+    const to     = e.validTo   ? new Date(e.validTo)   : bounds.to;
+
+    if (from > friday)          return false;
+    if (to   < week.mondayDate) return false;
 
     switch (e.repeatType) {
       case RepeatType.WEEKLY:
