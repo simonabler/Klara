@@ -12,7 +12,7 @@ import { SubjectService } from '../classes/reference-data.service';
 import {
   WeekInfo, buildWeekInfo, getMondayOfWeek, dateOfDay, isToday,
   filterEntriesForWeek, repeatLabel, hexToFaint,
-  currentSchoolYear, PERIOD_TIMES, DAY_NAMES,
+  currentSchoolYear, PERIOD_TIMES, DAY_NAMES, DAY_NAMES_LONG,
 } from './week.utils';
 
 @Component({
@@ -109,6 +109,20 @@ import {
             <button class="today-btn" (click)="goToToday()">Heute</button>
           </div>
 
+          <!-- Mobile: Tag-Navigation (nur auf kleinen Screens sichtbar) -->
+          <div class="tt-day-nav">
+            <button class="week-nav-btn" (click)="prevDay()" aria-label="Vorheriger Tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span class="tt-day-nav-label">
+              {{ DAY_NAMES_LONG[activeMobileDay()] }},
+              {{ getDayDate(activeMobileDay()) | date:"d. MMM" : undefined : "de-AT" }}
+            </span>
+            <button class="week-nav-btn" (click)="nextDay()" aria-label="Nächster Tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+
           @if (hasBiweekly()) {
             <div class="week-type-badge" [class.is-a]="weekInfo().isWeekA" [class.is-b]="!weekInfo().isWeekA">
               {{ weekInfo().isWeekA ? 'Woche A' : 'Woche B' }}
@@ -131,7 +145,9 @@ import {
 
         <!-- ── Grid (immer sichtbar, leer oder befüllt) ── -->
         <div class="tt-wrap">
-          <div class="tt-grid">
+
+          <!-- Desktop: volle Wochenansicht -->
+          <div class="tt-grid tt-grid-desktop">
 
             <div class="tt-corner"></div>
             @for (day of days; track day) {
@@ -186,7 +202,57 @@ import {
               }
             }
 
-          </div><!-- /tt-grid -->
+          </div><!-- /tt-grid-desktop -->
+
+          <!-- Mobile: Tagesansicht (ein Tag auf einmal) -->
+          <div class="tt-grid tt-grid-mobile">
+
+            @for (period of periods(); track period) {
+              <div class="tt-mobile-row" [class.tt-today-row]="isDayToday(activeMobileDay())">
+                <!-- Zeit-Spalte -->
+                <div class="tt-time tt-time-mobile">
+                  <span class="tt-period-nr">{{ period }}.</span>
+                  <span class="tt-period-time">{{ PERIOD_TIMES[period] }}</span>
+                </div>
+
+                <!-- Inhalt -->
+                <div class="tt-cell tt-cell-mobile">
+                  @if (isDayToday(activeMobileDay())) {
+                    <div class="tt-today-marker"></div>
+                  }
+
+                  @for (entry of entriesForSlot(activeMobileDay(), period); track entry.id) {
+                    <div
+                      class="tt-lesson tt-lesson-mobile"
+                      [style.border-left-color]="entry.color ?? '#7BAABA'"
+                      [style.background]="hexToFaint(entry.color)"
+                      (click)="openEdit(entry)"
+                      role="button">
+                      <div class="tt-lesson-mobile-main">
+                        <span class="tt-lesson-subject">{{ entry.subjectName }}</span>
+                        <span class="tt-lesson-class">{{ entry.className }}</span>
+                      </div>
+                      <div class="tt-lesson-mobile-meta">
+                        @if (entry.room) { <span class="tt-lesson-room">{{ entry.room }}</span> }
+                        <span class="tt-lesson-repeat">{{ getRepeatLabel(entry) }}</span>
+                      </div>
+                    </div>
+                  }
+
+                  @if (entriesForSlot(activeMobileDay(), period).length === 0) {
+                    <button
+                      class="tt-add-btn"
+                      (click)="openPanel(activeMobileDay(), period)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+          </div><!-- /tt-grid-mobile -->
 
           @if (allEntries().length > 0) {
             <div class="tt-legend">
@@ -489,16 +555,102 @@ import {
     .tt-panel.open { transform: translateX(0); }
 
     /* ══════════════════════════════════════
+       TAG-NAVIGATION (Mobile only)
+    ══════════════════════════════════════ */
+    .tt-day-nav {
+      display: none;
+      align-items: center; gap: var(--sp-2);
+    }
+    .tt-day-nav-label {
+      font-size: 14px; font-weight: 500; color: var(--ink);
+      min-width: 160px; text-align: center;
+    }
+
+    /* Desktop: Tagesansicht ausblenden */
+    .tt-grid-mobile { display: none; }
+
+    /* ══════════════════════════════════════
+       MOBILE TAGESANSICHT
+    ══════════════════════════════════════ */
+    .tt-mobile-row {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+    .tt-mobile-row:last-child { border-bottom: none; }
+    .tt-mobile-row.tt-today-row { background: rgba(123,170,186,.04); }
+
+    .tt-time-mobile {
+      height: auto; min-height: 72px;
+      padding: var(--sp-3) var(--sp-2);
+      display: flex; flex-direction: column;
+      align-items: flex-end; justify-content: flex-start;
+    }
+
+    .tt-cell-mobile {
+      height: auto; min-height: 72px;
+      padding: var(--sp-2);
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .tt-lesson-mobile {
+      height: auto; min-height: 60px;
+      padding: var(--sp-3);
+      display: flex; align-items: center;
+      justify-content: space-between; gap: var(--sp-3);
+    }
+    .tt-lesson-mobile-main {
+      display: flex; flex-direction: column; gap: 2px; flex: 1;
+    }
+    .tt-lesson-mobile-main .tt-lesson-subject {
+      font-size: 14px;
+    }
+    .tt-lesson-mobile-main .tt-lesson-class {
+      font-size: 12px;
+    }
+    .tt-lesson-mobile-meta {
+      display: flex; flex-direction: column;
+      align-items: flex-end; gap: 2px; flex-shrink: 0;
+    }
+    .tt-lesson-mobile-meta .tt-lesson-room  { font-size: 11px; }
+    .tt-lesson-mobile-meta .tt-lesson-repeat { font-size: 10px; position: static; opacity: .6; }
+
+    /* ══════════════════════════════════════
        RESPONSIVE
     ══════════════════════════════════════ */
     @media (max-width: 768px) {
-      .tt-page { padding: var(--sp-4) var(--sp-3); }
+      .tt-page { padding: var(--sp-3) var(--sp-3); }
       .onboarding-page { padding-top: 0; }
       h1 { font-size: 22px; }
-      .week-label { min-width: 0; font-size: 13px; }
+
+      /* Topbar: Wochennavigation kompakter */
+      .tt-topbar { gap: var(--sp-2); }
+      .week-label { min-width: 0; font-size: 12px; padding: 0 var(--sp-2); }
+      .tt-topbar-spacer { display: none; }
+      .year-select { display: none; }
+
+      /* Tag-Navigation einblenden */
+      .tt-day-nav { display: flex; }
+
+      /* Desktop-Grid ausblenden, Mobile-Grid einblenden */
+      .tt-grid-desktop { display: none; }
+      .tt-grid-mobile  { display: block; }
+
+      /* Panel Vollbild */
       .tt-panel { width: 100vw; }
-      .tt-grid { min-width: 500px; }
-      .tt-day-date { font-size: 16px; }
+
+      /* Wochentage-Topbar Knöpfe kleiner */
+      .week-nav-btn { width: 26px; height: 26px; }
+      .today-btn { padding: 4px 10px; font-size: 11px; }
+      .btn { padding: 7px 12px; font-size: 12px; }
+
+      /* Legende kompakter */
+      .tt-legend { padding: var(--sp-2) var(--sp-3); gap: var(--sp-1); }
+
+      /* Onboarding */
+      .step-card { padding: var(--sp-3) var(--sp-4); }
+      .step-icon { width: 32px; height: 32px; }
     }
   `],
 })
@@ -514,9 +666,10 @@ export class TimetableComponent implements OnInit {
   readonly subjects      = signal<SubjectDto[]>([]);
   readonly currentMonday = signal(getMondayOfWeek());
   readonly selectedYear  = signal(currentSchoolYear());
-  readonly panelOpen     = signal(false);
-  readonly editEntry     = signal<TimetableEntryDto | null>(null);
-  readonly prefillSlot   = signal<{ day: number; period: number } | null>(null);
+  readonly panelOpen      = signal(false);
+  readonly editEntry      = signal<TimetableEntryDto | null>(null);
+  readonly prefillSlot    = signal<{ day: number; period: number } | null>(null);
+  readonly activeMobileDay = signal<number>(this.todayDayOfWeek());
 
   // ── Computed ───────────────────────────────────────────────────────────
   readonly weekInfo = computed<WeekInfo>(() => buildWeekInfo(this.currentMonday()));
@@ -535,9 +688,10 @@ export class TimetableComponent implements OnInit {
   );
 
   // ── Constants ──────────────────────────────────────────────────────────
-  readonly DAY_NAMES    = DAY_NAMES;
-  readonly PERIOD_TIMES = PERIOD_TIMES;
-  readonly days         = [1, 2, 3, 4, 5] as const;
+  readonly DAY_NAMES      = DAY_NAMES;
+  readonly DAY_NAMES_LONG = DAY_NAMES_LONG;
+  readonly PERIOD_TIMES   = PERIOD_TIMES;
+  readonly days           = [1, 2, 3, 4, 5] as const;
   readonly availableYears = this.buildYearOptions();
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
@@ -562,7 +716,39 @@ export class TimetableComponent implements OnInit {
   // ── Week navigation ────────────────────────────────────────────────────
   prevWeek(): void { this.currentMonday.update(d => addDays(d, -7)); }
   nextWeek(): void { this.currentMonday.update(d => addDays(d,  7)); }
-  goToToday(): void { this.currentMonday.set(getMondayOfWeek()); }
+  goToToday(): void {
+    this.currentMonday.set(getMondayOfWeek());
+    this.activeMobileDay.set(this.todayDayOfWeek());
+  }
+
+  prevDay(): void {
+    const current = this.activeMobileDay();
+    if (current > 1) {
+      this.activeMobileDay.set(current - 1);
+    } else {
+      // Montag → springe zur Vorwoche Freitag
+      this.prevWeek();
+      this.activeMobileDay.set(5);
+    }
+  }
+
+  nextDay(): void {
+    const current = this.activeMobileDay();
+    if (current < 5) {
+      this.activeMobileDay.set(current + 1);
+    } else {
+      // Freitag → springe zur nächsten Woche Montag
+      this.nextWeek();
+      this.activeMobileDay.set(1);
+    }
+  }
+
+  private todayDayOfWeek(): number {
+    const day = new Date().getDay(); // 0=So, 1=Mo...
+    // Wenn Wochenende → zeige Montag
+    if (day === 0 || day === 6) return 1;
+    return day;
+  }
 
   onYearChange(event: Event): void {
     this.selectedYear.set((event.target as HTMLSelectElement).value);
