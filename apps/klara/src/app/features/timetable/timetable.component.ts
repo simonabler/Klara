@@ -435,7 +435,7 @@ import {
     .tt-grid {
       display: grid;
       grid-template-columns: 56px repeat(5, 1fr);
-      overflow-x: auto; min-width: 600px;
+      overflow-x: auto; 
     }
 
     .tt-corner {
@@ -615,6 +615,10 @@ import {
     }
     .tt-lesson-mobile-meta .tt-lesson-room  { font-size: 11px; }
     .tt-lesson-mobile-meta .tt-lesson-repeat { font-size: 10px; position: static; opacity: .6; }
+
+    .tt-grid-desktop {
+      min-width: 600px;
+    }
 
     /* ══════════════════════════════════════
        RESPONSIVE

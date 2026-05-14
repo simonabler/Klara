@@ -29,7 +29,8 @@ export class TimetableService {
     dto: CreateTimetableEntryDto,
   ): Promise<TimetableEntryDto> {
     const entry = this.repo.create({ ...dto, teacherId });
-    return this.toDto(await this.repo.save(entry));
+    const newEntry = await this.repo.save(entry);
+    return this.toDto(await this.findOwned(teacherId, newEntry.id));
   }
 
   async update(
@@ -39,7 +40,8 @@ export class TimetableService {
   ): Promise<TimetableEntryDto> {
     const entry = await this.findOwned(teacherId, id);
     Object.assign(entry, dto);
-    return this.toDto(await this.repo.save(entry));
+    await this.repo.save(entry);
+    return this.toDto(await this.findOwned(teacherId, entry.id));
   }
 
   async remove(teacherId: string, id: string): Promise<void> {
