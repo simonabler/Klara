@@ -538,16 +538,14 @@ export class AssessmentDetailComponent implements OnInit {
     const students = this.allStudents();
     const rows: ResultRow[] = event.results.map(result => {
       const student = students.find(s => s.id === result.studentId);
-      const isPTM = ['PLUS_TILDE_MINUS', 'PASS_FAIL'].includes(this.activeSchema());
-      const storedComment = result.comment ?? '';
       return {
         studentId:   result.studentId,
         studentName: student ? `${student.lastName} ${student.firstName}` : result.studentId,
         avatarUrl:   student?.avatarUrl,
-        grade:       result.grade ?? null,
-        points:      result.points ?? null,
-        ptmValue:    isPTM ? storedComment : '',
-        comment:     isPTM ? '' : storedComment,
+        grade:       result.grade   ?? null,
+        points:      result.points  ?? null,
+        ptmValue:    result.ptmValue ?? '',
+        comment:     result.comment  ?? '',
         dirty:       false,
         saving:      false,
       };
@@ -565,9 +563,10 @@ export class AssessmentDetailComponent implements OnInit {
     const isPTM = ['PLUS_TILDE_MINUS', 'PASS_FAIL'].includes(this.activeSchema());
     this.assessmentService.upsertResult(this.event()!.id, {
       studentId: row.studentId,
-      grade:     row.grade   ?? undefined,
-      points:    row.points  ?? undefined,
-      comment:   isPTM ? (row.ptmValue || undefined) : (row.comment || undefined),
+      grade:     row.grade    ?? undefined,
+      points:    row.points   ?? undefined,
+      ptmValue:  isPTM ? (row.ptmValue || undefined) : undefined,
+      comment:   row.comment  || undefined,
     }).subscribe({
       next: () => {
         this._rows.update(list => list.map(r =>
@@ -588,9 +587,10 @@ export class AssessmentDetailComponent implements OnInit {
     const isPTM = ['PLUS_TILDE_MINUS', 'PASS_FAIL'].includes(this.activeSchema());
     const results = dirty.map(r => ({
       studentId: r.studentId,
-      grade:     r.grade   ?? undefined,
-      points:    r.points  ?? undefined,
-      comment:   isPTM ? (r.ptmValue || undefined) : (r.comment || undefined),
+      grade:     r.grade    ?? undefined,
+      points:    r.points   ?? undefined,
+      ptmValue:  isPTM ? (r.ptmValue || undefined) : undefined,
+      comment:   r.comment  || undefined,
     }));
     this.assessmentService.bulkUpsertResults(this.event()!.id, results).subscribe({
       next: (updated) => {
