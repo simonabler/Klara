@@ -12,7 +12,7 @@ export class AddStudentGender1773590000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       ALTER TABLE "students"
-        ADD COLUMN IF NOT EXISTS "gender" character(1)
+        ADD COLUMN IF NOT EXISTS "gender" varchar(1)
     `);
   }
 
