@@ -68,6 +68,11 @@ export class UpsertStudentResultValidationDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(50)
+  ptmValue?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(1000)
   comment?: string;
 }

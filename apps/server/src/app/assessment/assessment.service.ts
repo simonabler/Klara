@@ -129,9 +129,10 @@ export class AssessmentService {
       });
     }
 
-    if (dto.grade   !== undefined) result.grade   = dto.grade   ?? null;
-    if (dto.points  !== undefined) result.points  = dto.points  ?? null;
-    if (dto.comment !== undefined) result.comment = dto.comment ?? null;
+    if (dto.grade    !== undefined) result.grade    = dto.grade    ?? null;
+    if (dto.points   !== undefined) result.points   = dto.points   ?? null;
+    if (dto.ptmValue !== undefined) result.ptmValue = dto.ptmValue ?? null;
+    if (dto.comment  !== undefined) result.comment  = dto.comment  ?? null;
 
     return this.resultRepo.save(result);
   }
@@ -229,7 +230,7 @@ export class AssessmentService {
           r => r.assessmentEventId === event.id && r.studentId === student.id,
         );
         if (result) {
-          const rawValue = result.grade ?? result.points ?? (result.comment ?? undefined);
+          const rawValue = result.grade ?? result.points ?? result.ptmValue ?? undefined;
           cells[event.id] = {
             value:    rawValue,
             resultId: result.id,
