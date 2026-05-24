@@ -132,7 +132,6 @@ export class AssessmentService {
     if (dto.grade   !== undefined) result.grade   = dto.grade   ?? null;
     if (dto.points  !== undefined) result.points  = dto.points  ?? null;
     if (dto.comment !== undefined) result.comment = dto.comment ?? null;
-    if (dto.additionalComment !== undefined) result.additionalComment = dto.additionalComment ?? null;
 
     return this.resultRepo.save(result);
   }

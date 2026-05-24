@@ -19,7 +19,6 @@ export class StudentResultDto {
   grade?: number;      // 1–5 österreichisch
   points?: number;
   comment?: string;
-  additionalComment?: string;
   updatedAt!: string;
   assessmentEvent?: AssessmentEventRefDto;
 }
@@ -29,7 +28,6 @@ export class UpsertStudentResultDto {
   grade?: number;
   points?: number;
   comment?: string;
-  additionalComment?: string;
 }
 
 // ── AssessmentEvent ──────────────────────────────────────────────────────────
