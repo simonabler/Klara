@@ -70,6 +70,11 @@ export class UpsertStudentResultValidationDto {
   @IsString()
   @MaxLength(1000)
   comment?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  additionalComment?: string;
 }
 
 export class BulkUpsertResultsValidationDto {

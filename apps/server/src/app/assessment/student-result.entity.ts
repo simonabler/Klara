@@ -25,6 +25,10 @@ export class StudentResult {
   @Column({ type: 'text', nullable: true })
   comment: string;
 
+  /** Freitext-Kommentar zusätzlich zum strukturierten Wert (z.B. bei +/~/- oder Bestanden/Nicht bestanden) */
+  @Column({ type: 'text', nullable: true })
+  additionalComment: string;
+
   @ManyToOne(() => AssessmentEvent, (event) => event.results, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'assessmentEventId' })
   assessmentEvent: AssessmentEvent;
