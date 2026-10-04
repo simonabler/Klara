@@ -22,6 +22,10 @@ export class StudentResult {
   @Column({ type: 'float', nullable: true })
   points: number;
 
+  /** Strukturierter Wert für nicht-numerische Schemas: '+', '~', '-', 'bestanden', 'nicht bestanden' */
+  @Column({ type: 'text', nullable: true })
+  ptmValue: string;
+
   @Column({ type: 'text', nullable: true })
   comment: string;
 
