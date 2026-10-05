@@ -38,7 +38,18 @@ export class MetricsService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    await this.ensureMeta();
+    try {
+      await this.ensureMeta();
+    } catch (err: any) {
+      // 42P01 = Tabelle fehlt: verständlich melden statt nacktem QueryFailedError
+      if (err?.driverError?.code === '42P01' || err?.code === '42P01') {
+        throw new Error(
+          'Die Tabellen des Metrics-Moduls fehlen (metric_meta). Migrations ausführen ' +
+          '(„npm run migration:run“ oder TYPEORM_MIGRATIONS_RUN=true) oder METRICS_ENABLED=false setzen.',
+        );
+      }
+      throw err;
+    }
   }
 
   /**
