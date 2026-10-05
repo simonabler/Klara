@@ -1,5 +1,7 @@
 # Klara
 
+[![CI](https://github.com/simonabler/Klara/actions/workflows/ci.yml/badge.svg)](https://github.com/simonabler/Klara/actions/workflows/ci.yml)
+
 <p align="center">
   <img src="images/klara-preview.svg" alt="Klara – Schülerübersicht" width="100%"/>
 </p>
@@ -36,7 +38,8 @@ Klara hilft Lehrkräften dabei, schnell und ohne Aufwand folgendes zu dokumentie
 - **Schülerprofile** – Name, Bild, Geburtsdatum, Elterninformationen
 - **Pädagogische Notizen** – Mitarbeit und Verhalten, fachbezogen und chronologisch
 - **Leistungsdokumentation** – Schularbeiten, Überprüfungen, Ergebnisse je Schüler
-- **Beurteilungsgrundlagen** – übersichtlich abrufbar, ohne automatische Notenlogik
+- **Beurteilungsgrundlagen** – übersichtlich abrufbar, ohne automatische Notenlogik (Notendurchschnitt nur, wenn in den Einstellungen aktiviert), Export als Excel
+- **Stundenplan** – als Dashboard mit Wochen- und Tagesansicht, A/B-Wochen, Semester- und Einzelterminen
 
 ---
 
@@ -60,7 +63,9 @@ Klara hilft Lehrkräften dabei, schnell und ohne Aufwand folgendes zu dokumentie
 /
 ├── apps/
 │   ├── klara/          # Angular Frontend (SSR)
-│   └── server/         # NestJS Backend
+│   ├── klara-e2e/      # Playwright E2E-Tests (Frontend)
+│   ├── server/         # NestJS Backend
+│   └── server-e2e/     # E2E-Tests (Backend)
 ├── libs/
 │   └── domain/         # Shared Library: DTOs, Interfaces, Enums
 │                       # Import via @app/domain
@@ -73,6 +78,7 @@ Klara hilft Lehrkräften dabei, schnell und ohne Aufwand folgendes zu dokumentie
 │       └── .env.template
 ├── docker-compose.yml      # Produktion (mit Traefik)
 ├── docker-compose.dev.yml  # Lokale Entwicklung
+├── .github/workflows/ci.yml  # CI: Lint, Tests, Build
 └── .env.example
 ```
 
@@ -84,7 +90,9 @@ Die Library `libs/domain` ist die einzige Quelle der Wahrheit für alle geteilte
 import { NoteType, AssessmentEventType } from '@app/domain';
 ```
 
-Sie enthält DTOs, TypeScript-Interfaces und Enums. Beide Apps importieren ausschließlich aus `@app/domain` – keine doppelten Typdefinitionen.
+Sie enthält DTOs und Enums. Beide Apps importieren ausschließlich aus `@app/domain` – keine doppelten Typdefinitionen.
+
+Die Request-Validierung (class-validator) liegt dagegen im Backend in den `*-validation.dto.ts`-Dateien der jeweiligen Module. Die globale `ValidationPipe` läuft mit `whitelist` und `forbidNonWhitelisted` – jedes Feld eines Request-DTOs braucht dort einen Validierungs-Dekorator, sonst wird der Request abgelehnt.
 
 ---
 
@@ -93,7 +101,7 @@ Sie enthält DTOs, TypeScript-Interfaces und Enums. Beide Apps importieren aussc
 ### Voraussetzungen
 
 - [Docker](https://www.docker.com) und Docker Compose
-- [Node.js 20+](https://nodejs.org) und npm (für Entwicklung ohne Docker)
+- [Node.js 20+](https://nodejs.org) und npm (für Entwicklung ohne Docker; Dockerfiles und CI verwenden Node 24)
 
 ### Mit Docker starten
 
@@ -126,6 +134,12 @@ npx nx serve klara
 
 Der Angular Dev-Server proxied `/api` automatisch auf `http://localhost:3000` (siehe `apps/klara/proxy.conf.json`).
 
+Ohne gesetzte `TYPEORM_*`-Variablen nutzt das Backend eine lokale SQLite-Datenbank (`./klara.sqlite`, Schema per `synchronize`).
+
+### Demo-Lehrkraft
+
+Außerhalb von Produktion legt der Seed beim Start eine Demo-Lehrkraft mit Beispieldaten an (Klasse, Fächer, Schüler, Notizen, Leistungen). Ohne Google-Konfiguration meldest du dich über `http://localhost:3000/api/auth/demo` direkt als diese Lehrkraft an. Seed und Demo-Login verwenden dieselbe Identität (`apps/server/src/app/common/demo-teacher.ts`).
+
 ---
 
 ## Umgebungsvariablen
@@ -139,11 +153,15 @@ TYPEORM_PORT=5432
 TYPEORM_DATABASE=klara
 TYPEORM_USERNAME=user
 TYPEORM_PASSWORD=dein-passwort
-TYPEORM_SYNC=true
+# Nur in der Entwicklung true – in Produktion verweigert das Backend den Start
+TYPEORM_SYNC=false
+# Migrations beim Start ausführen (Produktion: true)
+TYPEORM_MIGRATIONS_RUN=false
 
 # App
 NODE_ENV=production
 PORT=3000
+FRONTEND_URL=https://klara.abler.tirol   # erlaubte CORS-Origin + Redirect nach Login
 
 # Uploads (Avatare)
 # Vollständiger Pfad zum Upload-Verzeichnis inkl. Unterordner
@@ -155,9 +173,15 @@ GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=https://klara.abler.tirol/api/auth/google/callback
 JWT_SECRET=change-me-in-production
 JWT_EXPIRES_IN=8h
+
+# Metriken + Anomaly-Guard (nur mit Postgres)
+METRICS_ENABLED=true
+METRICS_TOKEN=            # mind. 32 Zeichen, z. B. `openssl rand -hex 32`
 ```
 
 Für die Datenbank zusätzlich `conf/postgres/.env` aus dem Template befüllen.
+
+Der Frontend-Container braucht für SSR zusätzlich `BACKEND_URL` (z. B. `http://backend:3000`), siehe `docker-compose.yml`.
 
 ---
 
@@ -177,7 +201,22 @@ npx nx test klara        # Frontend Unit Tests
 npx nx lint server
 npx nx lint klara
 npx nx lint domain
+
+# Alles auf einmal (wie in der CI)
+npx nx run-many -t lint test build --projects=domain,server,klara
+
+# Datenbank-Migrations
+npm run migration:generate --name=AddSomething   # aus Entity-Änderungen erzeugen
+npm run migration:run
+npm run migration:revert
+npm run migration:show
 ```
+
+Schemaänderungen kommen immer über eine Migration in `apps/server/src/migrations/` – nie über `TYPEORM_SYNC` in Produktion.
+
+### CI
+
+Die GitHub Action `.github/workflows/ci.yml` läuft bei jedem Push auf `master` und bei jedem Pull Request: Lint, Unit-Tests und Build für `domain`, `server` und `klara` sowie die Kompilierung der Migrations wie im Backend-Dockerfile.
 
 ---
 
@@ -204,28 +243,40 @@ Das Backend ist unter `/api` erreichbar.
 | Lokal (Docker) | `http://localhost/api` |
 | Lokal (ohne Docker) | `http://localhost:3000/api` |
 
-**Swagger-Dokumentation:**
+**Swagger-Dokumentation** (nur außerhalb von Produktion aktiv):
 
 ```
-https://klara.abler.tirol/api/docs   # Produktion
 http://localhost/api/docs            # lokal via Docker
 http://localhost:3000/api/docs       # lokal ohne Docker
 ```
 
 Health-Check: `GET /api/healthz` → `{ "status": "ok" }`
 
+### Metriken und Anomaly-Guard
+
+Mit `METRICS_ENABLED=true` (nur mit Postgres) zählt das Backend API-Aufrufe und sperrt IPs mit auffälligem Traffic automatisch (HTTP 429). Die Auswertung liegt unter `/api/_stats` und ist nur mit dem Header `X-Metrics-Token` erreichbar. Details, Schwellwerte und Ausnahmen: [`apps/server/src/app/metrics/README.md`](apps/server/src/app/metrics/README.md).
+
 ### Endpunkte (Übersicht)
+
+Alle Endpunkte außer Login und Health-Check erfordern das Auth-Cookie.
 
 | Ressource | Pfad |
 |---|---|
 | Schüler | `/api/students` |
-| Avatar-Upload | `/api/students/:id/avatar` |
-| CSV-Import | `/api/students/import` |
+| Avatar-Upload | `POST /api/students/:id/avatar` |
+| CSV-Import | `POST /api/students/import`, `POST /api/students/check-duplicates` |
 | Klassen | `/api/classes` |
 | Fächer | `/api/subjects` |
 | Notizen | `/api/notes` |
 | Leistungsereignisse | `/api/assessments` |
-| Schülerergebnisse | `/api/assessments/:id/results` |
+| Beurteilungstabelle | `GET /api/assessments/table` |
+| Schülerergebnisse | `PUT /api/assessments/:id/results`, `GET /api/assessments/student/:studentId/results` |
+| Bewertungsschemata | `/api/assessment-types` |
+| Stundenplan | `/api/timetable` |
+| Login | `GET /api/auth/google`, `GET /api/auth/demo` (nur Entwicklung) |
+| Sitzung | `GET /api/auth/me`, `GET /api/auth/logout` |
+| Notenberechnung an/aus | `GET/PATCH /api/auth/grading-enabled` |
+| Datenexport | `GET /api/auth/export` |
 | Konto löschen | `DELETE /api/auth/account` |
 
 ---
@@ -246,9 +297,10 @@ Klara speichert personenbezogene Daten von Schülerinnen und Schülern (Name, Ge
 
 | Recht | Umsetzung in Klara |
 |---|---|
-| **Auskunft** (Art. 15) | Schülerdaten sind in der App einsehbar; vollständiger Export manuell möglich |
-| **Löschung** (Art. 17) | Schüler können einzeln gelöscht werden (inkl. aller verknüpften Daten via CASCADE). Lehrkräfte können ihr Konto unter Einstellungen löschen. |
-| **Portabilität** (Art. 20) | Noch nicht als automatisierter Export umgesetzt – geplant für eine spätere Version |
+| **Auskunft** (Art. 15) | Schülerdaten sind in der App einsehbar; vollständiger Export über `GET /api/auth/export` |
+| **Löschung** (Art. 17) | Schüler können einzeln gelöscht werden (inkl. aller verknüpften Daten und des Profilbilds). Lehrkräfte können ihr Konto unter Einstellungen löschen. |
+| **Speicherbegrenzung** (Art. 5 Abs. 1 lit. e) | Unter Einstellungen › Aufbewahrung wird eine Frist (1–10 Jahre nach Schuljahresende) gewählt. Abgelaufene Schuljahre werden auf der Startseite gemeldet und nach Bestätigung gelöscht: Klassen, deren Notizen und Leistungen sowie Schüler/innen, die in keiner anderen Klasse mehr sind. Es wird nichts automatisch gelöscht. |
+| **Portabilität** (Art. 20) | Export aller Daten einer Lehrkraft als strukturiertes JSON über `GET /api/auth/export` |
 
 ### Technische Maßnahmen
 

@@ -8,11 +8,12 @@ import { SubjectDto, AssessmentTypeDto, AssessmentSchema } from '@app/domain';
 import { AuthService } from '../../auth/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { RetentionSettingsComponent } from '../school-year/retention-settings.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RetentionSettingsComponent],
   template: `
     <div class="page">
       <header class="page-header">
@@ -64,20 +65,30 @@ import { firstValueFrom } from 'rxjs';
               @if (editingTypeId() === t.id) {
                 <div class="type-edit-row">
                   <input class="inline-input" [value]="t.name" #typeNameInput
-                         (keydown.enter)="saveType(t.id, typeNameInput.value, typeSchemaSelect.value)"
+                         (keydown.enter)="saveType(t.id, typeNameInput.value, typeSchemaSelect.value, typeWeightInput.value)"
                          (keydown.escape)="editingTypeId.set(null)" />
                   <select class="inline-select" #typeSchemaSelect [value]="t.schema">
                     @for (s of schemaOptions; track s.value) {
                       <option [value]="s.value">{{ s.label }}</option>
                     }
                   </select>
-                  <button class="btn btn-sm btn-primary" (click)="saveType(t.id, typeNameInput.value, typeSchemaSelect.value)">Speichern</button>
+                  <!-- [hidden] statt @if: die Referenz #typeWeightInput muss für „Speichern“ sichtbar bleiben -->
+                  <label class="weight-field" [hidden]="!gradingEnabled()" title="Wie oft zählt dieser Leistungstyp im Notenschnitt?">
+                    <span>Gewicht</span>
+                    <input class="inline-input weight-input" type="number" min="0.5" max="10" step="0.5"
+                           [value]="t.weight ?? 1" #typeWeightInput
+                           (keydown.enter)="saveType(t.id, typeNameInput.value, typeSchemaSelect.value, typeWeightInput.value)" />
+                  </label>
+                  <button class="btn btn-sm btn-primary" (click)="saveType(t.id, typeNameInput.value, typeSchemaSelect.value, typeWeightInput.value)">Speichern</button>
                   <button class="btn btn-sm btn-secondary" (click)="editingTypeId.set(null)">Abbrechen</button>
                 </div>
               } @else {
                 <div class="type-info">
                   <span class="item-name">{{ t.name }}</span>
                   <span class="type-schema-badge">{{ schemaLabel(t.schema) }}</span>
+                  @if (gradingEnabled() && isGradeSchema(t.schema)) {
+                    <span class="type-schema-badge" title="Gewicht im Notenschnitt">×{{ t.weight ?? 1 }}</span>
+                  }
                   @if (t.isDefault) {
                     <span class="type-default-badge">Standard</span>
                   }
@@ -107,6 +118,10 @@ import { firstValueFrom } from 'rxjs';
               <option [value]="s.value">{{ s.label }}</option>
             }
           </select>
+          @if (gradingEnabled()) {
+            <input type="number" class="weight-input" formControlName="weight" min="0.5" max="10" step="0.5"
+                   title="Gewicht im Notenschnitt" aria-label="Gewicht im Notenschnitt" />
+          }
           <button type="submit" class="btn btn-primary" [disabled]="typeForm.invalid">Hinzufügen</button>
         </form>
       </section>
@@ -120,6 +135,8 @@ import { firstValueFrom } from 'rxjs';
             <div class="toggle-desc">
               Ermöglicht die Vergabe von Gewichtungen pro Leistungstyp und zeigt einen
               berechneten Ø-Vorschlag in der Tabellenansicht. Empfohlen für Sekundarstufe.
+              In den Ø fließen nur Noten ein (Skala 1–5, falls keine vorhanden 1–10);
+              Punkte, +/~/− und Bestanden zählen nicht.
             </div>
           </div>
           <button class="toggle-btn" [class.active]="gradingEnabled()" (click)="toggleGrading()">
@@ -129,6 +146,12 @@ import { firstValueFrom } from 'rxjs';
             <span class="toggle-label">{{ gradingEnabled() ? 'Ein' : 'Aus' }}</span>
           </button>
         </div>
+      </section>
+
+      <!-- Aufbewahrung -->
+      <section class="settings-section" id="aufbewahrung">
+        <div class="section-label">Aufbewahrung &amp; Löschfristen</div>
+        <app-retention-settings />
       </section>
 
       <!-- Datenschutz & Konto -->
@@ -267,6 +290,9 @@ import { firstValueFrom } from 'rxjs';
     .add-row { display: flex; gap: var(--sp-2); align-items: center; }
     .add-row input { flex: 1; min-width: 0; margin: 0; }
     .add-row select { width: 180px; flex-shrink: 0; }
+    .add-row .weight-input { width: 72px; flex: 0 0 72px; }
+    .weight-field { display: flex; align-items: center; gap: var(--sp-1); font-size: 12px; color: var(--ink-faint); margin: 0; }
+    .weight-field .weight-input { width: 64px; min-width: 0; flex: 0 0 64px; }
 
     .type-list { margin-bottom: var(--sp-3); }
     .type-info { display: flex; align-items: center; gap: var(--sp-3); flex: 1; min-width: 0; }
@@ -431,7 +457,18 @@ export class SettingsComponent implements OnInit {
   typeForm = this.fb.group({
     name:   ['', [Validators.required, Validators.minLength(1)]],
     schema: [AssessmentSchema.GRADES_1_5, Validators.required],
+    weight: [1, [Validators.min(0.5), Validators.max(10)]],
   });
+
+  isGradeSchema(schema: string): boolean {
+    return schema === AssessmentSchema.GRADES_1_5 || schema === AssessmentSchema.GRADES_1_10;
+  }
+
+  /** Gewicht aus einem Eingabefeld; leer oder ungültig → undefined (unverändert) */
+  private parseWeight(raw: string | number | null | undefined): number | undefined {
+    const value = typeof raw === 'number' ? raw : parseFloat(String(raw ?? '').replace(',', '.'));
+    return Number.isFinite(value) && value > 0 && value <= 10 ? value : undefined;
+  }
 
   // ── Subject form ────────────────────────────────────────────────────────────
   subjectForm = this.fb.group({
@@ -480,16 +517,19 @@ export class SettingsComponent implements OnInit {
     this.assessmentTypeService.create({
       name:   v.name!,
       schema: v.schema as AssessmentSchema,
+      weight: this.gradingEnabled() ? this.parseWeight(v.weight) : undefined,
     }).subscribe({
-      next: () => { this.typeForm.reset({ schema: AssessmentSchema.GRADES_1_5 }); this.loadAssessmentTypes(); },
+      next: () => { this.typeForm.reset({ schema: AssessmentSchema.GRADES_1_5, weight: 1 }); this.loadAssessmentTypes(); },
     });
   }
 
-  saveType(id: string, name: string, schema: string): void {
+  saveType(id: string, name: string, schema: string, weight?: string): void {
     if (!name.trim()) return;
     this.assessmentTypeService.update(id, {
       name:   name.trim(),
       schema: schema as AssessmentSchema,
+      // Gewicht nur ändern, wenn die Notenberechnung aktiv (und das Feld sichtbar) ist
+      weight: this.gradingEnabled() ? this.parseWeight(weight) : undefined,
     }).subscribe({
       next: () => { this.editingTypeId.set(null); this.loadAssessmentTypes(); },
     });

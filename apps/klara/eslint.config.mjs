@@ -32,6 +32,8 @@ export default [
       // Pre-existing: Bootstrap forms use <label> without linked controls throughout
       // the codebase. Downgrade to warn until templates are refactored for a11y.
       '@angular-eslint/template/label-has-associated-control': 'warn',
+      // `!= null` prüft bewusst auf null UND undefined (gilt auch für Inline-Templates).
+      '@angular-eslint/template/eqeqeq': ['error', { allowNullOrUndefined: true }],
     },
   },
 ];

@@ -3,7 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth/auth.service';
 import { ClassService } from '../classes/class.service';
-import { ClassDto } from '@app/domain';
+import { ClassDto, RetentionYearDto, nextSchoolYear } from '@app/domain';
+import { SchoolYearService } from '../school-year/school-year.service';
 
 function currentSchoolYear(): string {
   const now = new Date();
@@ -54,6 +55,18 @@ function currentSchoolYear(): string {
           </button>
         </div>
       </div>
+
+      <!-- ── Hinweis: Aufbewahrungsfrist abgelaufen ── -->
+      @if (dueRetention().length > 0) {
+        <div class="retention-banner" role="status">
+          <span>
+            Die Aufbewahrungsfrist für
+            <strong>{{ dueRetentionYears() }}</strong>
+            ist abgelaufen. Die Daten sollten gelöscht werden.
+          </span>
+          <a routerLink="/app/settings" class="retention-link">Zu den Einstellungen</a>
+        </div>
+      }
 
       <!-- ── Lade-Zustand ── -->
       @if (loading()) {
@@ -111,6 +124,12 @@ function currentSchoolYear(): string {
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Neue Klasse anlegen
+          </a>
+          <a routerLink="/app/schuljahreswechsel" [queryParams]="{ von: selectedYear() }" class="btn-new-class">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/>
+            </svg>
+            Klassen nach {{ followingYear() }} übernehmen
           </a>
         </div>
       }
@@ -265,6 +284,13 @@ function currentSchoolYear(): string {
       margin-bottom: var(--sp-5);
     }
 
+    .retention-banner {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap;
+      background: #FFFBF5; border: 1px solid #E8C9A0; border-radius: var(--r-md);
+      padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-5);
+      font-size: 14px; color: var(--ink);
+    }
+    .retention-link { font-size: 13px; font-weight: 600; color: #8A5A1A; white-space: nowrap; }
     .class-card {
       background: var(--white);
       border: 1.5px solid var(--border);
@@ -344,7 +370,7 @@ function currentSchoolYear(): string {
     }
 
     /* ── Neue Klasse Button ── */
-    .grid-actions { display: flex; }
+    .grid-actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
 
     .btn-new-class {
       display: inline-flex;
@@ -507,6 +533,7 @@ function currentSchoolYear(): string {
 export class HomeComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly classService = inject(ClassService);
+  private readonly schoolYearService = inject(SchoolYearService);
   private readonly router = inject(Router);
 
   readonly user = this.authService.currentUser;
@@ -532,6 +559,12 @@ export class HomeComponent implements OnInit {
 
   readonly hasAnyClass = computed(() => this.allClasses().length > 0);
 
+  readonly followingYear = computed(() => nextSchoolYear(this.selectedYear()));
+
+  /** Schuljahre, deren Aufbewahrungsfrist abgelaufen ist */
+  readonly dueRetention = signal<RetentionYearDto[]>([]);
+  readonly dueRetentionYears = computed(() => this.dueRetention().map((y) => y.schoolYear).join(', '));
+
   ngOnInit(): void {
     this.classService.getAll().subscribe({
       next: (classes) => {
@@ -542,6 +575,11 @@ export class HomeComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+    // Hinweis ist optional – ein Fehler hier darf die Startseite nicht stören
+    this.schoolYearService.getRetention().subscribe({
+      next: (o) => this.dueRetention.set(o.due),
+      error: () => this.dueRetention.set([]),
     });
   }
 

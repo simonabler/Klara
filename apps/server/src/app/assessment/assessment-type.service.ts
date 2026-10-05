@@ -10,7 +10,7 @@ import {
 } from '@app/domain';
 
 /** Standard-Typen die jeder Lehrkraft beim ersten Aufruf angelegt werden */
-const DEFAULT_TYPES = [
+export const DEFAULT_TYPES = [
   {
     name: 'Mündliche Überprüfung',
     schema: AssessmentSchema.PLUS_TILDE_MINUS,

@@ -139,7 +139,7 @@ export class BeurteilungExportService {
   // ── Hilfsmethoden ──────────────────────────────────────────────────────────
 
   private buildFilename(cls: string, subj: string, year: string, ext: string): string {
-    const parts = [cls, subj, year].filter(Boolean).join('_').replace(/[^a-zA-Z0-9_\-]/g, '-');
+    const parts = [cls, subj, year].filter(Boolean).join('_').replace(/[^a-zA-Z0-9_-]/g, '-');
     const date  = new Date().toISOString().slice(0, 10);
     return `klara_beurteilung_${parts || 'export'}_${date}.${ext}`;
   }

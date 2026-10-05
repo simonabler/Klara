@@ -13,7 +13,3 @@ export class SubjectService {
   update(id: string, dto: UpdateSubjectDto): Observable<SubjectDto> { return this.http.patch<SubjectDto>(`${this.base}/${id}`, dto); }
   delete(id: string): Observable<void> { return this.http.delete<void>(`${this.base}/${id}`); }
 }
-
-// SchoolLevelService bleibt als leerer Stub damit alte Imports nicht crashen
-@Injectable({ providedIn: 'root' })
-export class SchoolLevelService {}

@@ -17,6 +17,7 @@ import {
   NoteDto, StudentResultDto,
 } from '@app/domain';
 import { NoteType, AssessmentEventType } from '@app/domain';
+import { Semester, schoolYearOf, semesterBounds, toIsoDate } from '@app/domain';
 
 // ── Datenstruktur pro Schüler ────────────────────────────────────────────────
 
@@ -89,6 +90,15 @@ const NOTE_TYPE_LABEL: Record<NoteType, string> = {
             }
           </select>
         </div>
+
+        <div class="filter-field filter-field-narrow">
+          <label>Zeitraum</label>
+          <select [ngModel]="selectedSemester()" (ngModelChange)="onSemesterChange($event)">
+            <option value="">Ganzes Schuljahr</option>
+            <option value="1">1. Semester (Sep – Jän)</option>
+            <option value="2">2. Semester (Feb – Aug)</option>
+          </select>
+        </div>
       </div>
 
       <!-- ── Tabellenansicht (Beta) ── -->
@@ -97,6 +107,7 @@ const NOTE_TYPE_LABEL: Record<NoteType, string> = {
           [classId]="selectedClassId()"
           [subjectId]="selectedSubjectId()"
           [schoolYear]="selectedSchoolYear()"
+          [semester]="selectedSemester()"
           [className]="selectedClassName()"
           [subjectName]="selectedSubjectName()">
         </app-beurteilung-table>
@@ -298,6 +309,7 @@ const NOTE_TYPE_LABEL: Record<NoteType, string> = {
       margin-bottom: var(--sp-5);
     }
     .filter-field { display: flex; flex-direction: column; gap: var(--sp-1); flex: 1; min-width: 180px; }
+    .filter-field-narrow { flex: 0 1 220px; }
     .filter-field label {
       font-size: 11px; font-weight: 600; text-transform: uppercase;
       letter-spacing: 1px; color: var(--ink-faint);
@@ -458,6 +470,8 @@ export class BeurteilungComponent implements OnInit {
 
   selectedClassId   = signal('');
   selectedSubjectId = signal('');
+  /** '' = ganzes Schuljahr, sonst 1./2. Semester */
+  selectedSemester  = signal<'' | '1' | '2'>('');
 
   selectedClassName  = computed(() =>
     this.classes().find(c => c.id === this.selectedClassId())?.name ?? ''
@@ -496,6 +510,28 @@ export class BeurteilungComponent implements OnInit {
     else this.entries.set([]);
   }
 
+  onSemesterChange(semester: '' | '1' | '2'): void {
+    this.selectedSemester.set(semester);
+    if (this.selectedSubjectId()) this.loadData();
+  }
+
+  /**
+   * Prüft, ob ein Datum im gewählten Semester liegt (ohne Semester: immer).
+   * Das Schuljahr kommt von der Klasse, sonst ist es das aktuelle.
+   */
+  private inSelectedSemester(date: string | undefined): boolean {
+    const semester = this.selectedSemester();
+    if (!semester) return true;
+    if (!date) return false;
+    const { from, to } = semesterBounds(
+      this.selectedSchoolYear() || schoolYearOf(new Date()),
+      Number(semester) as Semester,
+    );
+    // Datums-Spalten kommen als 'YYYY-MM-DD', Zeitstempel als ISO mit Uhrzeit (UTC)
+    const day = date.length === 10 ? date : toIsoDate(new Date(date));
+    return day >= toIsoDate(from) && day <= toIsoDate(to);
+  }
+
   private loadData(): void {
     const classId   = this.selectedClassId();
     const subjectId = this.selectedSubjectId();
@@ -524,7 +560,7 @@ export class BeurteilungComponent implements OnInit {
 
             // Notizen nach Schüler gruppieren
             for (const student of students) {
-              const studentNotes = notes.filter(n => n.studentId === student.id);
+              const studentNotes = notes.filter(n => n.studentId === student.id && this.inSelectedSemester(n.createdAt));
               notesMap.set(student.id, {
                 general: studentNotes.filter(n => !n.subjectId),
                 subject: studentNotes.filter(n => n.subjectId === subjectId),
@@ -535,6 +571,7 @@ export class BeurteilungComponent implements OnInit {
             students.forEach((student, i) => {
               const filtered = (allResults[i] ?? []).filter(
                 r => r.assessmentEvent?.subjectId === subjectId
+                  && this.inSelectedSemester(r.assessmentEvent?.date)
               );
               // Chronologisch sortiert
               filtered.sort((a, b) =>
