@@ -47,15 +47,22 @@ describe('week.utils', () => {
   });
 
   describe('isWeekA', () => {
-    it('KW 36 ist Referenz-Woche A, KW 37 ist Woche B', () => {
-      expect(isWeekA(36)).toBe(true);
-      expect(isWeekA(37)).toBe(false);
-      expect(isWeekA(38)).toBe(true);
+    it('die Woche mit dem 1. September ist Woche A, danach abwechselnd', () => {
+      expect(isWeekA(new Date(2026, 7, 31))).toBe(true);  // 31.08.2026
+      expect(isWeekA(new Date(2026, 8, 7))).toBe(false);  // 07.09.2026
+      expect(isWeekA(new Date(2026, 8, 14))).toBe(true);  // 14.09.2026
     });
 
-    it('funktioniert auch für Wochen vor der Referenz', () => {
-      expect(isWeekA(35)).toBe(false);
-      expect(isWeekA(2)).toBe(true);
+    it('kippt nicht beim Jahreswechsel mit KW 53', () => {
+      expect(isWeekA(new Date(2026, 11, 28))).toBe(false); // KW 53 → B
+      expect(isWeekA(new Date(2027, 0, 4))).toBe(true);    // KW 1  → A
+    });
+  });
+
+  describe('buildWeekInfo', () => {
+    it('setzt Woche A/B nach Schulwochen, nicht nach Kalenderwoche', () => {
+      expect(buildWeekInfo(new Date(2027, 0, 4)).isWeekA).toBe(true);
+      expect(buildWeekInfo(new Date(2027, 0, 4)).isoWeek).toBe(1);
     });
   });
 

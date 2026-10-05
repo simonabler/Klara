@@ -7,6 +7,7 @@ import {
   BeurteilungTableDto,
   TableStudentRowDto,
   NoteDto,
+  Semester,
 } from '@app/domain';
 
 @Component({
@@ -53,7 +54,12 @@ import {
           <div class="cell cell-header cell-notes-header">Notizen</div>
           @for (col of table()!.columns; track col.id) {
             <div class="cell cell-header cell-event" [title]="col.title">
-              <span class="col-title">{{ col.title }}</span>
+              <span class="col-title">
+                {{ col.title }}
+                @if (col.weight != null && col.weight !== 1) {
+                  <span class="col-weight" [title]="'Zählt ' + col.weight + '-fach im Ø'">×{{ col.weight }}</span>
+                }
+              </span>
               <span class="col-date">{{ col.date | date:'dd.MM.' }}</span>
             </div>
           }
@@ -215,6 +221,11 @@ import {
     .cell-event { flex-direction: column; align-items: flex-start; gap: 2px; min-width: 80px; }
     .col-title { color: var(--navy); font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
     .col-date  { color: var(--ink-faint); font-size: 10px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+    .col-weight {
+      margin-left: 2px; padding: 0 4px; border-radius: 4px;
+      background: var(--light-teal); color: var(--navy);
+      font-size: 10px; font-weight: 700; text-transform: none; letter-spacing: 0;
+    }
 
     .cell-avg, .cell-avg-val { min-width: 60px; justify-content: center; background: var(--surface) !important; }
     .class-avg { margin-left: var(--sp-1); color: var(--navy); font-size: 13px; font-weight: 700; text-transform: none; letter-spacing: 0; }
@@ -323,6 +334,8 @@ export class BeurteilungTableComponent implements OnChanges {
   @Input() classId     = '';
   @Input() subjectId   = '';
   @Input() schoolYear  = '';
+  /** '' = ganzes Schuljahr, sonst 1./2. Semester */
+  @Input() semester: '' | '1' | '2' = '';
   @Input() className   = '';
   @Input() subjectName = '';
 
@@ -354,6 +367,7 @@ export class BeurteilungTableComponent implements OnChanges {
       this.classId,
       this.subjectId || undefined,
       this.schoolYear || undefined,
+      this.semester ? (Number(this.semester) as Semester) : undefined,
     ).subscribe({
       next: t  => { this.table.set(t); this.loading.set(false); },
       error: () => this.loading.set(false),
@@ -396,7 +410,7 @@ export class BeurteilungTableComponent implements OnChanges {
     if (!this.table() || this.exporting()) return;
     this.exporting.set(true);
     try {
-      await this.exportService.exportExcel(this.table()!, this.className, this.subjectName, this.schoolYear);
+      await this.exportService.exportExcel(this.table()!, this.className, this.subjectName, this.periodLabel());
     } finally {
       this.exporting.set(false);
     }
@@ -406,10 +420,17 @@ export class BeurteilungTableComponent implements OnChanges {
     if (!this.table() || this.exporting()) return;
     this.exporting.set(true);
     try {
-      await this.exportService.exportPDF(this.table()!, this.className, this.subjectName, this.schoolYear);
+      await this.exportService.exportPDF(this.table()!, this.className, this.subjectName, this.periodLabel());
     } finally {
       this.exporting.set(false);
     }
+  }
+
+  /** Zeitraum für Export-Titel und Dateiname, z. B. „2026/27 1. Semester“ */
+  periodLabel(): string {
+    return [this.schoolYear, this.semester ? `${this.semester}. Semester` : '']
+      .filter(Boolean)
+      .join(' ');
   }
 
   closeDrawer(): void {
