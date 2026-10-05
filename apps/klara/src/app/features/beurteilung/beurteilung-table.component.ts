@@ -115,7 +115,7 @@ import {
 
     <!-- ── Notizen-Drawer ── -->
     @if (drawerOpen()) {
-      <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+      <div class="drawer-backdrop" (click)="closeDrawer()" (keydown.escape)="closeDrawer()" tabindex="-1" aria-hidden="true"></div>
       <aside class="drawer">
         <div class="drawer-header">
           <div class="drawer-title">

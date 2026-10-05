@@ -177,6 +177,9 @@ import {
                       [style.border-left-color]="entry.color ?? '#7BAABA'"
                       [style.background]="hexToFaint(entry.color)"
                       (click)="openEdit(entry)"
+                      (keydown.enter)="openEdit(entry)"
+                      (keydown.space)="$event.preventDefault(); openEdit(entry)"
+                      tabindex="0"
                       role="button"
                       [attr.aria-label]="entry.subjectName + ', ' + entry.className">
                       <span class="tt-lesson-repeat">{{ getRepeatLabel(entry) }}</span>
@@ -227,6 +230,9 @@ import {
                       [style.border-left-color]="entry.color ?? '#7BAABA'"
                       [style.background]="hexToFaint(entry.color)"
                       (click)="openEdit(entry)"
+                      (keydown.enter)="openEdit(entry)"
+                      (keydown.space)="$event.preventDefault(); openEdit(entry)"
+                      tabindex="0"
                       role="button">
                       <div class="tt-lesson-mobile-main">
                         <span class="tt-lesson-subject">{{ entry.subjectName }}</span>
@@ -282,7 +288,7 @@ import {
 
     <!-- ── Overlay ── -->
     @if (panelOpen()) {
-      <div class="tt-overlay" (click)="closePanel()"></div>
+      <div class="tt-overlay" (click)="closePanel()" (keydown.escape)="closePanel()" tabindex="-1" aria-hidden="true"></div>
     }
 
     <!-- ── Slide-in Panel ── -->
