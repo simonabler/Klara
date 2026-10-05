@@ -10,6 +10,7 @@
     <header class="page-header">
       <a class="back-link" routerLink="/app/students">← Schüler</a>
       <div class="header-actions">
+        <button class="btn-edit" (click)="showExport.set(!showExport())" [attr.aria-expanded]="showExport()">Datenauskunft</button>
         <a class="btn-edit" [routerLink]="['/app/students', student()!.id, 'edit']">Bearbeiten</a>
         <button class="btn-delete-trigger" (click)="confirmDelete.set(true)"
                 [class.active]="confirmDelete()" title="Schüler löschen">
@@ -21,6 +22,22 @@
         </button>
       </div>
     </header>
+
+    <!-- ── Datenauskunft (Art. 15 DSGVO) ── -->
+    @if (showExport()) {
+      <div class="export-panel">
+        <span class="export-panel-text">
+          Alle zu <strong>{{ student()!.firstName }} {{ student()!.lastName }}</strong> gespeicherten Daten –
+          Stammdaten, Erziehungsberechtigte, Klassen, Leistungen und Notizen – für ein Auskunftsersuchen nach Art. 15 DSGVO.
+        </span>
+        <div class="export-panel-actions">
+          <button class="btn-cancel-sm" (click)="downloadExport('json')" [disabled]="exporting()">JSON</button>
+          <button class="btn-primary-sm" (click)="downloadExport('pdf')" [disabled]="exporting()">
+            {{ exporting() ? 'Wird erstellt…' : 'PDF herunterladen' }}
+          </button>
+        </div>
+      </div>
+    }
 
     <!-- ── Löschen Bestätigung ── -->
     @if (confirmDelete()) {

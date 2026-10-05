@@ -21,10 +21,10 @@ export const GRADE_SCHEMAS: readonly AssessmentSchema[] = [
  * `event.type` ist entweder die ID eines Leistungstyps oder (ältere Events)
  * ein Enum-Wert wie 'EXAM', der über `defaultForEventType` zugeordnet wird.
  */
-export function resolveType(
+export function resolveType<T extends Pick<AssessmentTypeLike, 'id' | 'defaultForEventType'>>(
   eventType: string,
-  types: AssessmentTypeLike[],
-): AssessmentTypeLike | undefined {
+  types: T[],
+): T | undefined {
   return types.find((t) => t.id === eventType) ?? types.find((t) => t.defaultForEventType === eventType);
 }
 

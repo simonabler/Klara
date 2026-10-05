@@ -396,3 +396,20 @@ dd { margin: 0; font-size: 14px; color: var(--ink); }
   .results-list { overflow-x: auto; }
   .result-row { flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-3); }
 }
+
+// ── Datenauskunft ──
+.export-panel {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); flex-wrap: wrap;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-5);
+}
+.export-panel-text { flex: 1; min-width: 220px; font-size: 13px; color: var(--ink-light); line-height: 1.5; }
+.export-panel-actions { display: flex; gap: var(--sp-2); }
+.btn-primary-sm {
+  padding: 6px 14px; border-radius: var(--r-sm); border: 1.5px solid var(--navy);
+  background: var(--navy); color: var(--white); font-family: var(--font-body);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}
+
+button.btn-edit { cursor: pointer; }

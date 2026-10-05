@@ -81,6 +81,9 @@ export class ExportService {
         firstName: s.firstName,
         lastName: s.lastName,
         dateOfBirth: s.dateOfBirth ?? null,
+        gender: s.gender ?? null,
+        email: s.email ?? null,
+        phone: s.phone ?? null,
         classes: s.classes?.map((c) => c.name) ?? [],
         parents: s.parents?.map((p) => ({
           firstName: p.firstName,
@@ -115,6 +118,7 @@ export class ExportService {
             : null,
           grade: r.grade ?? null,
           points: r.points ?? null,
+          value: r.ptmValue ?? null,
           comment: r.comment ?? null,
         })) ?? [],
       })),

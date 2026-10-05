@@ -7,3 +7,4 @@ export * from './note.dto';
 export * from './assessment.dto';
 export * from './timetable.dto';
 export * from './school-year.dto';
+export * from './student-export.dto';
