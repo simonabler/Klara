@@ -16,6 +16,8 @@ import { NoteModule } from './note/note.module';
 import { AssessmentModule } from './assessment/assessment.module';
 import { SeedModule } from './seed/seed.module';
 import { TimetableModule } from './timetable/timetable.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { isMetricsEnabled } from './metrics/metrics-enabled';
 
 // Migrations liegen nach dem Build als separate JS-Dateien in dist/apps/server/migrations/.
 // __dirname zeigt zur Laufzeit auf dist/apps/server/app/ → eine Ebene hoch.
@@ -91,6 +93,9 @@ const migrationsPath = join(__dirname, '..', 'migrations', '*.js');
     AssessmentModule,
     SeedModule,
     TimetableModule,
+    // Metriken + Anomaly-Guard: nur mit METRICS_ENABLED=true und Postgres.
+    // ConfigModule.forRoot() oben hat die .env zu diesem Zeitpunkt bereits geladen.
+    ...(isMetricsEnabled() ? [MetricsModule] : []),
   ],
   controllers: [AppController],
   providers: [AppService],

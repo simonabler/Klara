@@ -1,45 +1,46 @@
-import { Controller, Get, HttpCode, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import { MetricsService } from './metrics.service';
 import { SkipMetrics } from './metrics.decorator';
 import { BlocklistService } from './blocklist.service';
+import { MetricsTokenGuard } from './metrics-token.guard';
+import { UnbanValidationDto } from './unban-validation.dto';
+import { normalizeIp } from './client-ip';
 
-@Controller()
+/**
+ * Betriebs-Endpunkte unter `/api/_stats`.
+ * Nur mit gültigem Token im Header `X-Metrics-Token` erreichbar (siehe MetricsTokenGuard).
+ */
+@ApiExcludeController()
+@UseGuards(MetricsTokenGuard)
+@SkipMetrics()
+@Controller('_stats')
 export class MetricsController {
   constructor(
     private readonly metrics: MetricsService,
     private readonly blocklist: BlocklistService,
   ) {}
 
-  @Get('_stats')
-  @HttpCode(200)
-  @SkipMetrics()
+  @Get()
   getStats() {
     return this.metrics.snapshot();
   }
 
-  @Get('_stats/reset')
+  @Post('reset')
   @HttpCode(200)
-  @SkipMetrics()
   async reset() {
     await this.metrics.reset();
     return { ok: true };
   }
 
-  @Get('_stats/security')
-  @HttpCode(200)
-  @SkipMetrics()
+  @Get('security')
   security() {
-    return {
-      blocked: this.blocklist.list(),
-    };
+    return { blocked: this.blocklist.list() };
   }
 
-  @Get('_stats/security/unban')
+  @Post('security/unban')
   @HttpCode(200)
-  @SkipMetrics()
-  unban(@Query('ip') ip: string) {
-    if (!ip) return { ok: false, error: 'ip required' };
-    const ok = this.blocklist.unban(ip);
-    return { ok };
+  unban(@Body() dto: UnbanValidationDto) {
+    return { ok: this.blocklist.unban(normalizeIp(dto.ip)) };
   }
 }

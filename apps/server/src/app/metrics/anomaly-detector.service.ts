@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SlidingCounter, SlidingDistinct } from './sliding';
 import { BlocklistService } from './blocklist.service';
+import { allowlistFromEnv, getClientIp, isExemptIp } from './client-ip';
 
 export interface AnomalyConfig {
   burstPerMin: number;          // Requests/Minute/IP
@@ -32,14 +33,11 @@ export class AnomalyDetectorService {
 
   constructor(private readonly blocklist: BlocklistService) {}
 
-  private getIp(req: any): string {
-    const xff = (req?.headers?.['x-forwarded-for'] as string) || '';
-    const candidate = xff.split(',')[0]?.trim();
-    return candidate || req?.ip || req?.socket?.remoteAddress || 'unknown';
-  }
+  private readonly allowlist = allowlistFromEnv();
 
   observe(req: any, route: string, method: string, status: number) {
-    const ip = this.getIp(req);
+    const ip = getClientIp(req);
+    if (isExemptIp(ip, this.allowlist)) return;
     const now = Date.now();
 
     const minute = (this.perIpMinute.get(ip) ?? new SlidingCounter(60_000, 5_000));

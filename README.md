@@ -173,6 +173,10 @@ GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=https://klara.abler.tirol/api/auth/google/callback
 JWT_SECRET=change-me-in-production
 JWT_EXPIRES_IN=8h
+
+# Metriken + Anomaly-Guard (nur mit Postgres)
+METRICS_ENABLED=true
+METRICS_TOKEN=            # mind. 32 Zeichen, z. B. `openssl rand -hex 32`
 ```
 
 Für die Datenbank zusätzlich `conf/postgres/.env` aus dem Template befüllen.
@@ -247,6 +251,10 @@ http://localhost:3000/api/docs       # lokal ohne Docker
 ```
 
 Health-Check: `GET /api/healthz` → `{ "status": "ok" }`
+
+### Metriken und Anomaly-Guard
+
+Mit `METRICS_ENABLED=true` (nur mit Postgres) zählt das Backend API-Aufrufe und sperrt IPs mit auffälligem Traffic automatisch (HTTP 429). Die Auswertung liegt unter `/api/_stats` und ist nur mit dem Header `X-Metrics-Token` erreichbar. Details, Schwellwerte und Ausnahmen: [`apps/server/src/app/metrics/README.md`](apps/server/src/app/metrics/README.md).
 
 ### Endpunkte (Übersicht)
 

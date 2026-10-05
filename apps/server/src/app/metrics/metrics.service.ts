@@ -41,66 +41,67 @@ export class MetricsService implements OnModuleInit {
     await this.ensureMeta();
   }
 
+  /**
+   * Zählt einen Request.
+   *
+   * Alle Zähler werden atomar in der Datenbank erhöht (UPDATE … + 1 bzw.
+   * INSERT … ON CONFLICT DO UPDATE). Ein Lesen-Ändern-Schreiben im Speicher
+   * würde bei parallelen Requests Updates verlieren und beim ersten Aufruf
+   * einer Route doppelte Inserts erzeugen. Postgres-spezifisch – das Modul
+   * ist nur mit Postgres aktiv (siehe metrics-enabled.ts).
+   */
   async record(route: string, method: string, status: number, durationMs: number): Promise<void> {
     const normalizedRoute = route || 'unknown';
-    const now = new Date();
-    const dayKey = now.toISOString().slice(0, 10);
+    const dayKey = new Date().toISOString().slice(0, 10);
 
-    const meta = await this.ensureMeta();
-    meta.totalCount += 1;
-    try {
-      const savedMeta = await this.metaRepo.save(meta);
-      this.metaCache = savedMeta;
-    } catch (err) {
-      this.log.error('Failed to persist metric meta', err instanceof Error ? err.stack : String(err));
-    }
+    await this.ensureMeta();
 
-    let routeEntity = await this.routeRepo.findOne({ where: { route: normalizedRoute } });
-    if (!routeEntity) {
-      routeEntity = this.routeRepo.create({
-        route: normalizedRoute,
-        count: 0,
-        methods: {},
-        statuses: {},
-        sumMs: 0,
-        minMs: durationMs,
-        maxMs: durationMs,
-        lastCallAt: now,
-      });
-    }
+    await Promise.all([
+      this.metaRepo
+        .query(
+          `UPDATE "metric_meta" SET "totalCount" = "totalCount" + 1, "updatedAt" = now() WHERE "id" = 'global'`,
+        )
+        .catch((err) => this.logError('metric meta', err)),
 
-    routeEntity.count += 1;
-    routeEntity.sumMs = (routeEntity.sumMs ?? 0) + durationMs;
-    routeEntity.minMs = routeEntity.count > 1
-      ? Math.min(routeEntity.minMs ?? durationMs, durationMs)
-      : durationMs;
-    routeEntity.maxMs = Math.max(routeEntity.maxMs ?? durationMs, durationMs);
-    routeEntity.lastCallAt = now;
-    const methods = { ...(routeEntity.methods ?? {}) };
-    methods[method] = (methods[method] ?? 0) + 1;
-    routeEntity.methods = methods;
-    const statusKey = String(status);
-    const statuses = { ...(routeEntity.statuses ?? {}) };
-    statuses[statusKey] = (statuses[statusKey] ?? 0) + 1;
-    routeEntity.statuses = statuses;
+      this.routeRepo
+        .query(
+          `INSERT INTO "metric_route"
+             ("route", "count", "methods", "statuses", "sumMs", "minMs", "maxMs", "lastCallAt")
+           VALUES ($1, 1, jsonb_build_object($2::text, 1), jsonb_build_object($3::text, 1), $4, $4, $4, now())
+           ON CONFLICT ("route") DO UPDATE SET
+             "count"      = "metric_route"."count" + 1,
+             "methods"    = "metric_route"."methods"
+                            || jsonb_build_object($2::text, COALESCE(("metric_route"."methods" ->> $2::text)::int, 0) + 1),
+             "statuses"   = "metric_route"."statuses"
+                            || jsonb_build_object($3::text, COALESCE(("metric_route"."statuses" ->> $3::text)::int, 0) + 1),
+             "sumMs"      = "metric_route"."sumMs" + EXCLUDED."sumMs",
+             "minMs"      = LEAST("metric_route"."minMs", EXCLUDED."minMs"),
+             "maxMs"      = GREATEST("metric_route"."maxMs", EXCLUDED."maxMs"),
+             "lastCallAt" = now(),
+             "updatedAt"  = now()`,
+          [normalizedRoute, method, String(status), durationMs],
+        )
+        .catch((err) => this.logError(`route metric for ${normalizedRoute}`, err)),
 
-    await this.routeRepo.save(routeEntity).catch((err) => {
-      this.log.error(`Failed to persist route metric for ${normalizedRoute}`, err instanceof Error ? err.stack : String(err));
-    });
+      this.dailyRepo
+        .query(
+          `INSERT INTO "metric_daily" ("day", "count") VALUES ($1, 1)
+           ON CONFLICT ("day") DO UPDATE SET "count" = "metric_daily"."count" + 1, "updatedAt" = now()`,
+          [dayKey],
+        )
+        .catch((err) => this.logError(`daily metric for ${dayKey}`, err)),
+    ]);
+  }
 
-    let dailyEntity = await this.dailyRepo.findOne({ where: { day: dayKey } });
-    if (!dailyEntity) {
-      dailyEntity = this.dailyRepo.create({ day: dayKey, count: 0 });
-    }
-    dailyEntity.count += 1;
-    await this.dailyRepo.save(dailyEntity).catch((err) => {
-      this.log.error(`Failed to persist daily metric for ${dayKey}`, err instanceof Error ? err.stack : String(err));
-    });
+  private logError(what: string, err: unknown): void {
+    this.log.error(`Failed to persist ${what}`, err instanceof Error ? err.stack : String(err));
   }
 
   async snapshot(): Promise<MetricsSnapshot> {
-    const meta = await this.ensureMeta();
-    const [routes, dailyRows] = await Promise.all([
+    await this.ensureMeta();
+    // Frisch lesen: totalCount wird atomar in der DB erhöht, der Cache kennt den Stand nicht
+    const [meta, routes, dailyRows] = await Promise.all([
+      this.metaRepo.findOneOrFail({ where: { id: 'global' } }),
       this.routeRepo.find(),
       this.dailyRepo.find(),
     ]);
