@@ -27,6 +27,10 @@ export class Teacher {
   @Column({ default: false })
   gradingEnabled: boolean;
 
+  /** Aufbewahrungsdauer in Jahren nach Schuljahresende; null = keine Frist */
+  @Column({ type: 'int', nullable: true })
+  retentionYears: number | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

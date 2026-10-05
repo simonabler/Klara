@@ -8,11 +8,12 @@ import { SubjectDto, AssessmentTypeDto, AssessmentSchema } from '@app/domain';
 import { AuthService } from '../../auth/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { RetentionSettingsComponent } from '../school-year/retention-settings.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RetentionSettingsComponent],
   template: `
     <div class="page">
       <header class="page-header">
@@ -145,6 +146,12 @@ import { firstValueFrom } from 'rxjs';
             <span class="toggle-label">{{ gradingEnabled() ? 'Ein' : 'Aus' }}</span>
           </button>
         </div>
+      </section>
+
+      <!-- Aufbewahrung -->
+      <section class="settings-section" id="aufbewahrung">
+        <div class="section-label">Aufbewahrung &amp; Löschfristen</div>
+        <app-retention-settings />
       </section>
 
       <!-- Datenschutz & Konto -->

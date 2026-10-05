@@ -16,6 +16,7 @@ import { NoteModule } from './note/note.module';
 import { AssessmentModule } from './assessment/assessment.module';
 import { SeedModule } from './seed/seed.module';
 import { TimetableModule } from './timetable/timetable.module';
+import { SchoolYearModule } from './school-year/school-year.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { isMetricsEnabled } from './metrics/metrics-enabled';
 
@@ -93,6 +94,7 @@ const migrationsPath = join(__dirname, '..', 'migrations', '*.js');
     AssessmentModule,
     SeedModule,
     TimetableModule,
+    SchoolYearModule,
     // Metriken + Anomaly-Guard: nur mit METRICS_ENABLED=true und Postgres.
     // ConfigModule.forRoot() oben hat die .env zu diesem Zeitpunkt bereits geladen.
     ...(isMetricsEnabled() ? [MetricsModule] : []),

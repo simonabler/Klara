@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { Student } from './student.entity';
 import { Parent } from '../parent/parent.entity';
 import { Class } from '../class/class.entity';
+import { deleteAvatarFiles } from '../common/avatar-files';
 import { CreateStudentDto, ImportStudentRowDto, ImportResultDto, UpdateStudentDto } from '@app/domain';
 
 /**
@@ -153,8 +154,11 @@ export class StudentService {
     avatarUrl: string,
   ): Promise<Student> {
     const student = await this.findOne(id, teacherId);
+    const previous = student.avatarUrl;
     student.avatarUrl = avatarUrl;
     await this.studentRepo.save(student);
+    // Altes Bild entfernen, damit keine verwaisten Fotos liegen bleiben
+    if (previous && previous !== avatarUrl) await deleteAvatarFiles([previous]);
     return student;
   }
 
@@ -333,7 +337,9 @@ export class StudentService {
 
     async remove(id: string, teacherId: string): Promise<void> {
     const student = await this.findOne(id, teacherId);
+    const avatarUrl = student.avatarUrl;
     await this.studentRepo.remove(student);
+    await deleteAvatarFiles([avatarUrl]);
   }
 
 }

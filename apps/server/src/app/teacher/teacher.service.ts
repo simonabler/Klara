@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Teacher } from './teacher.entity';
+import { deleteAvatarFiles } from '../common/avatar-files';
 
 @Injectable()
 export class TeacherService {
@@ -46,6 +47,11 @@ export class TeacherService {
   async deleteAccount(id: string): Promise<void> {
     const teacher = await this.teacherRepo.findOne({ where: { id } });
     if (!teacher) return;
+    // Avatar-URLs vor dem Löschen merken – die Schüler verschwinden per CASCADE
+    const students = (await this.teacherRepo.manager
+      .getRepository('Student')
+      .find({ where: { teacherId: id }, select: ['avatarUrl'] })) as { avatarUrl: string | null }[];
     await this.teacherRepo.remove(teacher);
+    await deleteAvatarFiles(students.map(s => s.avatarUrl));
   }
 }

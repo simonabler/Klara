@@ -298,7 +298,8 @@ Klara speichert personenbezogene Daten von Schülerinnen und Schülern (Name, Ge
 | Recht | Umsetzung in Klara |
 |---|---|
 | **Auskunft** (Art. 15) | Schülerdaten sind in der App einsehbar; vollständiger Export über `GET /api/auth/export` |
-| **Löschung** (Art. 17) | Schüler können einzeln gelöscht werden (inkl. aller verknüpften Daten via CASCADE). Lehrkräfte können ihr Konto unter Einstellungen löschen. |
+| **Löschung** (Art. 17) | Schüler können einzeln gelöscht werden (inkl. aller verknüpften Daten und des Profilbilds). Lehrkräfte können ihr Konto unter Einstellungen löschen. |
+| **Speicherbegrenzung** (Art. 5 Abs. 1 lit. e) | Unter Einstellungen › Aufbewahrung wird eine Frist (1–10 Jahre nach Schuljahresende) gewählt. Abgelaufene Schuljahre werden auf der Startseite gemeldet und nach Bestätigung gelöscht: Klassen, deren Notizen und Leistungen sowie Schüler/innen, die in keiner anderen Klasse mehr sind. Es wird nichts automatisch gelöscht. |
 | **Portabilität** (Art. 20) | Export aller Daten einer Lehrkraft als strukturiertes JSON über `GET /api/auth/export` |
 
 ### Technische Maßnahmen

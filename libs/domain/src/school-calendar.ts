@@ -87,3 +87,42 @@ export function schoolWeekIndex(date: Date): number {
 export function isWeekA(date: Date): boolean {
   return schoolWeekIndex(date) % 2 === 0;
 }
+
+// ── Schuljahreswechsel und Aufbewahrung ──────────────────────────────────────
+
+/** Gültiges Schuljahr im Format '2026/27' (Folgejahr passend zum Startjahr) */
+export function isValidSchoolYear(schoolYear: string): boolean {
+  const m = /^(\d{4})\/(\d{2})$/.exec(schoolYear);
+  return !!m && (parseInt(m[1], 10) + 1) % 100 === parseInt(m[2], 10);
+}
+
+/** Folgeschuljahr, z. B. '2026/27' → '2027/28' */
+export function nextSchoolYear(schoolYear: string): string {
+  const next = schoolYearStart(schoolYear) + 1;
+  return `${next}/${String(next + 1).slice(-2)}`;
+}
+
+/**
+ * Namensvorschlag für die Klasse im Folgejahr: führende Zahl + 1.
+ * '3A' → '4A', '1b' → '2b'; ohne führende Zahl bleibt der Name gleich.
+ */
+export function suggestPromotedClassName(name: string): string {
+  const m = /^(\s*)(\d+)(.*)$/.exec(name);
+  return m ? `${m[1]}${parseInt(m[2], 10) + 1}${m[3]}` : name;
+}
+
+/**
+ * Ab diesem Tag dürfen die Daten eines Schuljahres gelöscht werden:
+ * Schuljahresende (31.08.) plus Aufbewahrungsdauer in Jahren, dann der Folgetag.
+ * Beispiel: 2024/25 mit 1 Jahr → ab 01.09.2026.
+ */
+export function retentionDeletableFrom(schoolYear: string, retentionYears: number): Date {
+  const end = schoolYearBounds(schoolYear).to;
+  return new Date(end.getFullYear() + retentionYears, end.getMonth(), end.getDate() + 1);
+}
+
+/** Ist die Aufbewahrungsfrist eines Schuljahres abgelaufen? */
+export function isRetentionDue(schoolYear: string, retentionYears: number, today: Date = new Date()): boolean {
+  const day = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return day >= retentionDeletableFrom(schoolYear, retentionYears);
+}

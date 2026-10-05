@@ -54,6 +54,7 @@ export const appRoutes: Route[] = [
       { path: 'classes',         loadComponent: () => import('./features/classes/list/class-list.component').then(m => m.ClassListComponent),       title: 'Klassen – Klara' },
       { path: 'classes/new',     loadComponent: () => import('./features/classes/form/class-form.component').then(m => m.ClassFormComponent),       title: 'Neue Klasse – Klara' },
       { path: 'classes/:id/edit',loadComponent: () => import('./features/classes/form/class-form.component').then(m => m.ClassFormComponent),       title: 'Klasse bearbeiten – Klara' },
+      { path: 'schuljahreswechsel', loadComponent: () => import('./features/school-year/rollover.component').then(m => m.RolloverComponent), title: 'Schuljahreswechsel – Klara' },
       { path: 'settings',        loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),              title: 'Einstellungen – Klara' },
     ],
   },

@@ -1,6 +1,11 @@
 import {
+  isRetentionDue,
+  isValidSchoolYear,
   isWeekA,
   mondayOf,
+  nextSchoolYear,
+  retentionDeletableFrom,
+  suggestPromotedClassName,
   schoolWeekIndex,
   schoolYearBounds,
   schoolYearOf,
@@ -113,5 +118,43 @@ describe('school-calendar', () => {
     it('beginnt jedes Schuljahr neu mit Woche A', () => {
       expect(isWeekA(d('2027-09-01'))).toBe(true);
     });
+  });
+});
+
+describe('Schuljahreswechsel und Aufbewahrung', () => {
+  const d = (iso: string) => {
+    const [y, m, day] = iso.split('-').map(Number);
+    return new Date(y, m - 1, day);
+  };
+
+  it('prüft das Format von Schuljahren', () => {
+    expect(isValidSchoolYear('2026/27')).toBe(true);
+    expect(isValidSchoolYear('2099/00')).toBe(true);
+    expect(isValidSchoolYear('2026/28')).toBe(false);
+    expect(isValidSchoolYear('2026-27')).toBe(false);
+    expect(isValidSchoolYear('26/27')).toBe(false);
+  });
+
+  it('liefert das Folgeschuljahr', () => {
+    expect(nextSchoolYear('2026/27')).toBe('2027/28');
+    expect(nextSchoolYear('2099/00')).toBe('2100/01');
+  });
+
+  it('schlägt den Klassennamen fürs Folgejahr vor', () => {
+    expect(suggestPromotedClassName('3A')).toBe('4A');
+    expect(suggestPromotedClassName('1b')).toBe('2b');
+    expect(suggestPromotedClassName('9 HAK')).toBe('10 HAK');
+    expect(suggestPromotedClassName('Förderkurs')).toBe('Förderkurs');
+  });
+
+  it('berechnet, ab wann ein Schuljahr gelöscht werden darf', () => {
+    expect(retentionDeletableFrom('2024/25', 1)).toEqual(d('2026-09-01'));
+    expect(retentionDeletableFrom('2024/25', 3)).toEqual(d('2028-09-01'));
+  });
+
+  it('ist erst ab dem Folgetag des Fristendes fällig', () => {
+    expect(isRetentionDue('2024/25', 1, d('2026-08-31'))).toBe(false);
+    expect(isRetentionDue('2024/25', 1, d('2026-09-01'))).toBe(true);
+    expect(isRetentionDue('2025/26', 1, d('2026-10-05'))).toBe(false);
   });
 });
