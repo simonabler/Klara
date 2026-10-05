@@ -7,6 +7,7 @@ import { TimetableEntryDto, ClassDto, SubjectDto } from '@app/domain';
 import { RepeatType } from '@app/domain';
 import { TimetableService } from './timetable.service';
 import { TimetableEntryFormComponent } from './timetable-entry-form.component';
+import { LessonNotePanelComponent } from './lesson-note-panel.component';
 import { ClassService } from '../classes/class.service';
 import { SubjectService } from '../classes/reference-data.service';
 import {
@@ -18,7 +19,7 @@ import {
 @Component({
   selector: 'app-timetable',
   standalone: true,
-  imports: [CommonModule, RouterLink, TimetableEntryFormComponent],
+  imports: [CommonModule, RouterLink, TimetableEntryFormComponent, LessonNotePanelComponent],
   template: `
     <div class="tt-page">
 
@@ -176,12 +177,12 @@ import {
                       class="tt-lesson"
                       [style.border-left-color]="entry.color ?? '#7BAABA'"
                       [style.background]="hexToFaint(entry.color)"
-                      (click)="openEdit(entry)"
-                      (keydown.enter)="openEdit(entry)"
-                      (keydown.space)="$event.preventDefault(); openEdit(entry)"
+                      (click)="openLesson(entry, day)"
+                      (keydown.enter)="openLesson(entry, day)"
+                      (keydown.space)="$event.preventDefault(); openLesson(entry, day)"
                       tabindex="0"
                       role="button"
-                      [attr.aria-label]="entry.subjectName + ', ' + entry.className">
+                      [attr.aria-label]="'Notiz zu ' + entry.subjectName + ', ' + entry.className">
                       <span class="tt-lesson-repeat">{{ getRepeatLabel(entry) }}</span>
                       <span class="tt-lesson-subject">{{ entry.subjectName }}</span>
                       <span class="tt-lesson-class">{{ entry.className }}</span>
@@ -229,11 +230,12 @@ import {
                       class="tt-lesson tt-lesson-mobile"
                       [style.border-left-color]="entry.color ?? '#7BAABA'"
                       [style.background]="hexToFaint(entry.color)"
-                      (click)="openEdit(entry)"
-                      (keydown.enter)="openEdit(entry)"
-                      (keydown.space)="$event.preventDefault(); openEdit(entry)"
+                      (click)="openLesson(entry, activeMobileDay())"
+                      (keydown.enter)="openLesson(entry, activeMobileDay())"
+                      (keydown.space)="$event.preventDefault(); openLesson(entry, activeMobileDay())"
                       tabindex="0"
-                      role="button">
+                      role="button"
+                      [attr.aria-label]="'Notiz zu ' + entry.subjectName + ', ' + entry.className">
                       <div class="tt-lesson-mobile-main">
                         <span class="tt-lesson-subject">{{ entry.subjectName }}</span>
                         <span class="tt-lesson-class">{{ entry.className }}</span>
@@ -293,16 +295,26 @@ import {
 
     <!-- ── Slide-in Panel ── -->
     <div class="tt-panel" [class.open]="panelOpen()">
-      <app-timetable-entry-form
-        [entry]="editEntry()"
-        [prefillSlot]="prefillSlot()"
-        [schoolYear]="selectedYear()"
-        [classes]="classes()"
-        [subjects]="subjects()"
-        (saved)="onSaved($event)"
-        (deleted)="onDeleted($event)"
-        (cancelled)="closePanel()"
-      />
+      @if (panelMode() === 'lesson') {
+        <!-- Klick auf eine Stunde: Notizen für die Klasse -->
+        <app-lesson-note-panel
+          [entry]="lessonEntry()"
+          [date]="lessonDate()"
+          (editEntry)="openEdit(lessonEntry()!)"
+          (closed)="closePanel()"
+        />
+      } @else {
+        <app-timetable-entry-form
+          [entry]="editEntry()"
+          [prefillSlot]="prefillSlot()"
+          [schoolYear]="selectedYear()"
+          [classes]="classes()"
+          [subjects]="subjects()"
+          (saved)="onSaved($event)"
+          (deleted)="onDeleted($event)"
+          (cancelled)="closePanel()"
+        />
+      }
     </div>
   `,
   styles: [`
@@ -679,6 +691,10 @@ export class TimetableComponent implements OnInit {
   readonly panelOpen      = signal(false);
   readonly editEntry      = signal<TimetableEntryDto | null>(null);
   readonly prefillSlot    = signal<{ day: number; period: number } | null>(null);
+  /** 'lesson' = Notiz-Panel einer Stunde, 'entry' = Stunde anlegen/bearbeiten */
+  readonly panelMode      = signal<'lesson' | 'entry'>('entry');
+  readonly lessonEntry    = signal<TimetableEntryDto | null>(null);
+  readonly lessonDate     = signal<Date | null>(null);
   readonly activeMobileDay = signal<number>(this.todayDayOfWeek());
 
   // ── Computed ───────────────────────────────────────────────────────────
@@ -786,12 +802,22 @@ export class TimetableComponent implements OnInit {
 
   // ── Panel ──────────────────────────────────────────────────────────────
   openPanel(day?: number, period?: number): void {
+    this.panelMode.set('entry');
     this.editEntry.set(null);
     this.prefillSlot.set(day && period ? { day, period } : null);
     this.panelOpen.set(true);
   }
 
+  /** Klick auf eine Stunde: Notiz-Panel mit der Klasse dieser Stunde */
+  openLesson(entry: TimetableEntryDto, day: number): void {
+    this.lessonEntry.set(entry);
+    this.lessonDate.set(this.getDayDate(day));
+    this.panelMode.set('lesson');
+    this.panelOpen.set(true);
+  }
+
   openEdit(entry: TimetableEntryDto): void {
+    this.panelMode.set('entry');
     this.editEntry.set(entry);
     this.prefillSlot.set(null);
     this.panelOpen.set(true);
