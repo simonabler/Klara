@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { TeacherService } from '../teacher/teacher.service';
 import { JwtPayload } from './jwt-payload.interface';
+import { requireJwtSecret } from './jwt-secret';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -19,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         (req: Request) => req?.cookies?.['klara_token'] ?? null,
       ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET')!,
+      secretOrKey: requireJwtSecret(configService.get<string>('JWT_SECRET')),
       passReqToCallback: false,
     });
   }

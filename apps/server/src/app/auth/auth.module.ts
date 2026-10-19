@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { TeacherModule } from '../teacher/teacher.module';
 import { Teacher } from '../teacher/teacher.entity';
 import { ExportService } from './export.service';
+import { requireJwtSecret } from './jwt-secret';
 import { Student } from '../student/student.entity';
 import { Note } from '../note/note.entity';
 import { AssessmentEvent } from '../assessment/assessment-event.entity';
@@ -23,7 +24,7 @@ import { Class } from '../class/class.entity';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
+        secret: requireJwtSecret(configService.get<string>('JWT_SECRET')),
         signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRES_IN') as any ?? '8h',
         },

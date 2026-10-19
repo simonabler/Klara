@@ -175,7 +175,7 @@ UPLOAD_DIR=/data/uploads/avatars
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=https://klara.abler.tirol/api/auth/google/callback
-JWT_SECRET=change-me-in-production
+JWT_SECRET=                # Pflicht: openssl rand -base64 48 (mind. 32 Byte, sonst kein Start in Produktion)
 JWT_EXPIRES_IN=8h
 
 # Metriken + Anomaly-Guard (nur mit Postgres)
