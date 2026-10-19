@@ -10,6 +10,7 @@ import { AssessmentType } from './assessment-type.entity';
 import { Student } from '../student/student.entity';
 import { Class } from '../class/class.entity';
 import { Note } from '../note/note.entity';
+import { OwnershipValidationService } from '../common/ownership-validation.service';
 import {
   CreateAssessmentEventDto,
   UpdateAssessmentEventDto,
@@ -41,6 +42,7 @@ export class AssessmentService {
     private readonly noteRepo: Repository<Note>,
     @InjectRepository(AssessmentType)
     private readonly typeRepo: Repository<AssessmentType>,
+    private readonly ownership: OwnershipValidationService,
   ) {}
 
   // ── Events ──────────────────────────────────────────────────────────────
@@ -66,6 +68,8 @@ export class AssessmentService {
   }
 
   async createEvent(dto: CreateAssessmentEventDto, teacherId: string): Promise<AssessmentEvent> {
+    // Vor dem Speichern prüfen – sonst bliebe bei fremden Schülern ein leeres Event zurück
+    await this.ownership.assertStudents(teacherId, dto.studentIds ?? []);
     const event = this.eventRepo.create({
       title:     dto.title,
       type:      dto.type,
@@ -105,6 +109,8 @@ export class AssessmentService {
 
   async assignStudents(eventId: string, studentIds: string[], teacherId: string): Promise<AssessmentEvent> {
     const event = await this.findOneEvent(eventId, teacherId);
+    // Nur eigene Schüler – vor jeder Änderung prüfen, damit nichts halb geschrieben wird
+    await this.ownership.assertStudents(teacherId, studentIds);
 
     // Bestehende Ergebnisse holen – vorhandene Schüler behalten
     const existingStudentIds = new Set((event.results ?? []).map(r => r.studentId));
@@ -134,9 +140,28 @@ export class AssessmentService {
     dto: UpsertStudentResultDto,
     teacherId: string,
   ): Promise<StudentResult> {
-    // Sicherstellen dass das Event der Lehrkraft gehört
+    // Sicherstellen dass Event und Schüler der Lehrkraft gehören
     await this.findOneEvent(eventId, teacherId);
+    await this.ownership.assertStudents(teacherId, [dto.studentId]);
+    return this.saveResult(eventId, dto);
+  }
 
+  async bulkUpsertResults(
+    eventId: string,
+    results: UpsertStudentResultDto[],
+    teacherId: string,
+  ): Promise<AssessmentEvent> {
+    // Alle Schüler vorab prüfen – ein fremder Schüler bricht den ganzen Vorgang ab
+    await this.findOneEvent(eventId, teacherId);
+    await this.ownership.assertStudents(teacherId, results.map(r => r.studentId));
+    for (const dto of results) {
+      await this.saveResult(eventId, dto);
+    }
+    return this.findOneEvent(eventId, teacherId);
+  }
+
+  /** Speichert ein Ergebnis – Event und Schüler müssen vorher geprüft sein */
+  private async saveResult(eventId: string, dto: UpsertStudentResultDto): Promise<StudentResult> {
     let result = await this.resultRepo.findOne({
       where: { assessmentEventId: eventId, studentId: dto.studentId },
     });
@@ -154,17 +179,6 @@ export class AssessmentService {
     if (dto.comment  !== undefined) result.comment  = dto.comment  ?? null;
 
     return this.resultRepo.save(result);
-  }
-
-  async bulkUpsertResults(
-    eventId: string,
-    results: UpsertStudentResultDto[],
-    teacherId: string,
-  ): Promise<AssessmentEvent> {
-    for (const dto of results) {
-      await this.upsertResult(eventId, dto, teacherId);
-    }
-    return this.findOneEvent(eventId, teacherId);
   }
 
   // ── Ergebnisse für einen Schüler ──────────────────────────────────────────

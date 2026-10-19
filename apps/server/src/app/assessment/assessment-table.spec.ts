@@ -32,7 +32,7 @@ function setup(opts: {
   const resultRepo = { find: jest.fn().mockResolvedValue(opts.results) };
 
   const service = new AssessmentService(
-    eventRepo as any, resultRepo as any, classRepo as any, noteRepo as any, typeRepo as any,
+    eventRepo as any, resultRepo as any, classRepo as any, noteRepo as any, typeRepo as any, {} as any,
   );
   return { service, eventRepo, classRepo, qb };
 }
