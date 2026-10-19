@@ -209,11 +209,20 @@ describe('AssessmentService', () => {
   });
 
   describe('bulkUpsertResults', () => {
-    it('should call upsertResult for each entry', async () => {
+    function withTransaction() {
+      const tx = {
+        find: jest.fn().mockResolvedValue([{ studentId: 's1', assessmentEventId: eventId, grade: 5 }]),
+        create: jest.fn((d) => d),
+        save: jest.fn((d) => Promise.resolve(d)),
+      };
+      const transaction = jest.fn((cb) => cb({ getRepository: () => tx }));
+      (resultRepo as any).manager = { transaction };
+      return { tx, transaction };
+    }
+
+    it('speichert alle Einträge in einer Transaktion mit einem save', async () => {
       eventRepo.findOne.mockResolvedValue({ ...mockEvent, results: [] });
-      resultRepo.findOne.mockResolvedValue(null);
-      resultRepo.create.mockImplementation((d) => d);
-      resultRepo.save.mockImplementation((d) => Promise.resolve({ ...d, grade: d.grade }));
+      const { tx, transaction } = withTransaction();
 
       const results = [
         { studentId: 's1', grade: 1 },
@@ -221,7 +230,16 @@ describe('AssessmentService', () => {
         { studentId: 's3', grade: 3 },
       ];
       await service.bulkUpsertResults(eventId, results, teacherId);
-      expect(resultRepo.save).toHaveBeenCalledTimes(3);
+
+      expect(transaction).toHaveBeenCalledTimes(1);
+      expect(tx.find).toHaveBeenCalledTimes(1); // vorhandene einmal laden, nicht pro Schüler
+      expect(tx.save).toHaveBeenCalledTimes(1);
+      const saved = tx.save.mock.calls[0][0];
+      expect(saved).toHaveLength(3);
+      // vorhandenes Ergebnis von s1 wird aktualisiert, s2/s3 neu angelegt
+      expect(saved[0]).toMatchObject({ studentId: 's1', grade: 1 });
+      expect(tx.create).toHaveBeenCalledTimes(2);
+      expect(resultRepo.save).not.toHaveBeenCalled();
     });
   });
 

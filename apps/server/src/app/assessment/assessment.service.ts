@@ -29,6 +29,15 @@ import {
   weightedAverage,
 } from './beurteilung-calc';
 
+/** Übernimmt die gesetzten Felder aus dem DTO; `null` löscht einen Wert */
+function applyResult(result: StudentResult, dto: UpsertStudentResultDto): StudentResult {
+  if (dto.grade    !== undefined) result.grade    = dto.grade    ?? null;
+  if (dto.points   !== undefined) result.points   = dto.points   ?? null;
+  if (dto.ptmValue !== undefined) result.ptmValue = dto.ptmValue ?? null;
+  if (dto.comment  !== undefined) result.comment  = dto.comment  ?? null;
+  return result;
+}
+
 @Injectable()
 export class AssessmentService {
   constructor(
@@ -159,31 +168,32 @@ export class AssessmentService {
     // Alle Schüler vorab prüfen – ein fremder Schüler bricht den ganzen Vorgang ab
     await this.findOneEvent(eventId, teacherId);
     await this.ownership.assertStudents(teacherId, results.map(r => r.studentId));
-    for (const dto of results) {
-      await this.saveResult(eventId, dto);
-    }
+
+    // Alles oder nichts: vorhandene Ergebnisse einmal laden, gemeinsam speichern
+    await this.resultRepo.manager.transaction(async (em) => {
+      const repo = em.getRepository(StudentResult);
+      const existing = results.length
+        ? await repo.find({
+            where: { assessmentEventId: eventId, studentId: In(results.map(r => r.studentId)) },
+          })
+        : [];
+      const byStudent = new Map(existing.map(r => [r.studentId, r]));
+      const toSave = results.map(dto =>
+        applyResult(byStudent.get(dto.studentId) ?? repo.create({ assessmentEventId: eventId, studentId: dto.studentId }), dto),
+      );
+      await repo.save(toSave);
+    });
     return this.findOneEvent(eventId, teacherId);
   }
 
   /** Speichert ein Ergebnis – Event und Schüler müssen vorher geprüft sein */
   private async saveResult(eventId: string, dto: UpsertStudentResultDto): Promise<StudentResult> {
-    let result = await this.resultRepo.findOne({
+    const result = await this.resultRepo.findOne({
       where: { assessmentEventId: eventId, studentId: dto.studentId },
     });
-
-    if (!result) {
-      result = this.resultRepo.create({
-        assessmentEventId: eventId,
-        studentId: dto.studentId,
-      });
-    }
-
-    if (dto.grade    !== undefined) result.grade    = dto.grade    ?? null;
-    if (dto.points   !== undefined) result.points   = dto.points   ?? null;
-    if (dto.ptmValue !== undefined) result.ptmValue = dto.ptmValue ?? null;
-    if (dto.comment  !== undefined) result.comment  = dto.comment  ?? null;
-
-    return this.resultRepo.save(result);
+    return this.resultRepo.save(
+      applyResult(result ?? this.resultRepo.create({ assessmentEventId: eventId, studentId: dto.studentId }), dto),
+    );
   }
 
   // ── Ergebnisse für einen Schüler ──────────────────────────────────────────

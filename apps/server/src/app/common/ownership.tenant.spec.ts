@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { ForbiddenException } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { AssessmentEventType, NoteType, RepeatType } from '@app/domain';
 import { OwnershipValidationService } from './ownership-validation.service';
 import { AssessmentService } from '../assessment/assessment.service';
@@ -322,6 +322,59 @@ describe('Eigentümerprüfung beim Schreiben (Mandantentrennung)', () => {
         teacherB.id
       );
       expect(ok).toMatchObject({ classId: classB.id, subjectId: subjectB.id });
+    });
+  });
+
+  describe('Bulk-Ergebnisse transaktional (K-06)', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    it('speichert alle Einträge und aktualisiert vorhandene', async () => {
+      const event = await eventOfB();
+      await assessments.upsertResult(
+        event.id,
+        { studentId: studentB.id, grade: 5 },
+        teacherB.id
+      );
+      const studentB2 = await ds
+        .getRepository(Student)
+        .save({ firstName: 'Bea', lastName: 'Berger', teacherId: teacherB.id });
+
+      await assessments.bulkUpsertResults(
+        event.id,
+        [
+          { studentId: studentB.id, grade: 1 },
+          { studentId: studentB2.id, grade: 2 },
+        ],
+        teacherB.id
+      );
+      const results = await resultsOf(event.id);
+      expect(results).toHaveLength(2);
+      expect(results.find((r) => r.studentId === studentB.id)?.grade).toBe(1);
+    });
+
+    it('rollt bei einem Fehler alles zurück', async () => {
+      const event = await eventOfB();
+      // erst wirklich schreiben, dann scheitern – die Transaktion muss alles verwerfen
+      const realSave = Repository.prototype.save;
+      jest
+        .spyOn(Repository.prototype, 'save')
+        .mockImplementation(async function (
+          this: Repository<any>,
+          ...args: any[]
+        ) {
+          await (realSave as any).apply(this, args);
+          throw new Error('DB-Fehler nach dem Schreiben');
+        });
+
+      await expect(
+        assessments.bulkUpsertResults(
+          event.id,
+          [{ studentId: studentB.id, grade: 1 }],
+          teacherB.id
+        )
+      ).rejects.toThrow('DB-Fehler nach dem Schreiben');
+      jest.restoreAllMocks();
+      expect(await resultsOf(event.id)).toEqual([]);
     });
   });
 });
