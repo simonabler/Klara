@@ -19,18 +19,18 @@ RUN npx tsc -p apps/server/tsconfig.typeorm.json --noEmit false
 #    Webpack kopiert dabei dist/typeorm/.../migrations/*.js → dist/apps/server/migrations/
 RUN npx nx build server
 
+# 3. Von Nx erzeugtes package-lock.json reparieren: Nx 21.4 hebt beim Beschneiden
+#    verschachtelte Pakete eine Ebene zu hoch (z. B. content-type 2.x über express 5,
+#    das ^1.0.5 braucht) → `npm ci` scheitert. npm ergänzt nur fehlende Einträge,
+#    alle vorhandenen Versionen bleiben gepinnt.
+RUN cd dist/apps/server && npm install --package-lock-only --omit=dev --ignore-scripts --no-audit --no-fund
+
 # --- Runtime stage ---------------------------------------------------------
 FROM node:24-alpine AS runtime
 
 ENV NODE_ENV=production
 
 RUN apk update && apk upgrade
-RUN apk add --no-cache python3 make g++ sqlite-dev py3-setuptools
-
-
-
-# ENV npm_config_build_from_source=true
-# RUN npm rebuild sqlite3 -g --build-from-sourcepy3-setuptools
 
 WORKDIR /app
 RUN chown node:node -R .
@@ -38,11 +38,11 @@ RUN chown node:node -R .
 USER node
 
 # Copy built server and its production deps
+# Nx erzeugt package.json + package-lock.json mit fixen Versionen (inkl. pg und sharp).
+# sharp bringt vorkompilierte Binaries für Alpine (musl) mit – keine Build-Tools nötig.
 COPY --from=build --chown=node:node /build/klara/dist/apps/server ./
-RUN if [ -f package.json ]; then npm ci --omit=dev --ignore-scripts; fi
+RUN npm ci --omit=dev --ignore-scripts
 
-RUN npm rebuild sqlite3 --build-from-source
-RUN npm install pg sharp
 COPY --chown=node:node ./apps/server/entrypoint.backend.sh .
 
 EXPOSE 3000

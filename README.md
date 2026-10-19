@@ -163,6 +163,10 @@ NODE_ENV=production
 PORT=3000
 FRONTEND_URL=https://klara.abler.tirol   # erlaubte CORS-Origin + Redirect nach Login
 
+# Frontend-Container (Angular SSR): Hosts für serverseitiges Rendern, kommagetrennt.
+# Ersetzt die Vorgabe "localhost"; ohne passenden Eintrag antwortet SSR mit einem Fehler.
+NG_ALLOWED_HOSTS=klara.abler.tirol
+
 # Uploads (Avatare)
 # Vollständiger Pfad zum Upload-Verzeichnis inkl. Unterordner
 UPLOAD_DIR=/data/uploads/avatars
@@ -213,6 +217,22 @@ npm run migration:show
 ```
 
 Schemaänderungen kommen immer über eine Migration in `apps/server/src/migrations/` – nie über `TYPEORM_SYNC` in Produktion.
+
+### Avatar-Uploads bereinigen
+
+`apps/server/scripts/sanitize-avatars.ts` prüft alle Dateien in `UPLOAD_DIR`. Was sharp nicht als JPEG, PNG oder WebP erkennt, wird nach `UPLOAD_DIR/../quarantine/` verschoben (nicht gelöscht) und `students.avatarUrl` auf `NULL` gesetzt. Gültige Bilder werden wie beim Upload neu kodiert (max. 512×512, WebP, ohne EXIF/GPS) und bekommen bei Bedarf einen neuen Namen `<uuid>.webp`; die Verweise in der Datenbank werden angepasst. Am Ende steht eine Zusammenfassung. Das Skript liest dieselben `TYPEORM_*`- und `UPLOAD_DIR`-Variablen wie das Backend und braucht Postgres.
+
+```bash
+# Lokal (ts-node)
+npm run avatars:sanitize -- --dry-run   # nur anzeigen, nichts ändern
+npm run avatars:sanitize
+
+# Im Backend-Container (wird beim Build nach dist/apps/server/sanitize-avatars.js gebaut)
+docker compose exec backend node sanitize-avatars.js --dry-run
+docker compose exec backend node sanitize-avatars.js
+```
+
+Immer zuerst mit `--dry-run` laufen lassen und die Ausgabe prüfen. Dateien in `quarantine/` werden nicht ausgeliefert und können nach Sichtung manuell gelöscht werden.
 
 ### CI
 
@@ -308,6 +328,7 @@ Klara speichert personenbezogene Daten von Schülerinnen und Schülern (Name, Ge
 - Beim Löschen einer Lehrkraft werden via CASCADE alle Schüler, Notizen und Leistungsdaten dieser Lehrkraft mitgelöscht
 - Authentifizierung via httpOnly-Cookie (kein Token in URL oder localStorage)
 - `TYPEORM_SYNC` ist in Produktion deaktiviert (kein unbeabsichtigter Datenverlust)
+- Profilbilder werden beim Upload anhand des Inhalts geprüft und immer neu als WebP kodiert – dabei fallen alle Metadaten weg (EXIF, GPS). Ausgeliefert werden nur Bilddateien aus dem Avatar-Ordner, mit `nosniff` und restriktiver CSP
 
 ---
 

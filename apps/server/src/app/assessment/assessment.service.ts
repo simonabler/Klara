@@ -3,10 +3,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, In, Repository } from 'typeorm';
+import { Between, FindOperator, FindOptionsWhere, In, Repository } from 'typeorm';
 import { AssessmentEvent } from './assessment-event.entity';
 import { StudentResult } from './student-result.entity';
+import { AssessmentType } from './assessment-type.entity';
 import { Student } from '../student/student.entity';
+import { Class } from '../class/class.entity';
+import { Note } from '../note/note.entity';
 import {
   CreateAssessmentEventDto,
   UpdateAssessmentEventDto,
@@ -32,8 +35,12 @@ export class AssessmentService {
     private readonly eventRepo: Repository<AssessmentEvent>,
     @InjectRepository(StudentResult)
     private readonly resultRepo: Repository<StudentResult>,
-    @InjectRepository(Student)
-    private readonly studentRepo: Repository<Student>,
+    @InjectRepository(Class)
+    private readonly classRepo: Repository<Class>,
+    @InjectRepository(Note)
+    private readonly noteRepo: Repository<Note>,
+    @InjectRepository(AssessmentType)
+    private readonly typeRepo: Repository<AssessmentType>,
   ) {}
 
   // ── Events ──────────────────────────────────────────────────────────────
@@ -183,25 +190,27 @@ export class AssessmentService {
     gradingEnabled = false,
     semester?: Semester,
   ): Promise<import('@app/domain').BeurteilungTableDto> {
-    // 1. Klasse mit Schülern laden
-    const classRepo = this.studentRepo.manager.getRepository('Class');
-    const cls: any = await classRepo.findOne({
+    // 1. Klasse mit Schülern laden – nur die eigene. Fremde oder unbekannte
+    //    Klassen ergeben 404, bevor irgendetwas anderes geladen wird.
+    const cls = await this.classRepo.findOne({
       where: { id: classId, teacherId },
       relations: ['students'],
     });
-    const students: Student[] = cls?.students ?? [];
+    if (!cls) throw new NotFoundException('Klasse nicht gefunden');
+    const students: Student[] = cls.students ?? [];
 
     // 2. Optional auf ein Semester eingrenzen. Das Schuljahr kommt aus dem
     //    Request, sonst von der Klasse, sonst ist es das aktuelle.
     //    Ohne Semester bleiben (wie bisher) alle Events der Klasse sichtbar.
     const range = semester
-      ? semesterBounds(schoolYear || cls?.schoolYear || schoolYearOf(new Date()), semester)
+      ? semesterBounds(schoolYear || cls.schoolYear || schoolYearOf(new Date()), semester)
       : undefined;
 
     // 3. Events dieser Klasse/Fach laden
-    const where: any = { teacherId, classId };
+    const where: FindOptionsWhere<AssessmentEvent> = { teacherId, classId };
     if (subjectId) where.subjectId = subjectId;
-    if (range) where.date = Between(toIsoDate(range.from), toIsoDate(range.to));
+    // Spalte vom Typ 'date' → Vergleich mit ISO-Datum (YYYY-MM-DD), nicht mit Date
+    if (range) where.date = Between(toIsoDate(range.from), toIsoDate(range.to)) as FindOperator<unknown> as FindOperator<Date>;
 
     const events = await this.eventRepo.find({
       where,
@@ -216,13 +225,13 @@ export class AssessmentService {
       : [];
 
     // 5. Notiz-Anzahl pro Schüler/Fach laden (im Semester-Zeitraum, falls gewählt)
-    const noteRepo = this.studentRepo.manager.getRepository('Note');
-    const noteQuery = noteRepo
+    const noteQuery = this.noteRepo
       .createQueryBuilder('n')
       .select('n.studentId', 'studentId')
       .addSelect('COUNT(n.id)', 'count')
       .where('n.classId = :classId', { classId })
-      .andWhere(subjectId ? 'n.subjectId = :subjectId' : '1=1', { subjectId });
+      .andWhere('n.teacherId = :teacherId', { teacherId });
+    if (subjectId) noteQuery.andWhere('n.subjectId = :subjectId', { subjectId });
     if (range) {
       const dayAfter = new Date(range.to.getFullYear(), range.to.getMonth(), range.to.getDate() + 1);
       noteQuery.andWhere('n.createdAt >= :from AND n.createdAt < :until', { from: range.from, until: dayAfter });
@@ -234,8 +243,7 @@ export class AssessmentService {
     const noteCountMap = new Map(noteCounts.map(r => [r.studentId, parseInt(r.count, 10)]));
 
     // 6. Leistungstyp, Schema und Gewicht je Event bestimmen
-    const typeRepo = this.studentRepo.manager.getRepository('AssessmentType');
-    const types = (await typeRepo.find({ where: { teacherId } })) as AssessmentTypeLike[];
+    const types: AssessmentTypeLike[] = await this.typeRepo.find({ where: { teacherId } });
 
     const eventMeta = new Map(events.map(e => {
       const type = resolveType(e.type, types);

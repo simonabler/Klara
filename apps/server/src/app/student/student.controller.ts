@@ -92,9 +92,7 @@ export class StudentController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req: Request,
   ) {
-    // Relativer Pfad – funktioniert hinter jedem Reverse-Proxy
-    const avatarUrl = `/api/uploads/avatars/${file.filename}`;
-    return this.studentService.updateAvatar(id, (req.user as any).id, avatarUrl);
+    return this.studentService.updateAvatar(id, (req.user as any).id, file);
   }
 
   @Delete(':id')

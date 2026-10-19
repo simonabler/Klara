@@ -4,7 +4,9 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { AssessmentService } from './assessment.service';
 import { AssessmentEvent } from './assessment-event.entity';
 import { StudentResult } from './student-result.entity';
-import { Student } from '../student/student.entity';
+import { AssessmentType } from './assessment-type.entity';
+import { Class } from '../class/class.entity';
+import { Note } from '../note/note.entity';
 import { AssessmentEventType } from '@app/domain';
 import { NotFoundException } from '@nestjs/common';
 
@@ -22,8 +24,10 @@ const mockResultRepo = () => ({
   save: jest.fn(),
   remove: jest.fn(),
 });
-const mockStudentRepo = () => ({
-  findBy: jest.fn(),
+const mockRepo = () => ({
+  find: jest.fn(),
+  findOne: jest.fn(),
+  createQueryBuilder: jest.fn(),
 });
 
 describe('AssessmentService', () => {
@@ -37,7 +41,9 @@ describe('AssessmentService', () => {
         AssessmentService,
         { provide: getRepositoryToken(AssessmentEvent), useFactory: mockEventRepo },
         { provide: getRepositoryToken(StudentResult),   useFactory: mockResultRepo },
-        { provide: getRepositoryToken(Student),         useFactory: mockStudentRepo },
+        { provide: getRepositoryToken(Class),           useFactory: mockRepo },
+        { provide: getRepositoryToken(Note),            useFactory: mockRepo },
+        { provide: getRepositoryToken(AssessmentType),  useFactory: mockRepo },
       ],
     }).compile();
 

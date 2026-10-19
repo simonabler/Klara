@@ -2,7 +2,7 @@ import { unlink } from 'fs/promises';
 import { basename, join, resolve } from 'path';
 import { Logger } from '@nestjs/common';
 
-const AVATAR_URL_PREFIX = '/api/uploads/avatars/';
+export const AVATAR_URL_PREFIX = '/api/uploads/avatars/';
 const log = new Logger('AvatarFiles');
 
 /**

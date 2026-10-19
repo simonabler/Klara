@@ -4,7 +4,7 @@ import { AssessmentService } from './assessment.service';
 
 /**
  * getTable: Gewichtung, Skalen und Semester-Filter.
- * Repositories sind gemockt; manager.getRepository liefert Klasse, Notizen und Typen.
+ * Repositories sind gemockt.
  */
 function setup(opts: {
   events: any[];
@@ -27,13 +27,13 @@ function setup(opts: {
   };
   const noteRepo = { createQueryBuilder: jest.fn(() => qb) };
   const typeRepo = { find: jest.fn().mockResolvedValue(opts.types ?? []) };
-  const repos: Record<string, any> = { Class: classRepo, Note: noteRepo, AssessmentType: typeRepo };
 
   const eventRepo = { find: jest.fn().mockResolvedValue(opts.events) };
   const resultRepo = { find: jest.fn().mockResolvedValue(opts.results) };
-  const studentRepo = { manager: { getRepository: (name: string) => repos[name] } };
 
-  const service = new AssessmentService(eventRepo as any, resultRepo as any, studentRepo as any);
+  const service = new AssessmentService(
+    eventRepo as any, resultRepo as any, classRepo as any, noteRepo as any, typeRepo as any,
+  );
   return { service, eventRepo, classRepo, qb };
 }
 
@@ -102,6 +102,24 @@ describe('AssessmentService.getTable', () => {
     const { service, classRepo } = setup({ events, results, types });
     await service.getTable('t1', 'c1', 'sub1');
     expect(classRepo.findOne).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'c1', teacherId: 't1' } }));
+  });
+
+  it('wirft 404 für eine fremde Klasse, bevor Events geladen werden', async () => {
+    const { service, classRepo, eventRepo } = setup({ events, results, types });
+    classRepo.findOne.mockResolvedValue(null);
+    await expect(service.getTable('t2', 'c1')).rejects.toThrow('Klasse nicht gefunden');
+    expect(eventRepo.find).not.toHaveBeenCalled();
+  });
+
+  it('zählt nur Notizen der eigenen Lehrkraft, ohne Dummy-Bedingung', async () => {
+    const { service, qb } = setup({ events, results, types });
+    await service.getTable('t1', 'c1');
+    expect(qb.andWhere).toHaveBeenCalledWith('n.teacherId = :teacherId', { teacherId: 't1' });
+    expect(qb.andWhere).not.toHaveBeenCalledWith('1=1', expect.anything());
+    expect(qb.andWhere).not.toHaveBeenCalledWith(expect.stringContaining('subjectId'), expect.anything());
+
+    await service.getTable('t1', 'c1', 'sub1');
+    expect(qb.andWhere).toHaveBeenCalledWith('n.subjectId = :subjectId', { subjectId: 'sub1' });
   });
 
   describe('Semester-Filter', () => {
