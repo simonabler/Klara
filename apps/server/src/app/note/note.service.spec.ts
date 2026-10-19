@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { NoteService } from './note.service';
+import { OwnershipValidationService } from '../common/ownership-validation.service';
 import { Note } from './note.entity';
 import { NoteType } from '@app/domain';
 
@@ -49,6 +50,10 @@ describe('NoteService', () => {
             save:    jest.fn(),
             remove:  jest.fn(),
           },
+        },
+        {
+          provide: OwnershipValidationService,
+          useValue: { assertOwned: jest.fn().mockResolvedValue(undefined) },
         },
       ],
     }).compile();

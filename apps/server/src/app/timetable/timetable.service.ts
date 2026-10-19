@@ -7,12 +7,14 @@ import {
   CreateTimetableEntryDto,
   UpdateTimetableEntryDto,
 } from '@app/domain';
+import { OwnershipValidationService } from '../common/ownership-validation.service';
 
 @Injectable()
 export class TimetableService {
   constructor(
     @InjectRepository(TimetableEntry)
     private readonly repo: Repository<TimetableEntry>,
+    private readonly ownership: OwnershipValidationService,
   ) {}
 
   async findAll(teacherId: string, schoolYear: string): Promise<TimetableEntryDto[]> {
@@ -28,6 +30,8 @@ export class TimetableService {
     teacherId: string,
     dto: CreateTimetableEntryDto,
   ): Promise<TimetableEntryDto> {
+    // Klasse und Fach müssen der Lehrkraft gehören
+    await this.ownership.assertOwned(teacherId, { classId: dto.classId, subjectId: dto.subjectId });
     const entry = this.repo.create({ ...dto, teacherId });
     const newEntry = await this.repo.save(entry);
     return this.toDto(await this.findOwned(teacherId, newEntry.id));
@@ -39,6 +43,7 @@ export class TimetableService {
     dto: UpdateTimetableEntryDto,
   ): Promise<TimetableEntryDto> {
     const entry = await this.findOwned(teacherId, id);
+    await this.ownership.assertOwned(teacherId, { classId: dto.classId, subjectId: dto.subjectId });
     Object.assign(entry, dto);
     await this.repo.save(entry);
     return this.toDto(await this.findOwned(teacherId, entry.id));

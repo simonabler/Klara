@@ -69,7 +69,11 @@ export class AssessmentService {
 
   async createEvent(dto: CreateAssessmentEventDto, teacherId: string): Promise<AssessmentEvent> {
     // Vor dem Speichern prüfen – sonst bliebe bei fremden Schülern ein leeres Event zurück
-    await this.ownership.assertStudents(teacherId, dto.studentIds ?? []);
+    await this.ownership.assertOwned(teacherId, {
+      studentIds: dto.studentIds,
+      classId:    dto.classId,
+      subjectId:  dto.subjectId,
+    });
     const event = this.eventRepo.create({
       title:     dto.title,
       type:      dto.type,
@@ -91,6 +95,7 @@ export class AssessmentService {
 
   async updateEvent(id: string, dto: UpdateAssessmentEventDto, teacherId: string): Promise<AssessmentEvent> {
     const event = await this.findOneEvent(id, teacherId);
+    await this.ownership.assertOwned(teacherId, { classId: dto.classId, subjectId: dto.subjectId });
     if (dto.title     !== undefined) event.title     = dto.title;
     if (dto.type      !== undefined) event.type       = dto.type;
     if (dto.date      !== undefined) event.date       = dto.date as unknown as Date;

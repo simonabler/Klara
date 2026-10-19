@@ -226,7 +226,11 @@ describe('AssessmentService', () => {
   });
 
   describe('Eigentümerprüfung der Schüler (K-01)', () => {
-    const fremd = () => ownership.assertStudents.mockRejectedValue(new ForbiddenException('Ungültige Schülerzuweisung'));
+    const fremd = () => {
+      const err = new ForbiddenException('Ungültige Schülerzuweisung');
+      ownership.assertStudents.mockRejectedValue(err);
+      ownership.assertOwned.mockRejectedValue(err);
+    };
 
     it('assignStudents prüft alle Schüler und schreibt bei fremden nichts', async () => {
       eventRepo.findOne.mockResolvedValue({ ...mockEvent, results: [] });

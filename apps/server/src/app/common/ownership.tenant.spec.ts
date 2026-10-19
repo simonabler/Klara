@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { ForbiddenException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { AssessmentEventType } from '@app/domain';
+import { AssessmentEventType, NoteType, RepeatType } from '@app/domain';
 import { OwnershipValidationService } from './ownership-validation.service';
 import { AssessmentService } from '../assessment/assessment.service';
 import { AssessmentEvent } from '../assessment/assessment-event.entity';
@@ -13,6 +13,9 @@ import { Parent } from '../parent/parent.entity';
 import { Student } from '../student/student.entity';
 import { Subject } from '../subject/subject.entity';
 import { Teacher } from '../teacher/teacher.entity';
+import { NoteService } from '../note/note.service';
+import { TimetableService } from '../timetable/timetable.service';
+import { TimetableEntry } from '../timetable/timetable-entry.entity';
 
 /**
  * Mandantentrennung beim Schreiben mit echter Datenbank (SQLite in-memory):
@@ -26,6 +29,12 @@ describe('Eigentümerprüfung beim Schreiben (Mandantentrennung)', () => {
   let teacherB: Teacher;
   let studentA: Student;
   let studentB: Student;
+  let notes: NoteService;
+  let timetable: TimetableService;
+  let classA: Class;
+  let classB: Class;
+  let subjectA: Subject;
+  let subjectB: Subject;
 
   beforeAll(async () => {
     ds = new DataSource({
@@ -41,6 +50,7 @@ describe('Eigentümerprüfung beim Schreiben (Mandantentrennung)', () => {
         AssessmentEvent,
         StudentResult,
         AssessmentType,
+        TimetableEntry,
       ],
       synchronize: true,
     });
@@ -70,6 +80,13 @@ describe('Eigentümerprüfung beim Schreiben (Mandantentrennung)', () => {
       teacherId: teacherB.id,
     });
 
+    const classes = ds.getRepository(Class);
+    classA = await classes.save({ name: '3A', teacherId: teacherA.id });
+    classB = await classes.save({ name: '4B', teacherId: teacherB.id });
+    const subjects = ds.getRepository(Subject);
+    subjectA = await subjects.save({ name: 'Deutsch', teacherId: teacherA.id });
+    subjectB = await subjects.save({ name: 'Mathe', teacherId: teacherB.id });
+
     ownership = new OwnershipValidationService(
       ds.getRepository(Student),
       ds.getRepository(Class),
@@ -81,6 +98,11 @@ describe('Eigentümerprüfung beim Schreiben (Mandantentrennung)', () => {
       ds.getRepository(Class),
       ds.getRepository(Note),
       ds.getRepository(AssessmentType),
+      ownership
+    );
+    notes = new NoteService(ds.getRepository(Note), ownership);
+    timetable = new TimetableService(
+      ds.getRepository(TimetableEntry),
       ownership
     );
   });
@@ -175,6 +197,131 @@ describe('Eigentümerprüfung beim Schreiben (Mandantentrennung)', () => {
       const results = await resultsOf(event.id);
       expect(results).toHaveLength(1);
       expect(results[0]).toMatchObject({ studentId: studentB.id, grade: 2 });
+    });
+  });
+
+  describe('Fremdschlüssel beim Anlegen und Ändern (K-02)', () => {
+    const note = (refs: {
+      studentId: string;
+      classId?: string;
+      subjectId?: string;
+    }) => ({
+      content: 'Beobachtung',
+      type: NoteType.GENERAL,
+      ...refs,
+    });
+    const entry = (refs: { classId: string; subjectId: string }) => ({
+      ...refs,
+      dayOfWeek: 1,
+      period: 2,
+      repeatType: RepeatType.WEEKLY,
+      schoolYear: '2026/27',
+    });
+
+    it.each([
+      ['fremder Schüler', () => note({ studentId: studentA.id })],
+      [
+        'fremde Klasse',
+        () => note({ studentId: studentB.id, classId: classA.id }),
+      ],
+      [
+        'fremdes Fach',
+        () => note({ studentId: studentB.id, subjectId: subjectA.id }),
+      ],
+    ])('Notiz anlegen: %s → 403, nichts gespeichert', async (_name, dto) => {
+      const before = await ds.getRepository(Note).count();
+      await expect(notes.create(dto(), teacherB.id)).rejects.toThrow(
+        ForbiddenException
+      );
+      expect(await ds.getRepository(Note).count()).toBe(before);
+    });
+
+    it('Notiz ändern: fremde Klasse/fremdes Fach → 403, unverändert', async () => {
+      const own = await notes.create(
+        note({ studentId: studentB.id, classId: classB.id }),
+        teacherB.id
+      );
+      await expect(
+        notes.update(own.id, { classId: classA.id }, teacherB.id)
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        notes.update(own.id, { subjectId: subjectA.id }, teacherB.id)
+      ).rejects.toThrow(ForbiddenException);
+      const reloaded = await notes.findOne(own.id, teacherB.id);
+      expect(reloaded.classId).toBe(classB.id);
+      expect(reloaded.class?.name).toBe('4B');
+      expect(reloaded.subjectId).toBeNull();
+    });
+
+    it('Notiz mit eigenen Referenzen funktioniert unverändert', async () => {
+      const own = await notes.create(
+        note({
+          studentId: studentB.id,
+          classId: classB.id,
+          subjectId: subjectB.id,
+        }),
+        teacherB.id
+      );
+      expect(own).toMatchObject({ classId: classB.id, subjectId: subjectB.id });
+    });
+
+    it('Stundenplan anlegen: fremde Klasse oder fremdes Fach → 403', async () => {
+      await expect(
+        timetable.create(
+          teacherB.id,
+          entry({ classId: classA.id, subjectId: subjectB.id })
+        )
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        timetable.create(
+          teacherB.id,
+          entry({ classId: classB.id, subjectId: subjectA.id })
+        )
+      ).rejects.toThrow(ForbiddenException);
+      expect(await ds.getRepository(TimetableEntry).count()).toBe(0);
+    });
+
+    it('Stundenplan ändern: fremde Klasse → 403, eigener Eintrag funktioniert', async () => {
+      const own = await timetable.create(
+        teacherB.id,
+        entry({ classId: classB.id, subjectId: subjectB.id })
+      );
+      expect(own).toMatchObject({ className: '4B', subjectName: 'Mathe' });
+      await expect(
+        timetable.update(teacherB.id, own.id, { classId: classA.id })
+      ).rejects.toThrow(ForbiddenException);
+      const [reloaded] = await timetable.findAll(teacherB.id, '2026/27');
+      expect(reloaded.classId).toBe(classB.id);
+    });
+
+    it('Leistungsereignis: fremde Klasse oder fremdes Fach → 403', async () => {
+      const base = {
+        title: 'X',
+        type: AssessmentEventType.EXAM,
+        date: '2026-10-19',
+      };
+      const before = await ds.getRepository(AssessmentEvent).count();
+      await expect(
+        assessments.createEvent({ ...base, classId: classA.id }, teacherB.id)
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        assessments.createEvent(
+          { ...base, subjectId: subjectA.id },
+          teacherB.id
+        )
+      ).rejects.toThrow(ForbiddenException);
+      expect(await ds.getRepository(AssessmentEvent).count()).toBe(before);
+
+      const own = await eventOfB();
+      await expect(
+        assessments.updateEvent(own.id, { classId: classA.id }, teacherB.id)
+      ).rejects.toThrow(ForbiddenException);
+      const ok = await assessments.updateEvent(
+        own.id,
+        { classId: classB.id, subjectId: subjectB.id },
+        teacherB.id
+      );
+      expect(ok).toMatchObject({ classId: classB.id, subjectId: subjectB.id });
     });
   });
 });

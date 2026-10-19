@@ -7,12 +7,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { Note } from './note.entity';
 import { CreateNoteDto, UpdateNoteDto, NoteFilterDto } from '@app/domain';
+import { OwnershipValidationService } from '../common/ownership-validation.service';
 
 @Injectable()
 export class NoteService {
   constructor(
     @InjectRepository(Note)
     private readonly noteRepo: Repository<Note>,
+    private readonly ownership: OwnershipValidationService,
   ) {}
 
   async findAll(teacherId: string, filter: NoteFilterDto): Promise<Note[]> {
@@ -48,6 +50,12 @@ export class NoteService {
   }
 
   async create(dto: CreateNoteDto, teacherId: string): Promise<Note> {
+    // Schüler, Klasse und Fach müssen der Lehrkraft gehören
+    await this.ownership.assertOwned(teacherId, {
+      studentIds: [dto.studentId],
+      classId:    dto.classId,
+      subjectId:  dto.subjectId,
+    });
     const note = this.noteRepo.create({
       content:   dto.content,
       type:      dto.type,
@@ -62,6 +70,7 @@ export class NoteService {
 
   async update(id: string, dto: UpdateNoteDto, teacherId: string): Promise<Note> {
     const note = await this.findOne(id, teacherId);
+    await this.ownership.assertOwned(teacherId, { classId: dto.classId, subjectId: dto.subjectId });
     if (dto.content   !== undefined) note.content   = dto.content;
     if (dto.type      !== undefined) note.type       = dto.type;
     if (dto.subjectId !== undefined) note.subjectId  = dto.subjectId ?? null;
