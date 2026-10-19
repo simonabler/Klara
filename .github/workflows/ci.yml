@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# Laufende Builds desselben Branches abbrechen, wenn neu gepusht wird
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NX_DAEMON: 'false'
+  NX_NO_CLOUD: 'true'
+
+jobs:
+  verify:
+    name: Lint · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24        # gleiche Major-Version wie in den Dockerfiles
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Lint
+        run: npx nx run-many -t lint --projects=domain,server,klara
+
+      - name: Unit-Tests
+        run: npx nx run-many -t test --projects=domain,server,klara --ci
+
+      - name: Build
+        run: npx nx run-many -t build --projects=server,klara
+
+      - name: Migrations kompilieren (wie im Backend-Dockerfile)
+        run: npx tsc -p apps/server/tsconfig.typeorm.json --noEmit false

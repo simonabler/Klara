@@ -71,7 +71,9 @@ interface ResultRow {
           </div>
           <div class="picker-list">
             @for (s of filteredPickerStudents(); track s.id) {
-              <div class="picker-row" [class.selected]="isAssigned(s.id)" (click)="toggleAssignment(s.id)">
+              <div class="picker-row" [class.selected]="isAssigned(s.id)" (click)="toggleAssignment(s.id)"
+                   role="checkbox" tabindex="0" [attr.aria-checked]="isAssigned(s.id)"
+                   (keydown.enter)="toggleAssignment(s.id)" (keydown.space)="$event.preventDefault(); toggleAssignment(s.id)">
                 <div class="mini-avatar">{{ s.firstName[0] }}{{ s.lastName[0] }}</div>
                 <span class="picker-name">{{ s.lastName }} {{ s.firstName }}</span>
                 @if (isAssigned(s.id)) { <span class="check">✓</span> }
@@ -625,7 +627,8 @@ export class AssessmentDetailComponent implements OnInit {
 
   toggleAssignment(studentId: string): void {
     const set = new Set(this.assignedIds());
-    set.has(studentId) ? set.delete(studentId) : set.add(studentId);
+    if (set.has(studentId)) set.delete(studentId);
+    else set.add(studentId);
     this.assignedIds.set(set);
   }
 

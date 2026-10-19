@@ -11,6 +11,7 @@ import { Note } from '../note/note.entity';
 import { AssessmentEvent } from '../assessment/assessment-event.entity';
 import { StudentResult } from '../assessment/student-result.entity';
 import { NoteType, AssessmentEventType } from '@app/domain';
+import { DEMO_TEACHER } from '../common/demo-teacher';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -31,23 +32,21 @@ export class SeedService implements OnApplicationBootstrap {
   async onApplicationBootstrap(): Promise<void> {
     if (this.config.get('NODE_ENV') === 'production') return;
 
-    const existingTeacher = await this.teacherRepo.findOne({ where: { email: 'demo@klara.dev' } });
-    if (existingTeacher) {
+    // Demo-Lehrkraft finden oder anlegen – dieselbe, die auch der Demo-Login nutzt.
+    // Wurde sie bereits über den Demo-Login angelegt, bekommt sie hier ihre Beispieldaten.
+    let teacher = await this.teacherRepo.findOne({ where: { googleId: DEMO_TEACHER.googleId } });
+    if (teacher && (await this.studentRepo.count({ where: { teacherId: teacher.id } })) > 0) {
       this.logger.log('Seed already present – skipping');
       return;
     }
 
     this.logger.log('Seeding development data…');
 
-    // Teacher
-    const teacher = await this.teacherRepo.save(
-      this.teacherRepo.create({
-        googleId: 'seed-google-id',
-        email: 'demo@klara.dev',
-        displayName: 'Demo Lehrkraft',
-        avatarUrl: '',
-      }),
-    );
+    if (!teacher) {
+      teacher = await this.teacherRepo.save(
+        this.teacherRepo.create({ ...DEMO_TEACHER, avatarUrl: '' }),
+      );
+    }
 
     // Subjects
     const [mathe, deutsch] = await this.subjectRepo.save([

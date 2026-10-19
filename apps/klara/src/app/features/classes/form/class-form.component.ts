@@ -79,7 +79,9 @@ function currentSchoolYear(): string {
             } @else {
               <div class="student-grid">
                 @for (student of filteredStudents(); track student.id) {
-                  <div class="student-chip" [class.selected]="isSelected(student.id)" (click)="toggleStudent(student.id)">
+                  <div class="student-chip" [class.selected]="isSelected(student.id)" (click)="toggleStudent(student.id)"
+                       role="checkbox" tabindex="0" [attr.aria-checked]="isSelected(student.id)"
+                       (keydown.enter)="toggleStudent(student.id)" (keydown.space)="$event.preventDefault(); toggleStudent(student.id)">
                     <div class="chip-avatar">
                       @if (student.avatarUrl) {
                         <img [src]="student.avatarUrl" [alt]="student.firstName" />
@@ -237,7 +239,8 @@ export class ClassFormComponent implements OnInit {
 
   toggleStudent(id: string): void {
     const set = new Set(this.selectedStudentIds());
-    set.has(id) ? set.delete(id) : set.add(id);
+    if (set.has(id)) set.delete(id);
+    else set.add(id);
     this.selectedStudentIds.set(set);
   }
 

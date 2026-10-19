@@ -39,7 +39,7 @@ export class AddStudentResultPtmValue1773620000000 implements MigrationInterface
         "comment"  = NULL
       FROM "assessment_events" ae
       LEFT JOIN "assessment_types" at_by_id
-        ON ae."type" = at_by_id."id"
+        ON ae."type" = at_by_id."id"::text  -- type ist varchar, id ist uuid
       LEFT JOIN "assessment_types" at_by_enum
         ON ae."type" = at_by_enum."defaultForEventType"
       WHERE
@@ -58,7 +58,7 @@ export class AddStudentResultPtmValue1773620000000 implements MigrationInterface
         "ptmValue" = NULL
       FROM "assessment_events" ae
       LEFT JOIN "assessment_types" at_by_id
-        ON ae."type" = at_by_id."id"
+        ON ae."type" = at_by_id."id"::text  -- type ist varchar, id ist uuid
       LEFT JOIN "assessment_types" at_by_enum
         ON ae."type" = at_by_enum."defaultForEventType"
       WHERE

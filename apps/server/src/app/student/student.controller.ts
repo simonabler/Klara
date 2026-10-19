@@ -25,18 +25,28 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { StudentService } from './student.service';
 import { BulkImportStudentsValidationDto, CheckDuplicatesValidationDto, CreateStudentValidationDto, UpdateStudentValidationDto } from './student-validation.dto';
 import { avatarUploadOptions } from './avatar-upload.config';
+import { StudentExportService } from './student-export.service';
 
 @ApiTags('students')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('students')
 export class StudentController {
-  constructor(private readonly studentService: StudentService) {}
+  constructor(
+    private readonly studentService: StudentService,
+    private readonly exportService: StudentExportService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Alle Schüler der eingeloggten Lehrkraft' })
   findAll(@Req() req: Request) {
     return this.studentService.findAll((req.user as any).id);
+  }
+
+  @Get(':id/export')
+  @ApiOperation({ summary: 'Datenauskunft: alle gespeicherten Daten dieser Person (DSGVO Art. 15)' })
+  exportData(@Param('id') id: string, @Req() req: Request) {
+    return this.exportService.exportStudent(id, (req.user as any).id);
   }
 
   @Get(':id')

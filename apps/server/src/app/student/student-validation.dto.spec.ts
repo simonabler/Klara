@@ -1,7 +1,11 @@
+import 'reflect-metadata';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { CreateStudentDto, UpdateStudentDto } from './student.dto';
-import { CreateParentDto } from './parent.dto';
+import {
+  CreateStudentValidationDto as CreateStudentDto,
+  UpdateStudentValidationDto as UpdateStudentDto,
+  CreateParentValidationDto as CreateParentDto,
+} from './student-validation.dto';
 
 describe('CreateStudentDto', () => {
   it('should pass with valid data', async () => {

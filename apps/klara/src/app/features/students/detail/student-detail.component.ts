@@ -9,6 +9,8 @@ import { SubjectService } from '../../classes/reference-data.service';
 import { ClassService } from '../../classes/class.service';
 import { StudentDto, NoteDto, CreateNoteDto, UpdateNoteDto, SubjectDto, StudentResultDto, ClassDto } from '@app/domain';
 import { NoteType } from '@app/domain';
+import { StudentDataExportService } from '../data-export/student-data-export.service';
+import { ToastService } from '../../../shared/toast/toast.service';
 
 interface SubjectGroup {
   subjectId: string | null;
@@ -37,6 +39,11 @@ export class StudentDetailComponent implements OnInit {
   private readonly subjectService    = inject(SubjectService);
   private readonly assessmentService = inject(AssessmentService);
   private readonly classService      = inject(ClassService);
+  private readonly dataExport        = inject(StudentDataExportService);
+  private readonly toast             = inject(ToastService);
+
+  showExport = signal(false);
+  exporting  = signal(false);
 
   student      = signal<StudentDto | null>(null);
   loading      = signal(true);
@@ -251,6 +258,22 @@ export class StudentDetailComponent implements OnInit {
 
   setFilterType(type: NoteType | null): void {
     this.filterType.set(type);
+  }
+
+  /** Datenauskunft als PDF (lesbar) oder JSON (maschinenlesbar) herunterladen */
+  async downloadExport(format: 'pdf' | 'json'): Promise<void> {
+    const s = this.student();
+    if (!s || this.exporting()) return;
+    this.exporting.set(true);
+    try {
+      const data = await this.dataExport.load(s.id);
+      if (format === 'pdf') await this.dataExport.downloadPdf(data);
+      else this.dataExport.downloadJson(data);
+    } catch {
+      this.toast.show('error', 'Datenauskunft konnte nicht erstellt werden', 'Bitte versuche es erneut.');
+    } finally {
+      this.exporting.set(false);
+    }
   }
 
   deleteStudent(): void {

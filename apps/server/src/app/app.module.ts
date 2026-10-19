@@ -16,10 +16,16 @@ import { NoteModule } from './note/note.module';
 import { AssessmentModule } from './assessment/assessment.module';
 import { SeedModule } from './seed/seed.module';
 import { TimetableModule } from './timetable/timetable.module';
+import { SchoolYearModule } from './school-year/school-year.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { isMetricsEnabled } from './metrics/metrics-enabled';
+import { resolveMigrationsGlob } from './config/migrations-path';
 
 // Migrations liegen nach dem Build als separate JS-Dateien in dist/apps/server/migrations/.
-// __dirname zeigt zur Laufzeit auf dist/apps/server/app/ → eine Ebene hoch.
-const migrationsPath = join(__dirname, '..', 'migrations', '*.js');
+// Webpack bündelt das Backend in dist/apps/server/main.js – __dirname ist also
+// dist/apps/server. (Früher stand hier '..', damit liefen mit
+// TYPEORM_MIGRATIONS_RUN=true stillschweigend gar keine Migrationen.)
+const migrationsPath = resolveMigrationsGlob(__dirname);
 
 @Module({
   imports: [
@@ -91,6 +97,10 @@ const migrationsPath = join(__dirname, '..', 'migrations', '*.js');
     AssessmentModule,
     SeedModule,
     TimetableModule,
+    SchoolYearModule,
+    // Metriken + Anomaly-Guard: nur mit METRICS_ENABLED=true und Postgres.
+    // ConfigModule.forRoot() oben hat die .env zu diesem Zeitpunkt bereits geladen.
+    ...(isMetricsEnabled() ? [MetricsModule] : []),
   ],
   controllers: [AppController],
   providers: [AppService],

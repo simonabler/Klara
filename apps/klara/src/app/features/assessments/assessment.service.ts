@@ -8,6 +8,7 @@ import {
   UpdateAssessmentEventDto,
   UpsertStudentResultDto,
   StudentResultDto,
+  Semester,
 } from '@app/domain';
 
 @Injectable({ providedIn: 'root' })
@@ -26,10 +27,11 @@ export class AssessmentService {
     return this.http.get<AssessmentEventDto>(`${this.base}/${id}`);
   }
 
-  getTable(classId: string, subjectId?: string, schoolYear?: string): Observable<BeurteilungTableDto> {
+  getTable(classId: string, subjectId?: string, schoolYear?: string, semester?: Semester): Observable<BeurteilungTableDto> {
     let params = new HttpParams().set('classId', classId);
     if (subjectId)  params = params.set('subjectId',  subjectId);
     if (schoolYear) params = params.set('schoolYear', schoolYear);
+    if (semester)   params = params.set('semester',   String(semester));
     return this.http.get<BeurteilungTableDto>(`${this.base}/table`, { params });
   }
 

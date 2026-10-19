@@ -124,7 +124,9 @@ export class TableEventColumnDto {
   id!: string;
   title!: string;
   date!: string;
+  /** Bewertungsschema aus dem Leistungstyp */
   schema!: string;
+  /** Gewicht im Ø – nur gesetzt, wenn die Spalte in den Notenschnitt einfließt */
   weight?: number;
   color?: string;
 }

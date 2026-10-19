@@ -3,7 +3,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { AssessmentEvent } from './assessment-event.entity';
 import { StudentResult } from './student-result.entity';
 import { Student } from '../student/student.entity';
@@ -11,7 +11,19 @@ import {
   CreateAssessmentEventDto,
   UpdateAssessmentEventDto,
   UpsertStudentResultDto,
+  Semester,
+  schoolYearOf,
+  semesterBounds,
+  toIsoDate,
 } from '@app/domain';
+import {
+  AssessmentTypeLike,
+  averageScale,
+  resolveType,
+  schemaFor,
+  weightFor,
+  weightedAverage,
+} from './beurteilung-calc';
 
 @Injectable()
 export class AssessmentService {
@@ -169,10 +181,27 @@ export class AssessmentService {
     subjectId?: string,
     schoolYear?: string,
     gradingEnabled = false,
+    semester?: Semester,
   ): Promise<import('@app/domain').BeurteilungTableDto> {
-    // 1. Events dieser Klasse/Fach laden
+    // 1. Klasse mit Schülern laden
+    const classRepo = this.studentRepo.manager.getRepository('Class');
+    const cls: any = await classRepo.findOne({
+      where: { id: classId, teacherId },
+      relations: ['students'],
+    });
+    const students: Student[] = cls?.students ?? [];
+
+    // 2. Optional auf ein Semester eingrenzen. Das Schuljahr kommt aus dem
+    //    Request, sonst von der Klasse, sonst ist es das aktuelle.
+    //    Ohne Semester bleiben (wie bisher) alle Events der Klasse sichtbar.
+    const range = semester
+      ? semesterBounds(schoolYear || cls?.schoolYear || schoolYearOf(new Date()), semester)
+      : undefined;
+
+    // 3. Events dieser Klasse/Fach laden
     const where: any = { teacherId, classId };
     if (subjectId) where.subjectId = subjectId;
+    if (range) where.date = Between(toIsoDate(range.from), toIsoDate(range.to));
 
     const events = await this.eventRepo.find({
       where,
@@ -180,50 +209,53 @@ export class AssessmentService {
       order: { date: 'ASC' },
     });
 
-    // Optional nach Schuljahr filtern (AssessmentEvent hat kein schoolYear-Feld,
-    // daher über die Klasse — wir lassen alle Events der Klasse durch, da
-    // schoolYear-Filterung optional ist und per classId bereits eingeschränkt)
-
-    // 2. Schüler der Klasse laden
-    const classRepo = this.studentRepo.manager.getRepository('Class');
-    const cls: any = await classRepo.findOne({
-      where: { id: classId },
-      relations: ['students'],
-    });
-    const students: Student[] = cls?.students ?? [];
-
-    // 3. Alle Ergebnisse für diese Events laden
+    // 4. Alle Ergebnisse für diese Events laden
     const eventIds = events.map(e => e.id);
     const allResults = eventIds.length > 0
       ? await this.resultRepo.find({ where: { assessmentEventId: In(eventIds) } })
       : [];
 
-    // 4. Notiz-Anzahl pro Schüler/Fach laden
+    // 5. Notiz-Anzahl pro Schüler/Fach laden (im Semester-Zeitraum, falls gewählt)
     const noteRepo = this.studentRepo.manager.getRepository('Note');
-    const noteCounts: { studentId: string; count: string }[] = await noteRepo
+    const noteQuery = noteRepo
       .createQueryBuilder('n')
       .select('n.studentId', 'studentId')
       .addSelect('COUNT(n.id)', 'count')
       .where('n.classId = :classId', { classId })
-      .andWhere(subjectId ? 'n.subjectId = :subjectId' : '1=1', { subjectId })
+      .andWhere(subjectId ? 'n.subjectId = :subjectId' : '1=1', { subjectId });
+    if (range) {
+      const dayAfter = new Date(range.to.getFullYear(), range.to.getMonth(), range.to.getDate() + 1);
+      noteQuery.andWhere('n.createdAt >= :from AND n.createdAt < :until', { from: range.from, until: dayAfter });
+    }
+    const noteCounts: { studentId: string; count: string }[] = await noteQuery
       .groupBy('n.studentId')
       .getRawMany();
 
     const noteCountMap = new Map(noteCounts.map(r => [r.studentId, parseInt(r.count, 10)]));
 
-    // 5. AssessmentTypes für Gewichtung laden
+    // 6. Leistungstyp, Schema und Gewicht je Event bestimmen
     const typeRepo = this.studentRepo.manager.getRepository('AssessmentType');
-    const types: any[] = await typeRepo.find({ where: { teacherId } });
+    const types = (await typeRepo.find({ where: { teacherId } })) as AssessmentTypeLike[];
 
-    // 6. Zeilen aufbauen
+    const eventMeta = new Map(events.map(e => {
+      const type = resolveType(e.type, types);
+      return [e.id, { type, schema: schemaFor(e.type, type), weight: weightFor(type) }];
+    }));
+
+    // Ø nur aus Noten einer einzigen Skala – Punkte, +/~/− und Bestanden zählen nicht
+    const scale = gradingEnabled
+      ? averageScale([...eventMeta.values()].map(m => m.schema))
+      : undefined;
+    const countsToAverage = (eventId: string) => scale !== undefined && eventMeta.get(eventId)?.schema === scale;
+
+    // 7. Zeilen aufbauen
     const sortedStudents = [...students].sort((a, b) =>
       a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName),
     );
 
     const rows: import('@app/domain').TableStudentRowDto[] = sortedStudents.map(student => {
       const cells: Record<string, import('@app/domain').TableCellDto> = {};
-      let weightedSum = 0;
-      let weightSum   = 0;
+      const gradeValues: { value: number; weight: number }[] = [];
 
       for (const event of events) {
         const result = allResults.find(
@@ -237,20 +269,13 @@ export class AssessmentService {
             comment:  result.comment ?? undefined,
           };
 
-          if (gradingEnabled && rawValue != null) {
-            const numVal = typeof rawValue === 'number' ? rawValue : null;
-            if (numVal !== null) {
-              const weight = 1; // Default-Gewicht; AssessmentType wird in Phase 2 verknüpft
-              weightedSum += numVal * weight;
-              weightSum   += weight;
-            }
+          if (countsToAverage(event.id) && typeof result.grade === 'number') {
+            gradeValues.push({ value: result.grade, weight: eventMeta.get(event.id)!.weight });
           }
         }
       }
 
-      const gradeAverage = (gradingEnabled && weightSum > 0)
-        ? Math.round((weightedSum / weightSum) * 10) / 10
-        : undefined;
+      const gradeAverage = gradingEnabled ? weightedAverage(gradeValues) : undefined;
 
       return {
         studentId:    student.id,
@@ -263,21 +288,24 @@ export class AssessmentService {
       };
     });
 
-    // 7. Klassendurchschnitt
+    // 8. Klassendurchschnitt (Mittel der Schüler-Durchschnitte)
     const averages = rows.map(r => r.gradeAverage).filter((v): v is number => v !== undefined);
-    const classAverage = (gradingEnabled && averages.length > 0)
-      ? Math.round((averages.reduce((a, b) => a + b, 0) / averages.length) * 10) / 10
+    const classAverage = gradingEnabled
+      ? weightedAverage(averages.map(value => ({ value, weight: 1 })))
       : undefined;
 
-    // 8. Spalten
-    const columns: import('@app/domain').TableEventColumnDto[] = events.map(e => ({
-      id:     e.id,
-      title:  e.title,
-      date:   e.date instanceof Date ? e.date.toISOString().split('T')[0] : String(e.date),
-      schema: 'GRADES_1_5', // wird in Phase 2 aus AssessmentType gelesen
-      weight: undefined,
-      color:  undefined,
-    }));
+    // 9. Spalten – `weight` nur bei Spalten, die in den Ø einfließen
+    const columns: import('@app/domain').TableEventColumnDto[] = events.map(e => {
+      const meta = eventMeta.get(e.id)!;
+      return {
+        id:     e.id,
+        title:  e.title,
+        date:   e.date instanceof Date ? e.date.toISOString().split('T')[0] : String(e.date),
+        schema: meta.schema,
+        weight: countsToAverage(e.id) ? meta.weight : undefined,
+        color:  meta.type?.color ?? undefined,
+      };
+    });
 
     return { columns, rows, classAverage, gradingEnabled };
   }

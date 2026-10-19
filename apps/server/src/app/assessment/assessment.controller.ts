@@ -1,8 +1,9 @@
 import {
-  Body, Controller, Delete, Get, HttpCode, HttpStatus,
-  Param, Patch, Post, Put, Query, Req, UseGuards,
+  BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus,
+  Param, ParseIntPipe, Patch, Post, Put, Query, Req, UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Semester } from '@app/domain';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AssessmentService } from './assessment.service';
@@ -29,15 +30,20 @@ export class AssessmentController {
 
   @Get('table')
   @ApiOperation({ summary: 'Tabellenansicht: Schüler × Leistungen für eine Klasse' })
+  @ApiQuery({ name: 'semester', required: false, enum: [1, 2], description: '1 = Sep–Jän, 2 = Feb–Aug; ohne = ganzes Schuljahr' })
   async getTable(
     @Req() req: Request,
     @Query('classId') classId: string,
     @Query('subjectId') subjectId?: string,
     @Query('schoolYear') schoolYear?: string,
+    @Query('semester', new ParseIntPipe({ optional: true })) semester?: number,
   ) {
+    if (semester !== undefined && semester !== 1 && semester !== 2) {
+      throw new BadRequestException('semester muss 1 oder 2 sein');
+    }
     const teacherId      = (req.user as any).id;
     const gradingEnabled = await this.teacherService.getGradingEnabled(teacherId);
-    return this.service.getTable(teacherId, classId, subjectId, schoolYear, gradingEnabled);
+    return this.service.getTable(teacherId, classId, subjectId, schoolYear, gradingEnabled, semester as Semester | undefined);
   }
 
   // ── Events ──────────────────────────────────────────────────────────────

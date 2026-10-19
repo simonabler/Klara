@@ -21,6 +21,7 @@ import { Teacher } from '../teacher/teacher.entity';
 import { TeacherService } from '../teacher/teacher.service';
 import { ExportService } from './export.service';
 import { JwtPayload } from './jwt-payload.interface';
+import { DEMO_TEACHER } from '../common/demo-teacher';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -43,12 +44,7 @@ export class AuthController {
       throw new UnauthorizedException('Demo-Login ist in der Produktion nicht verfügbar');
     }
 
-    const teacher = await this.teacherService.findOrCreate({
-      googleId: 'demo-user',
-      email: 'demo@klara.local',
-      displayName: 'Demo Lehrkraft',
-      avatarUrl: undefined,
-    });
+    const teacher = await this.teacherService.findOrCreate({ ...DEMO_TEACHER });
 
     const payload: JwtPayload = { sub: teacher.id, email: teacher.email };
     const token = this.jwtService.sign(payload);

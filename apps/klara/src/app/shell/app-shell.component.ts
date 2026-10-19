@@ -14,7 +14,7 @@ import { AuthService } from '../auth/auth.service';
 
       <!-- ── Mobile Overlay ── -->
       @if (sidebarOpen()) {
-        <div class="overlay" (click)="closeSidebar()"></div>
+        <div class="overlay" (click)="closeSidebar()" (keydown.escape)="closeSidebar()" tabindex="-1" aria-hidden="true"></div>
       }
 
       <!-- ── Sidebar ── -->

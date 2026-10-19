@@ -1,12 +1,13 @@
 import {
   CallHandler,
   ExecutionContext,
+  HttpException,
   Injectable,
   Logger,
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { finalize, tap } from 'rxjs/operators';
 import { MetricsService } from './metrics.service';
 import { Reflector } from '@nestjs/core';
 import { SKIP_METRICS } from './metrics.decorator';
@@ -51,13 +52,22 @@ export class MetricsInterceptor implements NestInterceptor {
       ? process.hrtime.bigint()
       : BigInt(Date.now());
 
+    // Bei Exceptions setzt erst der Exception-Filter (nach finalize) den Statuscode –
+    // res.statusCode stünde hier noch auf 200. Daher Status aus dem Fehler ableiten.
+    let errorStatus: number | undefined;
+
     return next.handle().pipe(
+      tap({
+        error: (err: unknown) => {
+          errorStatus = err instanceof HttpException ? err.getStatus() : 500;
+        },
+      }),
       finalize(() => {
         const end = typeof process.hrtime.bigint === 'function'
           ? process.hrtime.bigint()
           : BigInt(Date.now());
         const durationMs = Number(end - start) / 1_000_000;
-        const status = res?.statusCode ?? 0;
+        const status = errorStatus ?? res?.statusCode ?? 0;
 
         if (!skip) {
           this.metrics.record(path, method, status, durationMs).catch((err) => {

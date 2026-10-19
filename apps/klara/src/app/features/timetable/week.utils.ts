@@ -1,5 +1,11 @@
 import { TimetableEntryDto } from '@app/domain';
 import { RepeatType, WeekVariant } from '@app/domain';
+import {
+  isWeekA as isSchoolWeekA,
+  schoolYearBounds as domainSchoolYearBounds,
+  schoolYearOf,
+  semesterOf,
+} from '@app/domain';
 
 export interface WeekInfo {
   mondayDate: Date;
@@ -30,26 +36,23 @@ export function getISOWeek(date: Date): number {
 
 /** Schuljahr als String, z.B. '2025/26' */
 export function currentSchoolYear(): string {
-  const now   = new Date();
-  const month = now.getMonth() + 1;
-  const start = month >= 9 ? now.getFullYear() : now.getFullYear() - 1;
-  return `${start}/${String(start + 1).slice(-2)}`;
+  return schoolYearOf(new Date());
 }
 
 /**
- * Woche A oder B:
- * KW 36 (erster möglicher Schulstart AT) gilt als Referenz-KW-A.
- * Jede ungerade Differenz zur Referenz → Woche B.
+ * Woche A oder B für die Woche ab `monday`.
+ *
+ * Gezählt wird ab der Woche mit dem 1. September (= Woche A), nicht nach
+ * ISO-Kalenderwoche. Die frühere KW-Parität kippte in Jahren mit 53
+ * Kalenderwochen (z. B. 2026): KW 53 und KW 1 wären beide Woche B gewesen.
  */
-export function isWeekA(isoWeek: number): boolean {
-  const referenceWeekA = 36;
-  return ((isoWeek - referenceWeekA) % 2 + 2) % 2 === 0;
+export function isWeekA(monday: Date): boolean {
+  return isSchoolWeekA(monday);
 }
 
-/** Aktuelles Semester (1 = Sep–Jan, 2 = Feb–Jun) */
+/** Aktuelles Semester (1 = Sep–Jan, 2 = Feb–Aug) */
 export function getSemester(date: Date): 1 | 2 {
-  const m = date.getMonth() + 1;
-  return m >= 9 || m <= 1 ? 1 : 2;
+  return semesterOf(date);
 }
 
 /** Vollständige WeekInfo für eine gegebene Montags-Datum */
@@ -58,7 +61,7 @@ export function buildWeekInfo(monday: Date): WeekInfo {
   return {
     mondayDate: monday,
     isoWeek:    kw,
-    isWeekA:    isWeekA(kw),
+    isWeekA:    isWeekA(monday),
     semester:   getSemester(monday),
     label:      formatWeekLabel(monday),
   };
@@ -93,11 +96,7 @@ export function isToday(date: Date): boolean {
 }
 
 export function schoolYearBounds(schoolYear: string): { from: Date; to: Date } {
-  const startYear = parseInt(schoolYear.split('/')[0], 10);
-  return {
-    from: new Date(startYear,     8, 1),   // 1. September
-    to:   new Date(startYear + 1, 7, 31),  // 31. August
-  };
+  return domainSchoolYearBounds(schoolYear); // 1. September – 31. August
 }
 
 /**

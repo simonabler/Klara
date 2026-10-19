@@ -282,9 +282,10 @@ describe('StudentService', () => {
         parent1FirstName: 'Maria', parent1LastName: 'Muster', parent1Email: 'maria@test.at',
       }], TEACHER_ID);
 
-      expect(parentRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ firstName: 'Maria', lastName: 'Muster', email: 'maria@test.at' }),
+      expect(parentRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ firstName: 'Maria', lastName: 'Muster', email: 'maria@test.at', studentId: 's1' }),
       );
+      expect(parentRepo.save).toHaveBeenCalledTimes(1);
     });
 
     it('legt keinen Elternteil an wenn nur Vorname vorhanden', async () => {
@@ -309,9 +310,10 @@ describe('StudentService', () => {
       );
 
       expect(result.classesCreated).toBe(1);
-      expect(classRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ name: '4A', schoolYear: '2025/26' }),
+      expect(classRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ name: '4A', schoolYear: '2025/26', teacherId: TEACHER_ID }),
       );
+      expect(classRepo.save).toHaveBeenCalledTimes(1);
     });
 
     it('verwendet bestehende Klasse und erhöht classesCreated nicht', async () => {
