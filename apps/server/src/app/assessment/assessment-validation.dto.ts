@@ -1,4 +1,5 @@
-import { IsArray, Max, Min, IsDateString, IsInt, IsNumber, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, Max, Min, IsDateString, IsIn, IsInt, IsNumber, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
 
 export class CreateAssessmentEventValidationDto {
   @IsString()
@@ -86,4 +87,25 @@ export class AssignStudentsValidationDto {
   @IsArray()
   @IsUUID('4', { each: true })
   studentIds!: string[];
+}
+
+/** Query-Parameter der Tabellenansicht (GET /assessments/table) */
+export class AssessmentTableQueryValidationDto {
+  @IsUUID()
+  classId!: string;
+
+  @IsOptional()
+  @IsUUID()
+  subjectId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  schoolYear?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: 'semester muss 1 oder 2 sein' })
+  @IsIn([1, 2], { message: 'semester muss 1 oder 2 sein' })
+  semester?: 1 | 2;
 }

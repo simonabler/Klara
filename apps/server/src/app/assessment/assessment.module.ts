@@ -4,6 +4,8 @@ import { AssessmentEvent } from './assessment-event.entity';
 import { StudentResult } from './student-result.entity';
 import { AssessmentType } from './assessment-type.entity';
 import { Student } from '../student/student.entity';
+import { Class } from '../class/class.entity';
+import { Note } from '../note/note.entity';
 import { AssessmentService } from './assessment.service';
 import { AssessmentController } from './assessment.controller';
 import { AssessmentTypeService } from './assessment-type.service';
@@ -12,7 +14,7 @@ import { TeacherModule } from '../teacher/teacher.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AssessmentEvent, StudentResult, AssessmentType, Student]),
+    TypeOrmModule.forFeature([AssessmentEvent, StudentResult, AssessmentType, Student, Class, Note]),
     TeacherModule,
   ],
   providers: [AssessmentService, AssessmentTypeService],
