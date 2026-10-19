@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, Max, Min, IsDateString, IsIn, IsInt, IsNumber, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { ArrayMaxSize, ArrayUnique, IsArray, Max, Min, IsDateString, IsIn, IsInt, IsNumber, IsOptional, IsString, IsUUID, MaxLength, MinLength, ValidateNested } from 'class-validator';
 
 export class CreateAssessmentEventValidationDto {
   @IsString()
@@ -78,8 +78,17 @@ export class UpsertStudentResultValidationDto {
   comment?: string;
 }
 
+/** Obergrenze pro Bulk-Request – eine Klasse hat deutlich weniger Schüler */
+export const MAX_BULK_RESULTS = 200;
+
 export class BulkUpsertResultsValidationDto {
   @IsArray()
+  @ArrayMaxSize(MAX_BULK_RESULTS)
+  @ArrayUnique((r: UpsertStudentResultValidationDto) => r?.studentId, {
+    message: 'Jeder Schüler darf nur einmal vorkommen',
+  })
+  @ValidateNested({ each: true })
+  @Type(() => UpsertStudentResultValidationDto)
   results!: UpsertStudentResultValidationDto[];
 }
 

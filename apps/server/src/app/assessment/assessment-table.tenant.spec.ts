@@ -11,6 +11,7 @@ import { Parent } from '../parent/parent.entity';
 import { Student } from '../student/student.entity';
 import { Subject } from '../subject/subject.entity';
 import { Teacher } from '../teacher/teacher.entity';
+import { OwnershipValidationService } from '../common/ownership-validation.service';
 
 /**
  * Mandantentrennung der Tabellenansicht mit echter Datenbank (SQLite in-memory):
@@ -121,7 +122,12 @@ describe('AssessmentService.getTable – Mandantentrennung', () => {
       ds.getRepository(StudentResult),
       ds.getRepository(Class),
       ds.getRepository(Note),
-      ds.getRepository(AssessmentType)
+      ds.getRepository(AssessmentType),
+      new OwnershipValidationService(
+        ds.getRepository(Student),
+        ds.getRepository(Class),
+        ds.getRepository(Subject)
+      )
     );
   });
 

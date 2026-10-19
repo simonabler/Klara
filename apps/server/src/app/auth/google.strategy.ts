@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback, Profile } from 'passport-google-oauth20';
+import type { StateStore } from 'passport-oauth2';
 import { ConfigService } from '@nestjs/config';
 import { TeacherService } from '../teacher/teacher.service';
+import { OAuthCookieStateStore } from './oauth-state.store';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -15,6 +17,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET')!,
       callbackURL: configService.get<string>('GOOGLE_CALLBACK_URL')!,
       scope: ['email', 'profile'],
+      // Schutz gegen Login-CSRF: state pro Login-Vorgang, geprüft im Callback.
+      // Cast: die Typen deklarieren Überladungen, passport wählt zur Laufzeit
+      // anhand der Parameteranzahl (store: 3, verify: 4) – siehe oauth-state.store.spec.ts
+      store: new OAuthCookieStateStore() as unknown as StateStore,
     });
   }
 

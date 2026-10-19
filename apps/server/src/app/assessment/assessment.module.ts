@@ -11,11 +11,13 @@ import { AssessmentController } from './assessment.controller';
 import { AssessmentTypeService } from './assessment-type.service';
 import { AssessmentTypeController } from './assessment-type.controller';
 import { TeacherModule } from '../teacher/teacher.module';
+import { OwnershipModule } from '../common/ownership.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AssessmentEvent, StudentResult, AssessmentType, Student, Class, Note]),
     TeacherModule,
+    OwnershipModule,
   ],
   providers: [AssessmentService, AssessmentTypeService],
   controllers: [AssessmentController, AssessmentTypeController],

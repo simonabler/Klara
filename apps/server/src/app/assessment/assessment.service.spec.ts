@@ -8,7 +8,8 @@ import { AssessmentType } from './assessment-type.entity';
 import { Class } from '../class/class.entity';
 import { Note } from '../note/note.entity';
 import { AssessmentEventType } from '@app/domain';
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { OwnershipValidationService } from '../common/ownership-validation.service';
 
 const mockEventRepo = () => ({
   find: jest.fn(),
@@ -29,11 +30,16 @@ const mockRepo = () => ({
   findOne: jest.fn(),
   createQueryBuilder: jest.fn(),
 });
+const mockOwnership = () => ({
+  assertStudents: jest.fn().mockResolvedValue(undefined),
+  assertOwned: jest.fn().mockResolvedValue(undefined),
+});
 
 describe('AssessmentService', () => {
   let service: AssessmentService;
   let eventRepo: ReturnType<typeof mockEventRepo>;
   let resultRepo: ReturnType<typeof mockResultRepo>;
+  let ownership: ReturnType<typeof mockOwnership>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -44,12 +50,14 @@ describe('AssessmentService', () => {
         { provide: getRepositoryToken(Class),           useFactory: mockRepo },
         { provide: getRepositoryToken(Note),            useFactory: mockRepo },
         { provide: getRepositoryToken(AssessmentType),  useFactory: mockRepo },
+        { provide: OwnershipValidationService,          useFactory: mockOwnership },
       ],
     }).compile();
 
     service    = module.get(AssessmentService);
     eventRepo  = module.get(getRepositoryToken(AssessmentEvent));
     resultRepo = module.get(getRepositoryToken(StudentResult));
+    ownership  = module.get(OwnershipValidationService);
   });
 
   const teacherId = 'teacher-uuid';
@@ -201,11 +209,20 @@ describe('AssessmentService', () => {
   });
 
   describe('bulkUpsertResults', () => {
-    it('should call upsertResult for each entry', async () => {
+    function withTransaction() {
+      const tx = {
+        find: jest.fn().mockResolvedValue([{ studentId: 's1', assessmentEventId: eventId, grade: 5 }]),
+        create: jest.fn((d) => d),
+        save: jest.fn((d) => Promise.resolve(d)),
+      };
+      const transaction = jest.fn((cb) => cb({ getRepository: () => tx }));
+      (resultRepo as any).manager = { transaction };
+      return { tx, transaction };
+    }
+
+    it('speichert alle Einträge in einer Transaktion mit einem save', async () => {
       eventRepo.findOne.mockResolvedValue({ ...mockEvent, results: [] });
-      resultRepo.findOne.mockResolvedValue(null);
-      resultRepo.create.mockImplementation((d) => d);
-      resultRepo.save.mockImplementation((d) => Promise.resolve({ ...d, grade: d.grade }));
+      const { tx, transaction } = withTransaction();
 
       const results = [
         { studentId: 's1', grade: 1 },
@@ -213,7 +230,56 @@ describe('AssessmentService', () => {
         { studentId: 's3', grade: 3 },
       ];
       await service.bulkUpsertResults(eventId, results, teacherId);
-      expect(resultRepo.save).toHaveBeenCalledTimes(3);
+
+      expect(transaction).toHaveBeenCalledTimes(1);
+      expect(tx.find).toHaveBeenCalledTimes(1); // vorhandene einmal laden, nicht pro Schüler
+      expect(tx.save).toHaveBeenCalledTimes(1);
+      const saved = tx.save.mock.calls[0][0];
+      expect(saved).toHaveLength(3);
+      // vorhandenes Ergebnis von s1 wird aktualisiert, s2/s3 neu angelegt
+      expect(saved[0]).toMatchObject({ studentId: 's1', grade: 1 });
+      expect(tx.create).toHaveBeenCalledTimes(2);
+      expect(resultRepo.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Eigentümerprüfung der Schüler (K-01)', () => {
+    const fremd = () => {
+      const err = new ForbiddenException('Ungültige Schülerzuweisung');
+      ownership.assertStudents.mockRejectedValue(err);
+      ownership.assertOwned.mockRejectedValue(err);
+    };
+
+    it('assignStudents prüft alle Schüler und schreibt bei fremden nichts', async () => {
+      eventRepo.findOne.mockResolvedValue({ ...mockEvent, results: [] });
+      fremd();
+      await expect(service.assignStudents(eventId, ['s1', 'fremd'], teacherId)).rejects.toThrow(ForbiddenException);
+      expect(ownership.assertStudents).toHaveBeenCalledWith(teacherId, ['s1', 'fremd']);
+      expect(resultRepo.save).not.toHaveBeenCalled();
+      expect(resultRepo.remove).not.toHaveBeenCalled();
+    });
+
+    it('upsertResult schreibt für fremde Schüler nichts', async () => {
+      eventRepo.findOne.mockResolvedValue(mockEvent);
+      fremd();
+      await expect(service.upsertResult(eventId, { studentId: 'fremd', grade: 1 }, teacherId)).rejects.toThrow(ForbiddenException);
+      expect(resultRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('bulkUpsertResults prüft vorab alle Schüler auf einmal', async () => {
+      eventRepo.findOne.mockResolvedValue(mockEvent);
+      fremd();
+      const results = [{ studentId: 's1', grade: 1 }, { studentId: 'fremd', grade: 2 }];
+      await expect(service.bulkUpsertResults(eventId, results, teacherId)).rejects.toThrow(ForbiddenException);
+      expect(ownership.assertStudents).toHaveBeenCalledWith(teacherId, ['s1', 'fremd']);
+      expect(resultRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('createEvent legt bei fremden Schülern kein Event an', async () => {
+      fremd();
+      const dto = { title: 'Test', type: AssessmentEventType.EXAM, date: '2025-03-10', studentIds: ['fremd'] };
+      await expect(service.createEvent(dto, teacherId)).rejects.toThrow(ForbiddenException);
+      expect(eventRepo.save).not.toHaveBeenCalled();
     });
   });
 });

@@ -166,6 +166,8 @@ FRONTEND_URL=https://klara.abler.tirol   # erlaubte CORS-Origin + Redirect nach 
 # Frontend-Container (Angular SSR): Hosts für serverseitiges Rendern, kommagetrennt.
 # Ersetzt die Vorgabe "localhost"; ohne passenden Eintrag antwortet SSR mit einem Fehler.
 NG_ALLOWED_HOSTS=klara.abler.tirol
+# CSP des Frontends: Standard ist Report-Only (nur melden). Scharf schalten mit:
+CSP_REPORT_ONLY=false
 
 # Uploads (Avatare)
 # Vollständiger Pfad zum Upload-Verzeichnis inkl. Unterordner
@@ -175,7 +177,7 @@ UPLOAD_DIR=/data/uploads/avatars
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=https://klara.abler.tirol/api/auth/google/callback
-JWT_SECRET=change-me-in-production
+JWT_SECRET=                # Pflicht: openssl rand -base64 48 (mind. 32 Byte, sonst kein Start in Produktion)
 JWT_EXPIRES_IN=8h
 
 # Metriken + Anomaly-Guard (nur mit Postgres)
@@ -232,7 +234,7 @@ docker compose exec backend node sanitize-avatars.js --dry-run
 docker compose exec backend node sanitize-avatars.js
 ```
 
-Immer zuerst mit `--dry-run` laufen lassen und die Ausgabe prüfen. Dateien in `quarantine/` werden nicht ausgeliefert und können nach Sichtung manuell gelöscht werden.
+Immer zuerst mit `--dry-run` laufen lassen und die Ausgabe prüfen. Dateien in `quarantine/` werden nicht ausgeliefert und können nach Sichtung manuell gelöscht werden. Seit Avatare nur noch über den angemeldeten Controller ausgeliefert werden (Dateinamen `<uuid>.webp`), werden Bilder mit alten Dateinamen erst nach dem Skriptlauf wieder angezeigt.
 
 ### CI
 
@@ -328,7 +330,7 @@ Klara speichert personenbezogene Daten von Schülerinnen und Schülern (Name, Ge
 - Beim Löschen einer Lehrkraft werden via CASCADE alle Schüler, Notizen und Leistungsdaten dieser Lehrkraft mitgelöscht
 - Authentifizierung via httpOnly-Cookie (kein Token in URL oder localStorage)
 - `TYPEORM_SYNC` ist in Produktion deaktiviert (kein unbeabsichtigter Datenverlust)
-- Profilbilder werden beim Upload anhand des Inhalts geprüft und immer neu als WebP kodiert – dabei fallen alle Metadaten weg (EXIF, GPS). Ausgeliefert werden nur Bilddateien aus dem Avatar-Ordner, mit `nosniff` und restriktiver CSP
+- Profilbilder werden beim Upload anhand des Inhalts geprüft und immer neu als WebP kodiert – dabei fallen alle Metadaten weg (EXIF, GPS). Ausgeliefert werden sie nur mit Anmeldung und nur an die Lehrkraft des jeweiligen Schülers (`/api/uploads/avatars/<uuid>.webp`), mit `nosniff`, restriktiver CSP und ohne langes Caching
 
 ---
 
