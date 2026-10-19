@@ -1,8 +1,11 @@
 import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
+import { CSP_NONCE } from '@angular/core';
 import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
+import helmet from 'helmet';
+import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './main.server';
@@ -24,6 +27,45 @@ export function app(): express.Express {
 
   server.set('view engine', 'html');
   server.set('views', distFolder);
+  server.disable('x-powered-by');
+
+  // Content-Security-Policy mit Nonce pro Request: Inline-Skripte laufen nur mit
+  // dieser Nonce, Inline-Event-Handler gar nicht. Vorerst nur melden
+  // (Report-Only, Meldungen in der Browser-Konsole); scharf mit CSP_REPORT_ONLY=false.
+  server.use((_req, res, next) => {
+    res.locals['cspNonce'] = randomBytes(16).toString('base64');
+    next();
+  });
+  server.use(
+    helmet({
+      contentSecurityPolicy: {
+        useDefaults: false,
+        reportOnly: process.env['CSP_REPORT_ONLY'] !== 'false',
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            (_req, res) =>
+              `'nonce-${(res as express.Response).locals['cspNonce']}'`,
+          ],
+          scriptSrcAttr: ["'none'"],
+          // Angular setzt Inline-Styles und style-Attribute – Style-Injection ist
+          // weit weniger gefährlich als Script-Injection
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'blob:'],
+          fontSrc: ["'self'"],
+          connectSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'none'"],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+      xFrameOptions: { action: 'deny' },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    })
+  );
 
   // Example Express Rest API endpoints
   // server.get('/api/**', (req, res) => { });
@@ -45,7 +87,14 @@ export function app(): express.Express {
         documentFilePath: indexHtml,
         url: `${protocol}://${headers.host}${originalUrl}`,
         publicPath: distFolder,
-        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
+        // Critical-CSS-Inlining setzt onload="this.media='all'" – ein Inline-Handler,
+        // den die CSP (script-src-attr 'none') blockiert
+        inlineCriticalCss: false,
+        providers: [
+          { provide: APP_BASE_HREF, useValue: baseUrl },
+          // Angular versieht eigene Inline-Skripte/-Styles mit dieser Nonce
+          { provide: CSP_NONCE, useValue: res.locals['cspNonce'] },
+        ],
       })
       .then((html) => res.send(html))
       .catch((err) => next(err));

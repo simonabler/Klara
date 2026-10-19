@@ -4,6 +4,7 @@ import { AppModule } from './app/app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
+import { NextFunction, Request, Response } from 'express';
 
 async function bootstrap() {
   // Sicherheitscheck: TYPEORM_SYNC=true in Produktion ist gefährlich
@@ -49,22 +50,12 @@ async function bootstrap() {
   app.use(require('cookie-parser')());
   app.set('trust proxy', 1);
 
-  // Helmet zuerst – sonst gehen Antworten der Static-Auslieferung ohne
-  // Sicherheits-Header raus
+  // Sicherheits-Header für alle Antworten. Die CSP setzen wir darunter getrennt:
+  // Das Backend liefert nur JSON und Bilder aus, das HTML der App kommt vom
+  // SSR-Server (apps/klara/src/server.ts) mit eigener CSP.
   app.use(
     helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:', 'blob:'],
-          connectSrc: ["'self'"],
-          fontSrc: ["'self'"],
-          objectSrc: ["'none'"],
-          frameSrc: ["'none'"],
-        },
-      },
+      contentSecurityPolicy: false,
       crossOriginEmbedderPolicy: false,
       xFrameOptions: { action: 'deny' },
       xContentTypeOptions: true,
@@ -75,6 +66,36 @@ async function bootstrap() {
         preload: true,
       },
     }),
+  );
+
+  // API: nichts darf geladen oder ausgeführt werden (kein 'unsafe-inline')
+  const apiCsp = helmet.contentSecurityPolicy({
+    useDefaults: false,
+    directives: {
+      defaultSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      baseUri: ["'none'"],
+      formAction: ["'none'"],
+    },
+  });
+  // Swagger UI (nur außerhalb von Produktion) braucht Inline-Skripte und -Styles
+  const swaggerCsp = helmet.contentSecurityPolicy({
+    useDefaults: false,
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:'],
+      connectSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    },
+  });
+  const isProduction = process.env.NODE_ENV === 'production';
+  app.use((req: Request, res: Response, next: NextFunction) =>
+    !isProduction && req.path.startsWith('/api/docs')
+      ? swaggerCsp(req, res, next)
+      : apiCsp(req, res, next),
   );
 
   // Upload-Verzeichnis beim Start anlegen. Ausgeliefert werden die Bilder nicht
