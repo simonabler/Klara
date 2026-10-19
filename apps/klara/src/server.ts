@@ -17,9 +17,9 @@ export function app(): express.Express {
 
   // Schutz gegen SSRF/Host-Header-Injection (@angular/ssr ab 20.3): nur bekannte Hosts
   // werden serverseitig gerendert, alle anderen bekommen die CSR-Variante.
-  // Andere Umgebungen: NG_ALLOWED_HOSTS (kommagetrennt) hat Vorrang vor dieser Liste.
+  // Produktion: NG_ALLOWED_HOSTS=klara.abler.tirol (kommagetrennt) – ersetzt diese Liste.
   const commonEngine = new CommonEngine({
-    allowedHosts: ['klara.abler.tirol', 'localhost'],
+    allowedHosts: ['localhost'],
   });
 
   server.set('view engine', 'html');

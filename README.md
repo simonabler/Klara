@@ -163,6 +163,10 @@ NODE_ENV=production
 PORT=3000
 FRONTEND_URL=https://klara.abler.tirol   # erlaubte CORS-Origin + Redirect nach Login
 
+# Frontend-Container (Angular SSR): Hosts für serverseitiges Rendern, kommagetrennt.
+# Ersetzt die Vorgabe "localhost"; ohne passenden Eintrag antwortet SSR mit einem Fehler.
+NG_ALLOWED_HOSTS=klara.abler.tirol
+
 # Uploads (Avatare)
 # Vollständiger Pfad zum Upload-Verzeichnis inkl. Unterordner
 UPLOAD_DIR=/data/uploads/avatars
