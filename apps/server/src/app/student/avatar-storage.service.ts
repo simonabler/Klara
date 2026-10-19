@@ -25,15 +25,10 @@ export function avatarUploadDir(): string {
  * EXIF/GPS – das ist aus Datenschutzgründen gewollt.
  */
 export async function reencodeAvatar(input: Buffer): Promise<Buffer> {
-  let meta: sharp.Metadata;
-  try {
-    meta = await sharp(input, {
-      limitInputPixels: MAX_INPUT_PIXELS,
-    }).metadata();
-  } catch {
-    throw new BadRequestException(INVALID_IMAGE_MESSAGE);
-  }
-  if (!meta.format || !ALLOWED_FORMATS.includes(meta.format)) {
+  const meta = await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS })
+    .metadata()
+    .catch(() => null);
+  if (!meta?.format || !ALLOWED_FORMATS.includes(meta.format)) {
     throw new BadRequestException(INVALID_IMAGE_MESSAGE);
   }
   if ((meta.width ?? 0) * (meta.height ?? 0) > MAX_INPUT_PIXELS) {

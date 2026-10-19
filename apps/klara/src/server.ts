@@ -15,7 +15,12 @@ export function app(): express.Express {
     ? join(distFolder, 'index.original.html')
     : join(distFolder, 'index.html');
 
-  const commonEngine = new CommonEngine();
+  // Schutz gegen SSRF/Host-Header-Injection (@angular/ssr ab 20.3): nur bekannte Hosts
+  // werden serverseitig gerendert, alle anderen bekommen die CSR-Variante.
+  // Andere Umgebungen: NG_ALLOWED_HOSTS (kommagetrennt) hat Vorrang vor dieser Liste.
+  const commonEngine = new CommonEngine({
+    allowedHosts: ['klara.abler.tirol', 'localhost'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);
