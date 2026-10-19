@@ -232,7 +232,7 @@ docker compose exec backend node sanitize-avatars.js --dry-run
 docker compose exec backend node sanitize-avatars.js
 ```
 
-Immer zuerst mit `--dry-run` laufen lassen und die Ausgabe prüfen. Dateien in `quarantine/` werden nicht ausgeliefert und können nach Sichtung manuell gelöscht werden.
+Immer zuerst mit `--dry-run` laufen lassen und die Ausgabe prüfen. Dateien in `quarantine/` werden nicht ausgeliefert und können nach Sichtung manuell gelöscht werden. Seit Avatare nur noch über den angemeldeten Controller ausgeliefert werden (Dateinamen `<uuid>.webp`), werden Bilder mit alten Dateinamen erst nach dem Skriptlauf wieder angezeigt.
 
 ### CI
 
@@ -328,7 +328,7 @@ Klara speichert personenbezogene Daten von Schülerinnen und Schülern (Name, Ge
 - Beim Löschen einer Lehrkraft werden via CASCADE alle Schüler, Notizen und Leistungsdaten dieser Lehrkraft mitgelöscht
 - Authentifizierung via httpOnly-Cookie (kein Token in URL oder localStorage)
 - `TYPEORM_SYNC` ist in Produktion deaktiviert (kein unbeabsichtigter Datenverlust)
-- Profilbilder werden beim Upload anhand des Inhalts geprüft und immer neu als WebP kodiert – dabei fallen alle Metadaten weg (EXIF, GPS). Ausgeliefert werden nur Bilddateien aus dem Avatar-Ordner, mit `nosniff` und restriktiver CSP
+- Profilbilder werden beim Upload anhand des Inhalts geprüft und immer neu als WebP kodiert – dabei fallen alle Metadaten weg (EXIF, GPS). Ausgeliefert werden sie nur mit Anmeldung und nur an die Lehrkraft des jeweiligen Schülers (`/api/uploads/avatars/<uuid>.webp`), mit `nosniff`, restriktiver CSP und ohne langes Caching
 
 ---
 

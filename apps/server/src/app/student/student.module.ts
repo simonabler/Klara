@@ -11,11 +11,12 @@ import { StudentService } from './student.service';
 import { StudentExportService } from './student-export.service';
 import { StudentController } from './student.controller';
 import { AvatarStorageService } from './avatar-storage.service';
+import { AvatarController } from './avatar.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Student, Parent, Class, Teacher, Note, StudentResult, AssessmentType])],
   providers: [StudentService, StudentExportService, AvatarStorageService],
-  controllers: [StudentController],
+  controllers: [StudentController, AvatarController],
   exports: [TypeOrmModule, StudentService],
 })
 export class StudentModule {}
