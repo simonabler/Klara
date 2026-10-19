@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 import { Student } from './student.entity';
 import { Parent } from '../parent/parent.entity';
 import { Class } from '../class/class.entity';
-import { deleteAvatarFiles } from '../common/avatar-files';
+import { AvatarStorageService } from './avatar-storage.service';
 import { CreateStudentDto, ImportStudentRowDto, ImportResultDto, UpdateStudentDto } from '@app/domain';
 
 /**
@@ -77,6 +77,7 @@ export class StudentService {
     private readonly parentRepo: Repository<Parent>,
     @InjectRepository(Class)
     private readonly classRepo: Repository<Class>,
+    private readonly avatarStorage: AvatarStorageService,
   ) {}
 
   async findAll(teacherId: string): Promise<Student[]> {
@@ -151,14 +152,21 @@ export class StudentService {
   async updateAvatar(
     id: string,
     teacherId: string,
-    avatarUrl: string,
+    file: Express.Multer.File | undefined,
   ): Promise<Student> {
+    // Erst den Besitz prüfen, dann schreiben – für fremde Schüler entsteht keine Datei
     const student = await this.findOne(id, teacherId);
+    const avatarUrl = await this.avatarStorage.store(file);
     const previous = student.avatarUrl;
     student.avatarUrl = avatarUrl;
-    await this.studentRepo.save(student);
+    try {
+      await this.studentRepo.save(student);
+    } catch (err) {
+      await this.avatarStorage.remove(avatarUrl);
+      throw err;
+    }
     // Altes Bild entfernen, damit keine verwaisten Fotos liegen bleiben
-    if (previous && previous !== avatarUrl) await deleteAvatarFiles([previous]);
+    if (previous && previous !== avatarUrl) await this.avatarStorage.remove(previous);
     return student;
   }
 
@@ -339,7 +347,7 @@ export class StudentService {
     const student = await this.findOne(id, teacherId);
     const avatarUrl = student.avatarUrl;
     await this.studentRepo.remove(student);
-    await deleteAvatarFiles([avatarUrl]);
+    await this.avatarStorage.remove(avatarUrl);
   }
 
 }

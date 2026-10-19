@@ -5,6 +5,7 @@ import { StudentService, parseDateOfBirth, buildImportErrorReason } from './stud
 import { Student } from './student.entity';
 import { Parent } from '../parent/parent.entity';
 import { Class } from '../class/class.entity';
+import { AvatarStorageService } from './avatar-storage.service';
 
 const TEACHER_ID = 'teacher-uuid';
 
@@ -32,6 +33,9 @@ function makeStudentRepo(overrides: Partial<Record<string, jest.Mock>> = {}) {
 }
 function makeParentRepo(overrides: Partial<Record<string, jest.Mock>> = {}) {
   return { create: jest.fn(), save: jest.fn(), find: jest.fn().mockResolvedValue([]), delete: jest.fn(), ...overrides };
+}
+function makeAvatarStorage() {
+  return { store: jest.fn().mockResolvedValue('/api/uploads/avatars/neu.webp'), remove: jest.fn().mockResolvedValue(true) };
 }
 function makeClassRepo(overrides: Partial<Record<string, jest.Mock>> = {}) {
   return { create: jest.fn(), save: jest.fn(), findOne: jest.fn().mockResolvedValue(null), query: jest.fn().mockResolvedValue(undefined), ...overrides };
@@ -130,20 +134,23 @@ describe('StudentService', () => {
   let studentRepo: ReturnType<typeof makeStudentRepo>;
   let parentRepo:  ReturnType<typeof makeParentRepo>;
   let classRepo:   ReturnType<typeof makeClassRepo>;
+  let avatarStorage: ReturnType<typeof makeAvatarStorage>;
 
-  async function buildModule(sRepo = makeStudentRepo(), pRepo = makeParentRepo(), cRepo = makeClassRepo()) {
+  async function buildModule(sRepo = makeStudentRepo(), pRepo = makeParentRepo(), cRepo = makeClassRepo(), aStore = makeAvatarStorage()) {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StudentService,
         { provide: getRepositoryToken(Student), useValue: sRepo },
         { provide: getRepositoryToken(Parent),  useValue: pRepo },
         { provide: getRepositoryToken(Class),   useValue: cRepo },
+        { provide: AvatarStorageService,        useValue: aStore },
       ],
     }).compile();
     service     = module.get<StudentService>(StudentService);
     studentRepo = sRepo;
     parentRepo  = pRepo;
     classRepo   = cRepo;
+    avatarStorage = aStore;
   }
 
   beforeEach(() => buildModule());
@@ -191,12 +198,43 @@ describe('StudentService', () => {
     });
   });
 
+  describe('updateAvatar', () => {
+    const file = { buffer: Buffer.from('bild') } as Express.Multer.File;
+
+    it('speichert das neue Bild und löscht das alte', async () => {
+      studentRepo.findOne.mockResolvedValue({ ...mockStudent, avatarUrl: '/api/uploads/avatars/alt.webp' });
+      const result = await service.updateAvatar('student-uuid', TEACHER_ID, file);
+      expect(avatarStorage.store).toHaveBeenCalledWith(file);
+      expect(result.avatarUrl).toBe('/api/uploads/avatars/neu.webp');
+      expect(avatarStorage.remove).toHaveBeenCalledWith('/api/uploads/avatars/alt.webp');
+    });
+
+    it('schreibt für fremde Schüler keine Datei', async () => {
+      studentRepo.findOne.mockResolvedValue(null);
+      await expect(service.updateAvatar('fremd', TEACHER_ID, file)).rejects.toThrow(NotFoundException);
+      expect(avatarStorage.store).not.toHaveBeenCalled();
+    });
+
+    it('entfernt das neue Bild wieder, wenn das Speichern in der DB scheitert', async () => {
+      studentRepo.findOne.mockResolvedValue({ ...mockStudent });
+      studentRepo.save.mockRejectedValue(new Error('DB weg'));
+      await expect(service.updateAvatar('student-uuid', TEACHER_ID, file)).rejects.toThrow('DB weg');
+      expect(avatarStorage.remove).toHaveBeenCalledWith('/api/uploads/avatars/neu.webp');
+    });
+  });
+
   describe('remove', () => {
     it('löscht Schüler', async () => {
       studentRepo.findOne.mockResolvedValue(mockStudent);
       studentRepo.remove.mockResolvedValue(undefined);
       await service.remove('student-uuid', TEACHER_ID);
       expect(studentRepo.remove).toHaveBeenCalledWith(mockStudent);
+    });
+
+    it('löscht auch die Avatar-Datei', async () => {
+      studentRepo.findOne.mockResolvedValue({ ...mockStudent, avatarUrl: '/api/uploads/avatars/a.webp' });
+      await service.remove('student-uuid', TEACHER_ID);
+      expect(avatarStorage.remove).toHaveBeenCalledWith('/api/uploads/avatars/a.webp');
     });
 
     it('wirft NotFoundException wenn Schüler nicht gefunden', async () => {

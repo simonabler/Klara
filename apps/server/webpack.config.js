@@ -13,6 +13,10 @@ module.exports = {
       target: 'node',
       compiler: 'tsc',
       main: './src/main.ts',
+      // Bereinigungsskript für Avatar-Uploads → dist/apps/server/sanitize-avatars.js
+      additionalEntryPoints: [
+        { entryName: 'sanitize-avatars', entryPath: './scripts/sanitize-avatars.ts' },
+      ],
       tsConfig: './tsconfig.app.json',
       assets: [
         './src/assets',
